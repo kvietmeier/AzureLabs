@@ -1,0 +1,11 @@
+# Commamds for tiering/untiering files
+# Azure Filesync client needs to be installed.
+
+# Need to Import Module
+Import-Module "C:\Program Files\Azure\StorageSyncAgent\StorageSync.Management.ServerCmdlets.dll"
+
+# Tier off files
+Invoke-StorageSyncCloudTiering -Path G:\Media
+
+# Bring them back
+Invoke-StorageSyncFileRecall -Path "G:\Media"

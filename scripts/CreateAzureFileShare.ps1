@@ -1,0 +1,93 @@
+###====================================================================================###
+###  CreateAzureFileShare.ps1                                                          ###
+###    Created By: Karl Vietmeier                                                      ###
+###                                                                                    ###
+###  Create a FileShare - by generating a random name with a 4 digit random number     ###
+###  "Get-Random" creates a random number                                              ###
+###                                                                                    ###
+###====================================================================================###
+
+# 
+# So it won't run on accident
+#return
+
+# Get my functions and credentials
+. "C:\bin\resources.ps1"
+
+
+### Storage Account SKUs - 
+# Standard_LRS      - Locally-redundant storage.
+# Standard_ZRS      - Zone-redundant storage.
+# Standard_GRS      - Geo-redundant storage.
+# Standard_RAGRS    - Read access geo-redundant storage.
+# Premium_LRS       - Premium locally-redundant storage.
+# Premium_ZRS       - Premium zone-redundant storage.
+# Standard_GZRS     - Geo-redundant zone-redundant storage.
+# Standard_RAGZRS   - Read access geo-redundant zone-redundant storage.
+
+
+###====================   Set Some Variables  ======================###        
+# These are sensitive - set here or in a separate file 
+#$SubID = ""
+#$SubName = ""
+
+$AZResourceGroup = "WVDLandscape01"
+
+# Create name with random 4 digit number.
+$StorageAcct= "kvstor$(Get-Random -Minimum 1000 -Maximum 2000)"
+
+# For FSLogix - use the same sharename
+$AZFileshare = "profiles"
+
+# SKUs - Choose what you need
+$SKUname = "Standard_LRS"
+
+# Set as appropriate
+$SizeInGB = "50"
+$region = "westus2"
+
+###=====================  Are you logged in?  ===================###        
+$context = Get-AzContext
+
+if (!$context -or ($context.Subscription.Id -ne $SubID)) 
+{
+    # Save your creds
+    $creds = get-credential
+    Connect-AzAccount -Credential $creds -Subscription $SubID
+    
+    # Change subscription context (May not need this)
+    Select-AzSubscription -SubscriptionId $SubName
+} 
+else 
+{
+    Write-Host "SubscriptionId '$SubID' already connected"
+}
+
+###==============================================================###        
+
+# Create the Account
+$AZStorageAcct = New-AzStorageAccount `
+    -ResourceGroupName $AZResourceGroup `
+    -Name $StorageAcct `
+    -SkuName $SKUname `
+    -Location $region `
+    -Kind StorageV2 `
+    #-EnableLargeFileShare
+
+# Create the Share
+New-AzRmStorageShare `
+    -ResourceGroupName $AZResourceGroup `
+    -StorageAccountName $AZStorageAcct.StorageAccountName `
+    -Name $AZFileshare `
+    -QuotaGiB $SizeInGB | Out-Null
+
+
+# Tell us it was created:
+Write-Host "Created Storage Account: $($AZStorageAcct.StorageAccountName)"
+
+
+###=================  Remove Account  ================###        
+#Remove-AzStorageAccount `
+#    -ResourceGroupName $AZResourceGroup `
+#    -AccountName $AZStorageAcct.StorageAccountName
+

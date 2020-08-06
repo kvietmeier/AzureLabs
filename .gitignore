@@ -1,11 +1,28 @@
+### .gitingore for AzureLabs repo
+###
+
+# Default entries
 .htaccess
 css.php
-rpc/
-sites/site*/admin/
-sites/site*/private/
-sites/site*/public/admin/
-sites/site*/public/setup/
-sites/site*/public/theme/
-textpattern/
 HISTORY.txt
 README.txt
+
+# Ignore "Private" files
+Private/
+
+
+# Ignore temporary or scratch files
+**/foo*
+**/*.log
+[Tt]emp/
+*.log
+*.bak
+*.[Tt]emp
+*.tmp
+*[Ss]cratch*
+
+# Ignore possibly very large files
+*.iso
+*.vhdx
+*.vhd
+*.zip

@@ -1,0 +1,5 @@
+ITPC_CTX_PerfData_CL
+| where TimeGenerated > ago(1h)
+| where Category == "Processor Information"
+
+
