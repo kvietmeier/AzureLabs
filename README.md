@@ -4,7 +4,16 @@ Collection of scripts, how-tos, and sample commands for working within Azure
 and Windows Virtual Desktop. 
 
 
-## Projects
+## Project Directories
+```
+├───ArmTemplates
+├───Diagrams
+├───MiscNotes
+├───scripts
+│   └───users
+└───WVD
+```
+
 
 ### Placeholder
 
