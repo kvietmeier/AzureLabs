@@ -1,6 +1,10 @@
-﻿<----------------#OPTION 1#---------------------->
+﻿### Grabbed from another repo as an example.  Won't run as is.
+###<----------------#OPTION 1#---------------------->
+# So we don't accidemntly run the commands as a script
+return
 
-#Install-Apps
+
+### --- Install-Apps
 $DownloadPath = "C:\"
 $Sa = "https://buildscriptswvd.blob.core.windows.net/buildscript/wvdimgbuild.zip"
 $Blob = "buildscript"
@@ -8,9 +12,9 @@ New-Item -Path $DownloadPath - Directory -Force | Out-Null
 Invoke-WebRequest -Uri "$Sa/$Blob/input.csv" -Outfile "$DownloadPath\input.csv"
 $Packages = import-csv "$DownloadPath\input.csv"
 ForEach ($Package in $Packages){
-$AppName = $(package.AppName)
-$ZipName = $(package.ZipName)
-$CommandLine = $(package.CommandLine)
+    $AppName = $(package.AppName)
+    $ZipName = $(package.ZipName)
+    $CommandLine = $(package.CommandLine)
 $Arguments = $(package.Arguments)
 Write-Host $AppName $ZipName
 Invoke-WebRequest -Uri "$Sa/$Blob/ZipName.zip" -OutFile "$DownloadPath\$ZipName.zip"
@@ -20,7 +24,7 @@ Start-Process "$CommandLine" -WorkingDirectory "$DownloadPath\$ZipName" -Wait -A
 }
 
 
-<----------------#OPTION 2#---------------------->
+###<----------------#OPTION 2#---------------------->
 
 ### Download Application Packages
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force
