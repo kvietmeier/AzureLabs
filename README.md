@@ -1,6 +1,6 @@
 ## Azure Labs
 
-Collection of scripts, how-tos, and sample copmmands for workinng within Azure
+Collection of scripts, how-tos, and sample commands for working within Azure
 and Windows Virtual Desktop. 
 
 

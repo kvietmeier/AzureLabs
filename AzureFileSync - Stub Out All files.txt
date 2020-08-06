@@ -1,4 +1,4 @@
-# Commamds for tiering/untiering files
+# Commands for tiering/untiering files
 # Azure Filesync client needs to be installed.
 
 # Need to Import Module
