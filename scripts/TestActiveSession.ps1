@@ -1,17 +1,22 @@
 ### Check for an active session - or prompt login
-#return
+# I'm using this to work out some kinks in a function to login 
+# to my Azure Account
+
+# Don't run accidently.
+return
 
 # Get my functions and credentials
 #. "..\..\Certs\resources.ps1"
 . 'C:\Users\kavietme\Documents\OneDrive - Microsoft\WindowsPowerShell\resources.ps1'
+
+# Where is the script running from?
 $PSScriptRoot
+
+# There is a Login function in the included file.
 #Login
 
 # Need the SubID (get it from an external file - above - or set it here)
 #$SubID = <subscription ID>
-
-C:\Users\kavietme\OneDrive - Microsoft\Documents\WindowsPowerShell
-
 
 Write-Host "==================================="
 Write-Host "Checking if $SubID is logged in"

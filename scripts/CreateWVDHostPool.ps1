@@ -94,6 +94,16 @@ New-AzRoleAssignment `
     -ResourceGroupName <resourcegroupname> `
     -ResourceType 'Microsoft.DesktopVirtualization/applicationGroups'
 
+    #-RoleDefinitionName "Personal Desktop Users" `
+
+# Working Example    
+New-AzRoleAssignment `
+    -ObjectId "35b0cbae-aae0-4117-908d-71730ed91d18" `
+    -RoleDefinitionName "Desktop Virtualization User" `
+    -ResourceGroupName "WVDLandscape01" `
+    -ResourceName TestPool01"-DAG" `
+    -ResourceType 'Microsoft.DesktopVirtualization/applicationGroups'
+
 # Run the following cmdlet to export the registration token to a variable, which you will
 # use later in Register the virtual machines to the Windows Virtual Desktop host pool.   
 $token = Get-AzWvdRegistrationInfo -ResourceGroupName <resourcegroupname> -HostPoolName <hostpoolname>

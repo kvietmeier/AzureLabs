@@ -6,8 +6,16 @@
 ###==================================================###
 
 return
-# Get my functions and credentials
-. "C:\bin\resources.ps1"
+### Get my functions and credentials
+# Credentials  (stored outside the repo)
+. '..\..\Certs\resources.ps1'
+
+# Functions (In this repo)
+. '.\FunctionLibrary.ps1'
+
+# Imported from "resources.ps1" - uncomment and set yourself
+#$SubID = "SubID of Subscription"
+#$SubName = "Subscription Name"
 
 # Need - 
 $AZResourceGroup = "WVDLandscape01"
@@ -15,52 +23,12 @@ $AZStorageAcct = "kvwvdlocalstorage02"
 $AZFileShare = "userprofiles"
 $SMBSharePath = "\\kvwvdstorage01.file.core.windows.net\userprofiles\"
 
-# Imported - uncomment and set yourself
-#$SubID = "SubID of Subscription"
-#$SubName = "Subscription Name"
 
-###-----------------------------------------------------------------------------###
-# Check to see if you are alrewady connected to a Sub.
-$context = Get-AzContext
+# Check to see if you are already connected to a Sub.
+Check-Login $SubID
 
-if (!$context -or ($context.Subscription.Id -ne $SubID)) 
-{
-    # Save your creds
-    $creds = get-credential
-    Connect-AzAccount -Credential $cred -Subscription $SubID
-} 
-else 
-{
-    Write-Host "SubscriptionId '$SubID' already connected"
-}
-
-###-----------------------------------------------------------------------------###
-
-
-function InstallPSModules 
-{
-  ### You are going to need some modules - of course :)
-  # Run these as an Admin:
-  # You might need to set this - (set it back later if you need to)
-  Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force
-
-  # May need to Upgrade PowerShellGet and other modules - upgrade NuGet first
-  Install-PackageProvider -Name NuGet -Force
-  Install-Module -Name PowerShellGet -Force
-
-  # Azure and AD Modules - probably have these
-  Install-Module -Name "Az" -Repository 'PSGallery' -Scope 'CurrentUser' -AllowClobber -Force -Verbose
-  Install-Module -Name "AzureAD" -Repository 'PSGallery' -Scope 'CurrentUser' -AllowClobber -Force -Verbose
-
-  # I needed this to do some GPO work
-  Install-Module -Name GPRegistryPolicy
-
-  # WVD Modules
-  Install-Module -Name Az.DesktopVirtualization -RequiredVersion 0.1.0 -SkipPublisherCheck
-
-}
-
-InstallPSModules
+# Install a bunch of PS Modules
+Install-PSModules
 
 # For AzureFiles AD Setup - download and follow install instructions:
 # AzFilesHybrid:   https://github.com/Azure-Samples/azure-files-samples/releases
@@ -87,10 +55,12 @@ Debug-AzStorageAccountAuth -StorageAccountName $AZStorageAcct -ResourceGroupName
 # - Note - The WVD Gateway blocks ICMP but you can still test name resolution
 #   even if the ping fails.
 # Test resolver against known host that responds to ICMP 
-ping ya.ru
+Test-NetConnection ya.ru
 
 # Test ICMP echo against known top level DNS server IP
-ping 8.8.8.8
+Test-NetConnection 8.8.8.8
+
+Test-NetConnection -ComputerName www.contoso.com -DiagnoseRouting -InformationLevel Detailed
 
 ### Check the Azure route table - info in the host OS is useless
 #
