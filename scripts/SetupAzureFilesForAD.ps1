@@ -8,13 +8,18 @@
 ##################################################################################################################
 
 ### Here for safety - comment/uncomment as desired
-#return
+return
 
-# Get my functions and credentials
-. "C:\bin\resources.ps1"
+### Get my functions and credentials
+# Credentials  (stored outside the repo)
+. '..\..\Certs\resources.ps1'
 
-# Funtion in the resources file -
-Login
+# Functions (In this repo)
+. '.\FunctionLibrary.ps1'
+
+# Imported from "FunctionLibrary.ps1"
+# Are we connected to Azure with the corredt SubID?
+Check-Login
 
 ###=================================== Prereqs =======================================###
 # 1: The correct set of PowerShell Modules

@@ -7,12 +7,19 @@
 ###                                                                                    ###
 ###====================================================================================###
 
-# 
-# So it won't run on accident
-#return
+### Here for safety - comment/uncomment as desired
+return
 
-# Get my functions and credentials
-. "C:\bin\resources.ps1"
+### Get my functions and credentials
+# Credentials  (stored outside the repo)
+. '..\..\Certs\resources.ps1'
+
+# Functions (In this repo)
+. '.\FunctionLibrary.ps1'
+
+# Imported from "FunctionLibrary.ps1"
+# Are we connected to Azure with the corredt SubID?
+Check-Login
 
 
 ### Storage Account SKUs - 
@@ -45,25 +52,6 @@ $SKUname = "Standard_LRS"
 # Set as appropriate
 $SizeInGB = "50"
 $region = "westus2"
-
-###=====================  Are you logged in?  ===================###        
-$context = Get-AzContext
-
-if (!$context -or ($context.Subscription.Id -ne $SubID)) 
-{
-    # Save your creds
-    $creds = get-credential
-    Connect-AzAccount -Credential $creds -Subscription $SubID
-    
-    # Change subscription context (May not need this)
-    Select-AzSubscription -SubscriptionId $SubName
-} 
-else 
-{
-    Write-Host "SubscriptionId '$SubID' already connected"
-}
-
-###==============================================================###        
 
 # Create the Account
 $AZStorageAcct = New-AzStorageAccount `
