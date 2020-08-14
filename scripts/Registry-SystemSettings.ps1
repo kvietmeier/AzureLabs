@@ -56,12 +56,12 @@ New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\
 
 # Enable timezone redirection
 New-ItemProperty -Path "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" `
-        -Name "fEnableTimeZoneRedirection" `
-        -PropertyType "DWORD" -Value "1" `
-        -Force
+    -Name "fEnableTimeZoneRedirection" `
+    -PropertyType "DWORD" -Value "1" `
+    -Force
 
 # Disable Storage Sense
 New-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\StorageSense\Parameters\StoragePolicy" `
-        -Name "01" `
-        -PropertyType "DWORD" -Value "0" `
-        -Force
+    -Name "01" `
+    -PropertyType "DWORD" -Value "0" `
+    -Force

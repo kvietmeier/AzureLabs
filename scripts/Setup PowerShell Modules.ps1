@@ -1,4 +1,9 @@
-###========    PowerShell commands for setting up Azure Files with AD Auth.    ========###
+###=================================================================================###
+###  PowerShell commands to Install some required modules for working in Azure.     ###
+###      Written By: Karl Vietmeier                                                 ###   
+###                                                                                 ###
+###  These Are common modules for AD, Azure, AzureFiles, WVD, and GPO               ###   
+###=================================================================================###
 return
 
 ### Required PS Modules:
@@ -8,7 +13,7 @@ $PSVersionTable.PSVersion
 # You might need to set this - (set it back later if you need to)
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force
 
-# Trust the Gallery - so we don't get prompted
+# Trust the Gallery - so we don't get prompted all the time
 Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
 
 # Run these as an Admin:
