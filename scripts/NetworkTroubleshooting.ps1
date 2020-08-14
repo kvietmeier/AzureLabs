@@ -25,9 +25,9 @@ Check-Login
 
 # Need - 
 $AZResourceGroup = "WVDLandscape01"
-$AZStorageAcct = "kvwvdlocalstorage02"
+$AZStorageAcct = "kvstor1551"
 $AZFileShare = "userprofiles"
-$SMBSharePath = "\\kvwvdstorage01.file.core.windows.net\userprofiles\"
+$SMBSharePath = "\\kvstor1551.file.core.windows.net\userprofiles\"
 
 
 # Check to see if you are already connected to a Sub.
@@ -91,16 +91,13 @@ $VM.NetworkProfile
 # Examples
 Get-AzEffectiveRouteTable `
   -NetworkInterfaceName $NIC1  `
-  -ResourceGroupName $RGroup1 `
-  | Format-Table
+  -ResourceGroupName $RGroup1 | Format-Table
 
 Get-AzEffectiveRouteTable `
   -NetworkInterfaceName $NIC2  `
-  -ResourceGroupName $RGroup1 `
-  | Format-Table
+  -ResourceGroupName $RGroup1 ` Format-Table
 
 Get-AzEffectiveRouteTable `
   -NetworkInterfaceName $NIC3  `
-  -ResourceGroupName $RGroup1 `
-  | Format-Table
+  -ResourceGroupName $RGroup1 | Format-Table
 

@@ -151,22 +151,67 @@ REG ADD "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "bginfo" /t REG_
 Write-Host "This script will prepare your image for capture and eventual upload to Azure."
 
 Write-Host "Disabling Automatic Updates..."
-reg add HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU /v NoAutoUpdate /t REG_DWORD /d 1 /f
+New-ItemProperty -Path "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" `
+    -Name "NoAutoUpdate" `
+    -PropertyType "REG_DWORD" `
+    -Value "1" `
+    -Force
+
+
 
 
 # Skiprearm for windows activation after sysprepping   (Doesn't work)
-REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\Currentversion\SL" /v ""
+#REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\Currentversion\SL" /v ""
+#New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\Currentversion\SL" /v ""
 
 
-# Configure session timeout policies
-Write-Host "Configuring session timeout policies..."
-#one minute = 60000  https://www.sevenforums.com/tutorials/118886-remote-desktop-set-time-limit-active-sessions.html
-reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" /v RemoteAppLogoffTimeLimit /t REG_DWORD /d 0 /f
-reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" /v fResetBroken /t REG_DWORD /d 1 /f
-reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" /v MaxConnectionTime /t REG_DWORD /d 28800000 /f  # 8 Hours
-reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" /v RemoteAppLogoffTimeLimit /t REG_DWORD /d 0 /f
-reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" /v MaxDisconnectionTime /t REG_DWORD /d 14400000 /f  #4 hours
-reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" /v MaxIdleTime /t REG_DWORD /d 7200000 /f  #2 hours
+###---------- Configure session timeout policies
+
+function SessionTimeouts ()
+{
+    Write-Host "Configuring session timeout policies..."
+    #one minute = 60000  https://www.sevenforums.com/tutorials/118886-remote-desktop-set-time-limit-active-sessions.html
+    # reg add <keyname> [{/v Valuename | /ve}] [/t datatype] [/s Separator] [/d Data] [/f]
+
+    # New-ItemProperty -Path $RegKey -Name "" -PropertyType "" -Value "" -Force 
+    $RegKey = "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
+    set-location -Path $RegKey
+
+    #reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" /v RemoteAppLogoffTimeLimit /t REG_DWORD /d 0 /f
+    New-ItemProperty -Path "." `
+        -Name "RemoteAppLogoffTimeLimit" `
+        -PropertyType "DWORD" -Value "0" `
+        -Force 
+
+    New-ItemProperty -Path "." `
+        -Name "fResetBroken" `
+        -PropertyType "DWORD" -Value "1" `
+        -Force 
+
+    New-ItemProperty -Path "." `
+        -Name "MaxConnectionTime" `
+        -PropertyType "DWORD" -Value "28800000" ` # 8hrs
+        -Force 
+
+    New-ItemProperty -Path "." `
+        -Name "RemoteAppLogoffTimeLimit" `
+        -PropertyType "DWORD" -Value "0" `
+        -Force 
+
+    New-ItemProperty -Path "." `
+        -Name "MaxDisconnectionTime" `
+        -PropertyType "DWORD" -Value "14400000" ` # 4hrs
+        -Force 
+
+    New-ItemProperty -Path "." `
+        -Name "MaxIdleTime" `
+        -PropertyType "DWORD" -Value "7200000" ` # 2hrs
+        -Force
+
+}
+###----------- END: Session Timeout
+
+
 
 # Enable timezone redirection
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" /v fEnableTimeZoneRedirection /t REG_DWORD /d 1 /f
