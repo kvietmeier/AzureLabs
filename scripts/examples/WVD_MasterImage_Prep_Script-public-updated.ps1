@@ -62,10 +62,10 @@
 #$FSLUNC = "\\server\share"  # Path to your FSlogix SMB share
 #$AADTenant = "xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  #your AAD Tenant ID
 
+# Where you are installing Office Apps from
 $InstallDir = "C:\Users\azureadmin\Downloads\test"
 
-
-# The usual - 
+# Probably need this
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 
@@ -74,7 +74,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 # Uninstall OneDrive 
 # Download the latest OneDriveSetup.exe from Micrsoft's site https://products.office.com/en-us/onedrive/download
 # Place in a temp folder - NOTE:  Change the folder path to your copy of OneDriveSetup.exe
-# you can use the downloaded exe as the uninstall path. 
+# OneDriveSetup also uninstalls. 
 ###################################################################
 
 # Uninstall One Drive
@@ -166,49 +166,26 @@ New-ItemProperty -Path "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\A
 
 
 ###---------- Configure session timeout policies
-
 function SessionTimeouts ()
 {
-    Write-Host "Configuring session timeout policies..."
-    #one minute = 60000  https://www.sevenforums.com/tutorials/118886-remote-desktop-set-time-limit-active-sessions.html
-    # reg add <keyname> [{/v Valuename | /ve}] [/t datatype] [/s Separator] [/d Data] [/f]
-
-    # New-ItemProperty -Path $RegKey -Name "" -PropertyType "" -Value "" -Force 
+   # Configuring session timeout policies...
+    
+    # Set registry key and path for commands
     $RegKey = "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
     set-location -Path $RegKey
 
-    #reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" /v RemoteAppLogoffTimeLimit /t REG_DWORD /d 0 /f
-    New-ItemProperty -Path "." `
-        -Name "RemoteAppLogoffTimeLimit" `
-        -PropertyType "DWORD" -Value "0" `
-        -Force 
-
-    New-ItemProperty -Path "." `
-        -Name "fResetBroken" `
-        -PropertyType "DWORD" -Value "1" `
-        -Force 
-
-    New-ItemProperty -Path "." `
-        -Name "MaxConnectionTime" `
-        -PropertyType "DWORD" -Value "28800000" ` # 8hrs
-        -Force 
-
-    New-ItemProperty -Path "." `
-        -Name "RemoteAppLogoffTimeLimit" `
-        -PropertyType "DWORD" -Value "0" `
-        -Force 
-
-    New-ItemProperty -Path "." `
-        -Name "MaxDisconnectionTime" `
-        -PropertyType "DWORD" -Value "14400000" ` # 4hrs
-        -Force 
-
-    New-ItemProperty -Path "." `
-        -Name "MaxIdleTime" `
-        -PropertyType "DWORD" -Value "7200000" ` # 2hrs
-        -Force
-
+    # Registry settings
+    New-ItemProperty -Path "." -Name "RemoteAppLogoffTimeLimit" -PropertyType "DWORD" -Value "0" -Force 
+    New-ItemProperty -Path "." -Name "fResetBroken" -PropertyType "DWORD" -Value "1" -Force 
+    New-ItemProperty -Path "." -Name "MaxConnectionTime" -PropertyType "DWORD" -Value "28800000" # 8hrs -Force 
+    New-ItemProperty -Path "." -Name "RemoteAppLogoffTimeLimit" -PropertyType "DWORD" -Value "0" -Force 
+    New-ItemProperty -Path "." -Name "MaxDisconnectionTime" -PropertyType "DWORD" -Value "14400000" # 4hrs -Force 
+    New-ItemProperty -Path "." -Name "MaxIdleTime" -PropertyType "DWORD" -Value "7200000" # 2hrs -Force
 }
+
+SessionTimeouts
+
+
 ###----------- END: Session Timeout
 
 
@@ -328,19 +305,19 @@ schtasks /change /tn "\Microsoft\Windows\BrokerInfrastructure\BgTaskRegistration
 # Desktop Icons and Small Icons, Remove Search/cortana
 
 REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel" /v "{20D04FE0-3AEA-1069-A2D8-08002B30309D}" /t REG_DWORD /d 0
-REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu" /v "{20D04FE0-3AEA-1069-A2D8-08002B30309D}" /t REG_DWORD /d 0
 REG ADD "HKLM\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel" /v "{20D04FE0-3AEA-1069-A2D8-08002B30309D}" /t REG_DWORD /d 0
 REG ADD "HKLM\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu" /v "{20D04FE0-3AEA-1069-A2D8-08002B30309D}" /t REG_DWORD /d 0
+REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu" /v "{20D04FE0-3AEA-1069-A2D8-08002B30309D}" /t REG_DWORD /d 0
 
 REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel" /v "{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}" /t REG_DWORD /d 0
-REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu" /v "{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}" /t REG_DWORD /d 0
 REG ADD "HKLM\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel" /v "{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}" /t REG_DWORD /d 0
 REG ADD "HKLM\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu" /v "{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}" /t REG_DWORD /d 0
+REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu" /v "{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}" /t REG_DWORD /d 0
 
 REG ADD "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /V TaskbarSmallIcons /T REG_DWORD /D 1 /F
-REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Search" /V SearchboxTaskbarMode /T REG_DWORD /D 0 /F
 REG ADD "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /V TaskbarSmallIcons /T REG_DWORD /D 1 /F
 REG ADD "HKLM\Software\Microsoft\Windows\CurrentVersion\Search" /V SearchboxTaskbarMode /T REG_DWORD /D 1 /F
+REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Search" /V SearchboxTaskbarMode /T REG_DWORD /D 0 /F
 
 REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /V ShowCortanaButton /T REG_DWORD /D 0 /F
 REG ADD "HKLM\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /V ShowCortanaButton /T REG_DWORD /D 0 /F
