@@ -255,7 +255,7 @@ Invoke-WebRequest -URI https://query.prod.cms.rt.microsoft.com/cms/api/am/binary
 # Install
 .\installwebrtc.msi /quiet
 
-# Enable Teams for VDI so you can install in Machine mode amd redirect video
+# Enable Teams for VDI so you can install in Machine mode and redirect video
 New-Item -Path "HKLM:\Software\Microsoft\Teams" 
 New-ItemProperty -Path "HKLM:\Software\Microsoft\Teams" `
     -Name "IsWVDEnvironment" -PropertyType DWORD -Value 1 `
@@ -267,36 +267,34 @@ msiexec /i installteams.msi /l*v teamslog.txt ALLUSER=1 /quiet
 ###----------  End Teams
 
 
-
+###----------  Misc system settings to enforce defaults and BKM.
 # The following steps are from: https://docs.microsoft.com/en-us/azure/virtual-machines/windows/prepare-for-upload-vhd-image
 
 # Remove the WinHTTP proxy
 netsh winhttp reset proxy
 
-Set-Service -Name w32time -StartupType Automatic
 
 # Set the power profile to the High Performance
 powercfg /setactive SCHEME_MIN
 
 # Make sure that the environmental variables TEMP and TMP are set to their default values
-Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' -name "TEMP" -Value "%SystemRoot%\TEMP" -Type ExpandString -force
-Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' -name "TMP" -Value "%SystemRoot%\TEMP" -Type ExpandString -force
+Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' `
+    -name "TEMP" -Value "%SystemRoot%\TEMP" -Type ExpandString -force
+Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' `
+    -name "TMP" -Value "%SystemRoot%\TEMP" -Type ExpandString -force
 
-# Set Windows services to defaults - This typically fails due to a permissions error, need to investigate why. May be due to differences in client vs Server os
-Set-Service -Name bfe -StartupType Automatic
-Set-Service -Name dhcp -StartupType Automatic
-Set-Service -Name dnscache -StartupType Automatic
-Set-Service -Name IKEEXT -StartupType Automatic
-Set-Service -Name iphlpsvc -StartupType Automatic
-Set-Service -Name netlogon -StartupType Manual
-Set-Service -Name netman -StartupType Manual
-Set-Service -Name nsi -StartupType Automatic
-Set-Service -Name termService -StartupType Manual
-Set-Service -Name MpsSvc -StartupType Automatic
-Set-Service -Name RemoteRegistry -StartupType Automatic
-Set-Service -Name Winrm -startuptype Automatic
+# Set Windows services to defaults
+Set-Service -Name w32time -StartupType Automatic
+Get-Service -Name BFE, Dhcp, Dnscache, IKEEXT, iphlpsvc, nsi, mpssvc, RemoteRegistry |
+  Where-Object StartType -ne Automatic |
+    Set-Service -StartupType Automatic
 
-# Ensure RDP is enabled
+Get-Service -Name Netlogon, Netman, TermService |
+  Where-Object StartType -ne Manual |
+    Set-Service -StartupType Manual
+
+### Do you need to explicitly confgure RDP?
+### Ensure RDP is enabled
 Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0 -Type DWord -force
 Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services' -name "fDenyTSConnections" -Value 0 -Type DWord -force
 
@@ -324,11 +322,14 @@ Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\W
 # Limit number of concurrent sessions
 Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\Winstations\RDP-Tcp' -name "MaxInstanceCount" -Value 4294967295 -Type DWord -force
 
-# (Broken)
-# Remove any self signed certs
-Remove-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "SSLCertificateSHA1Hash" -force
+# Remove any self signed certs if they exist
+if ((Get-Item -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp').Property -contains 'SSLCertificateSHA1Hash')
+{
+    Remove-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name SSLCertificateSHA1Hash -Force
+}
 
-# Turn on Firewall
+
+### Firewall Configuration (required?)
 Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True
 
 # Allow WinRM
@@ -343,7 +344,7 @@ Set-NetFirewallRule -DisplayGroup "Remote Desktop" -Enabled True
 # Enable File and Printer sharing for ping
 Set-NetFirewallRule -DisplayName "File and Printer Sharing (Echo Request - ICMPv4-In)" -Enabled True
 
-# Add Defender exclusion for FSLogix
+# Add Defender exclusions for FSLogix
 Add-MpPreference -ExclusionPath $FSLUNC
 Add-MpPreference -ExclusionExtension ”.vhd”
 Add-MpPreference -ExclusionExtension ”.vhdx”
@@ -388,7 +389,7 @@ REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcon
 REG ADD "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /V TaskbarSmallIcons /T REG_DWORD /D 1 /F
 REG ADD "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /V TaskbarSmallIcons /T REG_DWORD /D 1 /F
 REG ADD "HKLM\Software\Microsoft\Windows\CurrentVersion\Search" /V SearchboxTaskbarMode /T REG_DWORD /D 1 /F
-REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Search" /V SearchboxTaskbarMode /T REG_DWORD /D 0 /F
+REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Search" /V SearchboxTaskbarMode /T REG_DWORD /D 1 /F
 
 REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /V ShowCortanaButton /T REG_DWORD /D 0 /F
 REG ADD "HKLM\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /V ShowCortanaButton /T REG_DWORD /D 0 /F

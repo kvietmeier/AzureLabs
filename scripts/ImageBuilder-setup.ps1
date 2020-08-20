@@ -3,7 +3,7 @@
 ###    Created By: Karl Vietmeier                                                      ###
 ###                                                                                    ###
 ###  Description                                                                       ###
-###                                                                                    ###
+###   Just a dump of setup code for a project                                          ###
 ###                                                                                    ###
 ###====================================================================================###
 
