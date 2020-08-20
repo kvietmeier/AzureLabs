@@ -12,6 +12,8 @@
 #      https://docs.microsoft.com/en-us/fslogix/profile-container-configuration-reference
 #      https://docs.microsoft.com/en-us/fslogix/office-container-configuration-reference
 #
+#    This is best done through GPO
+#
 ###========================================================================================###
 
 # Don't run as a script on accident

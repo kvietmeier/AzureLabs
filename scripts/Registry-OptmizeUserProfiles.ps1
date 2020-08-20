@@ -1,5 +1,11 @@
 ###=========================================================================================###
 ### Optimize User Profile Settings - .bat/cmd syntax
+###  
+### Not sure where this came from - there is no "HKLM:\Temp\... branch in the registry
+### Good set of optimizations though.
+###
+### I think this is supposed to be modifying NTUSER.dat 
+###
 ###=========================================================================================###
 return 
 

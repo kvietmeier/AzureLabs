@@ -10,8 +10,6 @@ Use: You're welcome to use, modify, and distribute this script.  I'd love to hea
 modifications you've made in the comments section of the original post over at ChristopherKibble.com.
 
 --- More than I need but interesting
-
-
 #>
 
 # This key contains all of the profiles on the machine (including non-user profiles)

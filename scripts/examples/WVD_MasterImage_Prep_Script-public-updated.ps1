@@ -6,6 +6,12 @@
 #                                                                   #
 # Most Recent Update Date: 04/06/2020                               #
 # Last Updated By: Adam Whitlatch                                   #
+#                                                                   #
+# Last Updated by: Karl Vietmeier (kavietme@microsoft.com)          #
+#            Date: 08/18/2020
+#            Replaced "reg add" with proper powershell
+#            Updated Office install info with correct paths etc.
+# 
 #####################################################################
 
 
@@ -77,31 +83,50 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 # OneDriveSetup also uninstalls. 
 ###################################################################
 
+# This one you can grab -
+Invoke-WebRequest -Uri "https://aka.ms/OneDriveWVD-Installer" -Outfile c:\temp\OneDriveSetup.exe
+
 # Uninstall One Drive
 $InstallDir\OneDriveSetup.exe /uninstall
-REG ADD "HKLM\Software\Microsoft\OneDrive" /v "AllUsersInstall" /t REG_DWORD /d 1 /reg:64
-REG ADD "HKLM\Software\Microsoft\OneDrive" /v "AllUsersInstall" /t REG_DWORD /d 1 /reg:32
 
-#Configure OneDrive to start at sign-in for all users
-REG ADD "HKLM\Software\Microsoft\Windows\CurrentVersion\Run" /v OneDrive /t REG_SZ /d "C:\Program Files (x86)\Microsoft OneDrive\OneDrive.exe /background" /f
+# Re-Create the key and entry (we are only going to use 64bit versions of everything)
+New-Item -Path "HKLM:\Software\Microsoft\Onedrive" 
+New-ItemProperty -Path "HKLM:\Software\Microsoft\Onedrive" -Name "AllUsersInstall" -PropertyType DWORD -Value 1
 
 # Re- Install OneDrive
 $InstallDir\OneDriveSetup.exe /allusers
-REG ADD "HKLM\Software\Microsoft\Windows\CurrentVersion\Run" /v OneDrive /t REG_SZ /d "C:\Program Files (x86)\Microsoft OneDrive\OneDrive.exe /background" /f
-REG ADD "HKLM\SOFTWARE\Policies\Microsoft\OneDrive" /v "KFMSilentOptIn" /t REG_SZ /d $AADTenant /f  #uses the AADTenent variable above #Redirect and move Windows known folders to OneDrive - Make sure to change the AAD ID to match your own AAD!!!! 
-REG ADD "HKLM\SOFTWARE\Policies\Microsoft\OneDrive" /v "SilentAccountConfig" /t REG_DWORD /d 1 /f   #Silently configure user accounts
+
+
+#Configure OneDrive to start at sign-in for all users
+New-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Run" `
+    -Name "OneDrive" -PropertyType String `
+    -Value "C:\Program Files (x86)\Microsoft OneDrive\OneDrive.exe /background" -Force
+
+# Uses the AADTenent variable above #Redirect and move Windows known 
+# folders to OneDrive - Make sure to change the AAD ID to match your own AAD!!!! 
+New-Item -Path "HKLM:\Software\Policies\Microsoft\OneDrive" 
+New-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\OneDrive" `
+    -Name "KFMSilentOptIn" -PropertyType String -Value "$AADTenantID" -Force
+
+#Silently configure user accounts
+New-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\OneDrive" `
+    -Name "SilentAccountConfig" -PropertyType DWORD -Value 1 -Force
+
 
 
 #######----  Install Office  ----#######
 # You need to download and run the deployment tool to get the files you need
 # Reference: https://docs.microsoft.com/en-us/azure/virtual-desktop/install-office-on-wvd-master-image
 # Source: https://www.microsoft.com/en-us/download/details.aspx?id=49117
+# 
+# Create a custom control XML file - https://config.office.com/
 
 $InstallDir\Setup.exe /configure "$InstallDir\configuration-Office365-x64.xml"  # use a customize Image to control which office apps are installed
 
 # Create C:\temp\apps\Office\OfficeUpdates.bat
 # You need to mount the NTUSER.dat registry hive
 ### .bat file for configuration
+### - this needs to fixed to use PowerShell!!!
 #<snip>
 rem Mount the default user registry hive
 reg load HKU\TempDefault C:\Users\Default\NTUSER.DAT
@@ -133,31 +158,33 @@ reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Search" /V SearchboxTask
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /V ShowCortanaButton /T REG_DWORD /D 0 /F
 #<snip>
 
+### Teams Install
+
+
+### Upgdate Edge Browser
+
+
+
+#          <<<----------------------------   Proceed Below after all app installs and configs  ---------------------------->>>
 # BGInfo - 
 # Add Registry Entry to BGinfo
 REG ADD "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "bginfo" /t REG_SZ /d "C:\temp\apps\BGInfo\bginfo.bat" /f
 
 
-#          <<<----------------------------   Proceed Below after all app installs and configs  ---------------------------->>>
 
-
-#disable Windows Defender Scanning of VHD
-#https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-defender-antivirus/configure-extension-file-exclusions-windows-defender-antivirus
+# Disable Windows Defender Scanning of VHD
+# https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-defender-antivirus/configure-extension-file-exclusions-windows-defender-antivirus
 #  Change Group Policy Management Editor >> Administrative templates >> Windows components >> Windows Defender Antivirus >> Exclusions
 #    Extension Exclusions:  .vhd, .vhdx
 #    Turn Off Auto Exclusion: Disabled
 
-
-Write-Host "This script will prepare your image for capture and eventual upload to Azure."
-
+# Disable it in the registry
 Write-Host "Disabling Automatic Updates..."
 New-ItemProperty -Path "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" `
     -Name "NoAutoUpdate" `
     -PropertyType "REG_DWORD" `
     -Value "1" `
     -Force
-
-
 
 
 # Skiprearm for windows activation after sysprepping   (Doesn't work)
@@ -171,7 +198,7 @@ function SessionTimeouts ()
    # Configuring session timeout policies...
     
     # Set registry key and path for commands
-    $RegKey = "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
+    $RegKey = "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
     set-location -Path $RegKey
 
     # Registry settings
@@ -188,21 +215,64 @@ SessionTimeouts
 
 ###----------- END: Session Timeout
 
+###--- Misc System Settings 
 
+# Disable Automatic Updates
+New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" `
+    -Name "NoAutoUpdate" -PropertyType "DWORD" -Value "1" `
+    -Force
 
 # Enable timezone redirection
-reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" /v fEnableTimeZoneRedirection /t REG_DWORD /d 1 /f
+New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" `
+    -Name "fEnableTimeZoneRedirection" -PropertyType "DWORD" -Value "1" `
+    -Force
+
+# Set Coordinated Universal Time (UTC) time for Windows 
+Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\TimeZoneInformation' `
+    -name "RealTimeIsUniversal" -Value "1" -Type DWord `
+    -Force
 
 # Disable Storage Sense
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\StorageSense\Parameters\StoragePolicy" /v 01 /t REG_DWORD /d 0 /f
+New-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\StorageSense\Parameters\StoragePolicy" `
+    -Name "01" -PropertyType "DWORD" -Value "0" `
+    -Force
+
+
+###------ Teams  ------###
+
+# Download Teams Installer
+Invoke-WebRequest -URI https://statics.teams.cdn.office.net/production-windows-x64/1.3.00.21759/Teams_windows_x64.msi -OutFile c:\bin\installteams.msi
+
+# Change to download dir
+Set-Location c:\bin
+
+# Add - key as a workaround
+'HKLM:\Software\Citrix\PortICA' or 'HKLM\SOFTWARE\VMware, Inc\VMware VDM\Agent'
+
+# Download Web Socket
+Invoke-WebRequest -URI https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RE4AQBt -OutFile c:\bin\installwebrtc.msi
+
+# Install
+.\installwebrtc.msi /quiet
+
+# Enable Teams for VDI so you can install in Machine mode amd redirect video
+New-Item -Path "HKLM:\Software\Microsoft\Teams" 
+New-ItemProperty -Path "HKLM:\Software\Microsoft\Teams" `
+    -Name "IsWVDEnvironment" -PropertyType DWORD -Value 1 `
+    -Force
+
+# Install the app in "Per Machine Mode"
+msiexec /i installteams.msi /l*v teamslog.txt ALLUSER=1 /quiet
+
+###----------  End Teams
+
+
 
 # The following steps are from: https://docs.microsoft.com/en-us/azure/virtual-machines/windows/prepare-for-upload-vhd-image
 
 # Remove the WinHTTP proxy
 netsh winhttp reset proxy
 
-# Set Coordinated Universal Time (UTC) time for Windows and the startup type of the Windows Time (w32time) service to Automatically
-Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\TimeZoneInformation' -name "RealTimeIsUniversal" -Value 1 -Type DWord -force
 Set-Service -Name w32time -StartupType Automatic
 
 # Set the power profile to the High Performance
@@ -275,7 +345,8 @@ Set-NetFirewallRule -DisplayName "File and Printer Sharing (Echo Request - ICMPv
 
 # Add Defender exclusion for FSLogix
 Add-MpPreference -ExclusionPath $FSLUNC
-
+Add-MpPreference -ExclusionExtension ”.vhd”
+Add-MpPreference -ExclusionExtension ”.vhdx”
 
 
 
@@ -329,44 +400,107 @@ reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v SpecialRoam
 
 
 
-########################################
-#      FSLogix Profile Settings        #
-########################################
+###========================================================================================###
+#                           FSLogix Profile Registry Settings                               #
+###========================================================================================###
+# Add Defender exclusion for FSLogix
+# Need Path Path to your FSlogix SMB share
+#
+# FSLogix Docs
+#  https://docs.microsoft.com/en-us/fslogix/profile-container-configuration-reference
+#  https://docs.microsoft.com/en-us/fslogix/office-container-configuration-reference
+#  https://docs.microsoft.com/en-us/fslogix/fslogix-storage-config-ht
+#
+###========================================================================================###
+
+# $FSLUNC = "\\server\share"  
+$FSLUNC = "\\<storageaccount>.file.core.windows.net\<share>\"
+
 # Add Defender exclusion for FSLogix
 Add-MpPreference -ExclusionPath $FSLUNC
 
+# Don't run as a script on accident
+return
 
-# be sure to set the FSLogix Variable above
-# $FSLUNC = "\\server\share"  # Path to your FSlogix SMB share Link to share/directory permissions   https://docs.microsoft.com/en-us/fslogix/fslogix-storage-config-ht
-New-Item -Path HKLM:\Software\FSLogix\ -Name Profiles -Force
-New-Item -Path HKLM:\Software\FSLogix\Profiles\ -Name Apps -Force
-Set-ItemProperty -Path HKLM:\Software\FSLogix\Profiles -Name "Enabled" -Type "Dword" -Value "1"
-New-ItemProperty -Path HKLM:\Software\FSLogix\Profiles -Name "VHDLocations" -Value $FSLUNC -PropertyType MultiString -Force
-Set-ItemProperty -Path HKLM:\Software\FSLogix\Profiles -Name "SizeInMBs" -Type "Dword" -Value "10240"  #10GB in MB - always better to oversize - FSlogix Overwrites deleted blocks first then new blocks. Should be hire if not using OneDrive 
-Set-ItemProperty -Path HKLM:\Software\FSLogix\Profiles -Name "VolumeType" -Type String -Value "vhdx"  # NOTE:  this should be set to "vhd" for Win 7 and Sever 2102R2
-Set-ItemProperty -Path HKLM:\Software\FSLogix\Profiles -Name "ProfileType" -Type "Dword" -Value "3"  # Machine should try to take the RW role and if it can't, it should fall back to a RO role.
-Set-ItemProperty -Path HKLM:\Software\FSLogix\Profiles -Name "FlipFlopProfileDirectoryName" -Type "Dword" -Value "1"  #Cosmetic change the way each user folder is created
+# Registry Keys
+$FSLogixKey           = "HKLM:\Software\FSLogix"
+$FSLogixUserProfile   = "HKLM:\Software\FSLogix\Profiles"
+$ProfileSize          = "1024"
 
-# Optional FSLogix Settings
-#Set-ItemProperty -Path HKLM:\Software\FSLogix\Profiles -Name "ConcurrentUserSessions" -Type "Dword" -Value "1"   # Concurrent sessions if you want to use the same profile for published apps & Desktop Should log into Desktop session first
-#Set-ItemProperty -Path HKLM:\Software\FSLogix\Profiles -Name "ProfileType" -Type "Dword" -Value "3"     #this should only be used if Concurrent User Settings is set  # Machine should try to take the RW role and if it can't, it should fall back to a RO role.
+# Be sure to set the FSLogix Variable $FSLUNC above
 
-#New-ItemProperty -Path HKLM:\Software\FSLogix\Profiles\Apps -Name "RoamSearch" -Type "Dword" -Value "2"  # Only for Server 2012R2 and Server 2016 Leave Defaul to 0
-#Set-ItemProperty -Path HKLM:\Software\FSLogix\Profiles -Name "RoamSearch" -Type "Dword" -Value "2"  # Only for Server 2012R2 and Server 2016 Leave Defaul to 0
-Set-ItemProperty -Path HKLM:\Software\FSLogix\Profiles -Name "DeleteLocalProfileWhenVHDShouldApply"  -Type "Dword" -Value "0"   # OPTIONAL 0 = no deleton - 1 = deletion - This will deliete existing profiles
+###---  Profile Container Settings
+# We need to create the "Profiles" and "profiles\Apps folders first
+New-Item -Path "$FSLogixKey" -Name Profiles -Force
 
+# Jump into the Reg Hive
+Set-Location "$FSLogixUserProfile"
 
-# SetUp FSX Office Container
-Set-ItemProperty -Path HKLM:\SOFTWARE\Policies\FSLogix\ODFC -Name "Enabled" -Type "Dword" -Value "1"
-New-ItemProperty -Path HKLM:\SOFTWARE\Policies\FSLogix\ODFC -Name "VHDLocations" -Value $FSLUNC -PropertyType MultiString -Force
-Set-ItemProperty -Path HKLM:\SOFTWARE\Policies\FSLogix\ODFC -Name "SizeInMBs" -Type "Dword" -Value "25600"  # 25GBin MB - always better to oversize - FSlogix Overwrites deleted blocks first then new blocks 
-Set-ItemProperty -Path HKLM:\SOFTWARE\Policies\FSLogix\ODFC -Name "VolumeType" -Type String -Value "vhdx"  #this shoudl be set to "vhd" for Win 7 and Sever 2102R2
-Set-ItemProperty -Path HKLM:\SOFTWARE\Policies\FSLogix\ODFC -Name "FlipFlopProfileDirectoryName" -Type "Dword" -Value "1" 
-#Set-ItemProperty -Path HKLM:\SOFTWARE\Policies\FSLogix\ODFC -Name "DeleteLocalProfileWhenVHDShouldApply"  -Type "Dword" -Value "0" #nodeleton - 1 yes deletion
+# Add the Apps folder for later use
+New-Item -Path "." -Name Apps -Force
 
+# Enable the use of FSLogix Profile containers.
+Set-ItemProperty -Path "." -Name "Enabled" -Type "Dword" -Value "1"
 
+# IMPORTANT - Tell FSLogix where the profiles live (use Set-Item if you are modifying)
+#Set-ItemProperty -Path "." -Name "VHDLocations" -Value "$FSLUNC" -PropertyType MultiString -Force
+New-ItemProperty -Path "." -Name "VHDLocations" -Value "$FSLUNC" -PropertyType MultiString -Force
 
+# NOTE: This should be set to "vhd" for Win 7 and Sever 2102R2 - default is vhdx
+Set-ItemProperty -Path "." -Name "VolumeType" -Type String -Value "vhdx" 
 
+# Size of the Profle VHDx 10GB in MB - always better to oversize
+# FSlogix Overwrites deleted blocks first then new blocks. Should be higher if not using OneDrive 
+Set-ItemProperty -Path "." -Name "SizeInMBs" -Type "Dword" -Value "10240"  
+
+# Machine should try to take the RW role and if it can't, it should fall back to a RO role.
+Set-ItemProperty -Path "." -Name "ProfileType" -Type "Dword" -Value "3"  
+
+# Cosmetic - change the way each user folder is created
+Set-ItemProperty -Path "." -Name "FlipFlopProfileDirectoryName" -Type "Dword" -Value "1"  
+
+# Force deletion of local profile: 0 = no deletion - 1 = deletion
+Set-ItemProperty -Path "." -Name "DeleteLocalProfileWhenVHDShouldApply" -Type "Dword" -Value "0"
+
+###--- Optional Settings ---###
+# Concurrent sessions: If you want to use the same profile for published 
+# Apps & Desktop; user should log into Desktop session first.
+Set-ItemProperty -Path "." -Name "ConcurrentUserSessions" -Type "Dword" -Value "1"   
+
+# This should only be used if Concurrent User Settings is set
+# Machine should try to take the RW role and if it can't, it should fall back to a RO role.
+# If the VHD isn't accessed concurrently, ProfileType should be 0
+Set-ItemProperty -Path "." -Name "ProfileType" -Type "Dword" -Value "3"
+
+# Only for Server 2012R2 and Server 2016 Leave Defaul to 0
+Set-ItemProperty -Path "." -Name "RoamSearch" -Type "Dword" -Value "2"  
+
+# Only for Server 2012R2 and Server 2016 Leave Default to 0
+New-ItemProperty -Path HKLM:\Software\FSLogix\Profiles\Apps -Name "RoamSearch" -Type "Dword" -Value "2"
+
+###--------------------------------------------------------------------------------###
+###---  Office Container Settings: Only required if Office profiles are in use  ---###
+###--------------------------------------------------------------------------------###
+$FSLogixOfficeProfile = "HKLM:\SOFTWARE\Policies\FSLogix\ODFC" 
+Set-Location "$FSLogixOfficeProfile"
+
+# Enable Container: 1 = enable; 0 = disable
+Set-ItemProperty -Path "." -Name "Enabled" -Type "Dword" -Value "1"
+
+# IMPORTANT - Tell FSLogix where the profiles live
+New-ItemProperty -Path "." -Name "VHDLocations" -Value $FSLUNC -PropertyType MultiString -Force
+
+# This should be set to "vhd" for Win 7 and Sever 2102R2
+Set-ItemProperty -Path "." -Name "VolumeType" -Type String -Value "vhdx"
+
+# 25GBin MB - always better to oversize - FSlogix Overwrites deleted blocks first then new blocks 
+Set-ItemProperty -Path "." -Name "SizeInMBs" -Type "Dword" -Value "25600" 
+
+# Cosmetic change the way each user folder is created
+Set-ItemProperty -Path "." -Name "FlipFlopProfileDirectoryName" -Type "Dword" -Value "1" 
+
+# Delete the local profile if it exists: 0 = no deletion; 1 = yes deletion
+Set-ItemProperty -Path "." -Name "DeleteLocalProfileWhenVHDShouldApply" -Type "Dword" -Value "0"
 
 # Launch Sysprep
 # Write-Host "We'll now launch Sysprep."
