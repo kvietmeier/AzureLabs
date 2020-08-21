@@ -43,7 +43,8 @@ function InstallFSLogix () {
 # Path to your FSlogix SMB share Link to share/directory permissions
 # https://docs.microsoft.com/en-us/fslogix/fslogix-storage-config-ht
 # $FSLUNC = "\\server\share"  
-$FSLUNC = "\\<storageaccount>.file.core.windows.net\<share>\"
+# Go ahead and set it, a later GPO will overwrite or you can update later 
+$FSLUNC = "\\storageaccount.file.core.windows.net\share\"
 
 # Add Defender exclusion for FSLogix
 Add-MpPreference -ExclusionPath $FSLUNC
@@ -82,8 +83,7 @@ else {
 } #>
 
 # IMPORTANT - Tell FSLogix where the profiles live (use Set-Item if you are modifying)
-#Set-ItemProperty -Path "." -Name "VHDLocations" -Value "$FSLUNC" -PropertyType MultiString -Force
-#New-ItemProperty -Path "." -Name "VHDLocations" -Value "$FSLUNC" -PropertyType MultiString -Force
+New-ItemProperty -Path "." -Name "VHDLocations" -Value "$FSLUNC" -PropertyType MultiString -Force
 
 # NOTE: This should be set to "vhd" for Win 7 and Sever 2102R2 - default is vhdx
 New-ItemProperty -Path "." -Name "VolumeType" -PropertyType String -Value "vhdx" 

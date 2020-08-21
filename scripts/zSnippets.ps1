@@ -45,3 +45,7 @@ Update-AzWvdHostPool -ResourceGroupName $AZResourceGroup -Name TestPool01 -Custo
 Get-AzWvdHostPool -ResourceGroupName $AZResourceGroup -Name TestPool01
 
 Get-AzWvdHostPool -ResourceGroupName $AZResourceGroup -Name TestPool01 | format-list Name, CustomRdpProperty
+
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer
+
+HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer
