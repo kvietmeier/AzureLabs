@@ -41,11 +41,16 @@ Set-RdsHostPool -TenantName MyTenant -HostPoolName MyPool -CustomRdpProperty "au
 $properties="audiocapturemode:i:1;use multimon:i:0"
 Update-AzWvdHostPool -ResourceGroupName $AZResourceGroup -Name TestPool01 -CustomRdpProperty $properties
 
+$AZResourceGroup = "TempRG-01"
+$AppGroup = "TestLogin-DAG"
 
+Get-AzWvdHostPool -ResourceGroupName $AZResourceGroup
 Get-AzWvdHostPool -ResourceGroupName $AZResourceGroup -Name TestPool01
+Get-AzWvdApplicationGroup -ResourceGroupName $AZResourceGroup
+Get-AzWvdApplicationGroup -ResourceGroupName $AZResourceGroup -Name $AppGroup | format-list Name
 
 Get-AzWvdHostPool -ResourceGroupName $AZResourceGroup -Name TestPool01 | format-list Name, CustomRdpProperty
 
-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer
 
-HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer
+Remove-AzWvdApplicationGroup -ResourceGroupName $AZResourceGroup -Name $AppGroup
+Remove-AzWvdHostPool -ResourceGroupName TempRG-01 -Name Foobar02

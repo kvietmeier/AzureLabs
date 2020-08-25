@@ -59,6 +59,16 @@ $ProfileSize          = "1024"
 #                           FSLogix Profile Registry Settings                               #
 ###========================================================================================###
 # Be sure to set the FSLogix Variable $FSLUNC above
+<# 
+Recommended values
+Enabled                                     "1"
+VHDLocations                                "$FSLUNC"
+VolumeType                                  "vhdx"
+SizeInMBs                                   "1024"
+ProfileType                                 "3"
+FlipFlopProfileDirectoryName                "1"
+DeleteLocalProfileWhenVHDShouldApply        "1"
+ #>
 
 ###---  Profile Container Settings
 # We need to create the "Profiles" and "profiles\Apps folders first
@@ -72,15 +82,6 @@ New-Item -Path "." -Name Apps -Force
 
 # Enable the use of FSLogix Profile containers.
 New-ItemProperty -Path "." -Name "Enabled" -PropertyType "DWORD" -Value "1"
-
-#### - testing this 
-<# if ((Get-Item -Path ".").Property -contains 'Enabled')
-{
-    Set-ItemProperty -Path "." -Name  "Enabled" -PropertyType "DWORD" -Value "1"
-}
-else {
-    New-ItemProperty -Path "." -Name  "Enabled" -PropertyType "DWORD" -Value "1"
-} #>
 
 # IMPORTANT - Tell FSLogix where the profiles live (use Set-Item if you are modifying)
 New-ItemProperty -Path "." -Name "VHDLocations" -Value "$FSLUNC" -PropertyType MultiString -Force
@@ -109,13 +110,13 @@ New-ItemProperty -Path "." -Name "ConcurrentUserSessions" -PropertyType "DWORD" 
 # This should only be used if Concurrent User Settings is set
 # Machine should try to take the RW role and if it can't, it should fall back to a RO role.
 # If the VHD isn't accessed concurrently, ProfileType should be 0
-New-ItemProperty -Path "." -Name "ProfileType" -PropertyType "DWORD" -Value "3"
+#New-ItemProperty -Path "." -Name "ProfileType" -PropertyType "DWORD" -Value "0"
 
 # Only for Server 2012R2 and Server 2016 Leave Defaul to 0
-New-ItemProperty -Path "." -Name "RoamSearch" -PropertyType "DWORD" -Value "2"  
+#New-ItemProperty -Path "." -Name "RoamSearch" -PropertyType "DWORD" -Value "2"  
 
 # Only for Server 2012R2 and Server 2016 Leave Default to 0
-New-ItemProperty -Path HKLM:\Software\FSLogix\Profiles\Apps -Name "RoamSearch" -PropertyType "DWORD" -Value "2"
+#New-ItemProperty -Path HKLM:\Software\FSLogix\Profiles\Apps -Name "RoamSearch" -PropertyType "DWORD" -Value "2"
 
 ###--------------------------------------------------------------------------------###
 ###---  Office Container Settings: Only required if Office profiles are in use  ---###
@@ -140,3 +141,14 @@ New-ItemProperty -Path "." -Name "FlipFlopProfileDirectoryName" -PropertyType "D
 
 # Delete the local profile if it exists: 0 = no deletion; 1 = yes deletion
 New-ItemProperty -Path "." -Name "DeleteLocalProfileWhenVHDShouldApply" -PropertyType "DWORD" -Value "0"
+
+
+
+#### - testing this 
+<# if ((Get-Item -Path ".").Property -contains 'Enabled')
+{
+    Set-ItemProperty -Path "." -Name  "Enabled" -PropertyType "DWORD" -Value "1"
+}
+else {
+    New-ItemProperty -Path "." -Name  "Enabled" -PropertyType "DWORD" -Value "1"
+} #>

@@ -33,7 +33,7 @@ Install-Module -Name "AzureAD" `
 
 # WVD Modules
 Install-Module -Name Az.DesktopVirtualization `
-    -RequiredVersion 0.1.0 `
+    -RequiredVersion 2.0.0 `
     -SkipPublisherCheck
 
 # I needed this to do some GPO work - optional
