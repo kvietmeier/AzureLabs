@@ -1,12 +1,15 @@
 ###====================================================================================###
-###  <scriptname>.ps1                                                                  ###
-###    Created By: Karl Vietmeier                                                      ###
-###                                                                                    ###
-###  Description                                                                       ###
-###    Create a Win10 VM for testing                                                   ###
-###    Sometimes you just need a VM with some standard defaults                        ### 
-###                                                                                    ###
-###    Not Working!!!                                                                  ###
+<# 
+  CreateWin10VM.ps1                                                    
+    Created By: Karl Vietmeier                                        
+                                                                    
+  Description                                                      
+    Create a Win10 VM for testing                                 
+    Sometimes you just need a VM for testing with some standard defaults     
+                                                                
+    Not Working!!!
+    Needs cleanup                                             
+#>
 ###====================================================================================###
 
 ### Here for safety - comment/uncomment as desired
@@ -23,26 +26,29 @@ return
 # Are we connected to Azure with the corredt SubID?
 Check-Login
 
-# Create some variables for the new VM.
+###--- Create some variables for the new VM.
 $ResourceGroup = "TempRG-01"
 $Region = "westus2"
+$SKU = "skuname"
 
 # Create name with random 4 digit number.
 $VMName= "Win10VM-$(Get-Random -Minimum 1000 -Maximum 2000)"
 
-# Create a resource group
-
-# Create the network resources.
+# Create/Use network resources.
 $SubNet = "subnet02"
 $vNet = "VnetCore"
 
+###--- End Vars
+
+# Public IP
 $PIP = New-AzPublicIpAddress `
-        -ResourceGroupName $ResourceGroup `
+     -ResourceGroupName $ResourceGroup `
         -Location $Region `
         -Name "$VMName-PIP" `
         -AllocationMethod Static `
         -IdleTimeoutInMinutes 4
 
+# Create NSG
 $NSGRuleRDP = New-AzNetworkSecurityRuleConfig `
               -Name NSGAllowRDP  -Protocol Tcp `
               -Direction Inbound `

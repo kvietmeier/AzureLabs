@@ -68,5 +68,5 @@ function Install-PSModules ()
     Install-Module -Name GPRegistryPolicy
 
     # WVD Modules
-    Install-Module -Name Az.DesktopVirtualization -RequiredVersion 0.1.0 -SkipPublisherCheck
+    Install-Module -Name Az.DesktopVirtualization -RequiredVersion 2.0.0 -SkipPublisherCheck
 }

@@ -418,6 +418,16 @@ reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v SpecialRoam
 $FSLUNC = "\\<storageaccount>.file.core.windows.net\<share>\"
 
 # Add Defender exclusion for FSLogix
+<# 
+If Windows Defender is configured in the VM, make sure it’s configured to not scan VHD and VHDX
+files during attachment. Fxlogix use virtual hard discs to store profiles. They are mounted 
+on login. Defender can sometimes interfere the mount resulting in unstable profiles.
+Settings:
+Add-MpPreference -ExclusionExtension ”.vhd”
+Add-MpPreference -ExclusionExtension ”.vhdx”
+Add-MpPreference -ExclusionPath ”$PATH”
+#>
+
 Add-MpPreference -ExclusionPath $FSLUNC
 
 # Don't run as a script on accident
