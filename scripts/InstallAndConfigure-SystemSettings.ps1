@@ -1,7 +1,10 @@
 ###====================================================================================###
-###                 Modify Registry Settings to Optmize Session Hosts                  ###
-###                   For Session Timeouts and other key settings                      ###
-###                                                                                    ###
+<# 
+
+                 Modify Registry Settings to Optmize Session Hosts  
+                   For Session Timeouts and other key settings      
+
+#>                                                     
 ###====================================================================================###
 return
 
@@ -63,7 +66,7 @@ New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection
 # Fix Watson crashes:
 Remove-Item -Path "HKCU:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\CorporateWerServer*"
 
-# Hide the Azure VM D: drive
+# Hide the Azure VM D: drive (Maybe better to do in GPO but can only hide A,B,C,D with Policy)
 New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" `
     -Name "NoDrives" -PropertyType DWORD -Value 8 `
     -Force    
@@ -96,11 +99,11 @@ New-ItemProperty -Path "." -Name "MaxYResolution" -PropertyType DWORD -Value "28
 ###--- End 5K Support
 
 
-# Install Chrome
+# Install Chrome - non-interactive
 $LocalTempDir = $env:TEMP; $ChromeInstaller = "ChromeInstaller.exe"; (new-object System.Net.WebClient).DownloadFile('http://dl.google.com/chrome/install/375.126/chrome_installer.exe', "$LocalTempDir\$ChromeInstaller"); & "$LocalTempDir\$ChromeInstaller" /silent /install; $Process2Monitor = "ChromeInstaller"; Do { $ProcessesFound = Get-Process | ?{$Process2Monitor -contains $_.Name} | Select-Object -ExpandProperty Name; If ($ProcessesFound) { "Still running: $($ProcessesFound -join ', ')" | Write-Host; Start-Sleep -Seconds 2 } else { rm "$LocalTempDir\$ChromeInstaller" -ErrorAction SilentlyContinue -Verbose } } Until (!$ProcessesFound)
 
 
-###---- Cosmetic Settings Only but common tweaks
+###---- Cosmetic Settings Only but common tweaks (these can be reset by sysprep)
 # Desktop Icons and Small Icons; Enable Search/cortana
 
 New-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel" `
@@ -136,7 +139,6 @@ New-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\Search" `
     -Name SearchboxTaskbarMode -PropertyType DWORD -Value 2 -Force
 
 <# SearchboxTaskbarMode DWORD
-
     0 = Hidden
     1 = Show search icon
     2 = Show search box

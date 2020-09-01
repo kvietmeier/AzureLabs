@@ -1,10 +1,11 @@
 ###====================================================================================###
-###  zSnippets.ps1                                                                     ###
-###    Created By: Karl Vietmeier                                                      ###
-###                                                                                    ###
-###  Description                                                                       ###
-###    Misc bits and pieces                                                            ###
-###                                                                                    ###
+<# 
+  zSnippets.ps1                   
+    Created By: Karl Vietmeier    
+                                 
+  Description                   
+    Misc bits and pieces       
+#>           
 ###====================================================================================###
 
 ### Here for safety - comment/uncomment as desired

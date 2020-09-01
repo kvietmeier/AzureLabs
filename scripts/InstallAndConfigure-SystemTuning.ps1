@@ -1,9 +1,13 @@
 ###====================================================================================###
-###  <scriptname>.ps1                                                                  ###
-###    Created By: Karl Vietmeier                                                      ###
-###                                                                                    ###
-###  Description                                                                       ###
-###  https://docs.microsoft.com/en-us/windows-server/remote/remote-desktop-services/rds_vdi-recommendations-1909                                                                                ###
+<# 
+
+  <scriptname>.ps1 
+    Created By: Karl Vietmeier  
+                                
+  Description                   
+  https://docs.microsoft.com/en-us/windows-server/remote/remote-desktop-services/rds_vdi-recommendations-1909
+
+#>
 ###====================================================================================###
 
 ### Here for safety - comment/uncomment as desired

@@ -69,4 +69,8 @@ function Install-PSModules ()
 
     # WVD Modules
     Install-Module -Name Az.DesktopVirtualization -RequiredVersion 2.0.0 -SkipPublisherCheck
+
+    
+
+
 }

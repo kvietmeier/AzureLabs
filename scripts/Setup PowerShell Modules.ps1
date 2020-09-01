@@ -1,8 +1,11 @@
 ###=================================================================================###
-###  PowerShell commands to Install some required modules for working in Azure.     ###
-###      Written By: Karl Vietmeier                                                 ###   
-###                                                                                 ###
-###  These Are common modules for AD, Azure, AzureFiles, WVD, and GPO               ###   
+<# 
+  PowerShell commands to Install some required modules for working in Azure. 
+      Written By: Karl Vietmeier                                             
+                                                                            
+  These Are common modules for AD, Azure, AzureFiles, WVD, and GPO
+  *** Includes code to non-interatively install AZFiles Module       
+#>
 ###=================================================================================###
 return
 

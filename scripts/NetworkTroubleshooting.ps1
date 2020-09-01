@@ -68,6 +68,18 @@ Test-NetConnection 8.8.8.8
 Test-NetConnection -ComputerName www.contoso.com -DiagnoseRouting -InformationLevel Detailed
 
 
+###--- DNS Resolving
+# https://docs.microsoft.com/en-us/powershell/module/dnsclient/resolve-dnsname?view=win10-ps
+# Running this command should show, the A record that DNS knows
+Resolve-dnsname -name filescorecloud.file.core.windows.net -type a
+
+# This command is the A record that will show, if on network/domain, the internal IP address of private endpoint
+Resolve-DnsName -name filescorecloud.privatelink.file.core.windows.net
+
+# This command will show the storage account still has a public IP, but how access to the contents is internal
+Resolve-DnsName -name filescorecloud.blob.core.windows.net
+
+
 ### The following commands requires you to be logged into your Azure account, run Connect-AzAccount if you haven't
 
 # Test for Port 445 
