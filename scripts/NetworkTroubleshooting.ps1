@@ -1,6 +1,6 @@
 ###========================================================================###
 <# 
-                   NetworkTroubleShooting.ps1
+  Script/Filename:  NetworkTroubleShooting.ps1
   Commands to validate/test network connectivity
   Created by:  Karl Vietmeier
     Not really a script
