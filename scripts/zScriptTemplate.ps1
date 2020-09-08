@@ -20,5 +20,3 @@ return
 # Imported from "FunctionLibrary.ps1"
 # Are we connected to Azure with the corredt SubID?
 Check-Login
-
-

@@ -1,67 +1,74 @@
 #####################################################################
-# Master Script for WVD Image Prep                                  #
-# Script authors:   Adam Whitlatch <adam.whitlatch.microsoft.com>   #   
-#                   Chris Nylen <Chris.Nylen@microsoft.com>         #
-#                   John Jenner <John.Jenner@microsoft.com>         #
-#                                                                   #
-# Most Recent Update Date: 04/06/2020                               #
-# Last Updated By: Adam Whitlatch                                   #
-#                                                                   #
-# Last Updated by: Karl Vietmeier (kavietme@microsoft.com)          #
-#            Date: 08/18/2020
-#            Replaced "reg add" with proper powershell
-#            Updated Office install info with correct paths etc.
-# 
+<# 
+ Master Script for WVD Image Prep                                
+ Script authors:   Adam Whitlatch <adam.whitlatch.microsoft.com>  
+                   Chris Nylen <Chris.Nylen@microsoft.com>       
+                   John Jenner <John.Jenner@microsoft.com>      
+                                                               
+ Most Recent Update Date: 04/06/2020                          
+ Last Updated By: Adam Whitlatch                             
+                                                            
+ Last Updated by: Karl Vietmeier (kavietme@microsoft.com)  
+            Date: 08/18/2020
+            Replaced "reg add" with powershell code
+            Updated Office install info with correct paths etc.
+#>
 #####################################################################
 
 
 
 ##############################################################################################################################################################
-# Below is the process I use to build my master image manually. NOTE, there are many ways to do this. You CAN use tools like SCCM, Azure Image Builder ect to build this. Azure Image builder being the most automated
-# NOTE: Windows 10 has a 8 times sysprep limit. Therefore, if you are building a master image in Azure follow this process to maintain a master image file wilout running into the sysprep limit
-# 1)  Deploy Win 10 base image from Azure Image Gallery, 
-# 2)  Make modifications, app installs, ect to image, 
-#       Re-Install Install One drive for all Users
-#       Install Office
-#       Install all Apps
-#       Run BGInfo Script
-# 3)  Reboot
-# 4)  Install FSX Agent, Azure Monitor Agent, Dependency Agents, and Sepago Agent
-#       Install FSX Agent
-#       Install Monitoring Agent - Do not connect to workspace
-#           Run Once Code at first login
-#            #MMDS
-#                $workspaceKey = "your workspace Key"
-#                $workspaceId = "Your Workspace ID"
-#                $mma = New-Object -ComObject 'AgentConfigManager.MgmtSvcCfg'
-#                $mma.AddCloudWorkspace($workspaceId, $workspaceKey)
-#                $mma.ReloadConfiguration()
-#       Install Dependency Agent
-#       Create Sepago LogAnalytics WS - search for sepago in marketplace - Only needs to be done the first time. Point all other Workspces to the same LA.
-#           Download Sepago views from github
-#           Install Views
-#           Get Workspace Id and Key info
-#       Install Sepago Agent - ITPC-LogAnalyticsAgent2
-#           Download the Sepago agent from website
-#           Extract files
-#           Copy ITPC-LogAnalyticsAgent2 Folder to Program Files Directory
-#           Modify Manifest File
-#              <add key="CustomerId" value="Your LA WokspaceID"/>
-#              <add key="SharedKey" value="youre workspace Key"/>
-#           Open Powershell or Command Prompt 
-#               Run ITPC-LogAnalyticsAgent.exe -test
-#           Verfy no errors
-#           Run ITPC-LogAnalyticsAgent.exe -install
-# 5)  Run Set small Icons Scripts & Desktop Icons Scripts
-# 6)  Run rest of this script to set common best practices for Master Images
-# 7)  Set any run at first book commands
-# 8)  Take Azure Disk Snapshot
-# 9) sysprep - gnealize and shutdown
-# 10) Updating Image - mount previous snapshot to a VM, power on, Make changes, re-install Monitoring, dependency & Sepago Agents, reboot, take a azure disk snapshot, sysprep, shutdown
+<#  
+Below is the process I use to build my master image manually. NOTE, there are many ways to do this. You CAN use tools like SCCM, Azure Image Builder ect to build
+this. Azure Image builder being the most automated
+
+NOTE: Windows 10 has a 8 times sysprep limit. Therefore, if you are building a master image in Azure follow this process 
+      to maintain a master image file wilout running into the sysprep limit
+ 1)  Deploy Win 10 base image from Azure Image Gallery, 
+ 2)  Make modifications, app installs, ect to image, 
+       Re-Install Install One drive for all Users
+       Install Office
+       Install all Apps
+       Run BGInfo Script
+ 3)  Reboot
+ 4)  Install FSX Agent, Azure Monitor Agent, Dependency Agents, and Sepago Agent
+       Install FSX Agent
+       Install Monitoring Agent - Do not connect to workspace
+           Run Once Code at first login
+            #MMDS
+                $workspaceKey = "your workspace Key"
+                $workspaceId = "Your Workspace ID"
+                $mma = New-Object -ComObject 'AgentConfigManager.MgmtSvcCfg'
+                $mma.AddCloudWorkspace($workspaceId, $workspaceKey)
+                $mma.ReloadConfiguration()
+       Install Dependency Agent
+       Create Sepago LogAnalytics WS - search for sepago in marketplace - Only needs to be done the first time. Point all other Workspces to the same LA.
+           Download Sepago views from github
+           Install Views
+           Get Workspace Id and Key info
+       Install Sepago Agent - ITPC-LogAnalyticsAgent2
+           Download the Sepago agent from website
+           Extract files
+           Copy ITPC-LogAnalyticsAgent2 Folder to Program Files Directory
+           Modify Manifest File
+              <add key="CustomerId" value="Your LA WokspaceID"/>
+              <add key="SharedKey" value="youre workspace Key"/>
+           Open Powershell or Command Prompt 
+               Run ITPC-LogAnalyticsAgent.exe -test
+           Verfy no errors
+           Run ITPC-LogAnalyticsAgent.exe -install
+ 5)  Run Set small Icons Scripts & Desktop Icons Scripts
+ 6)  Run rest of this script to set common best practices for Master Images
+ 7)  Set any run at first book commands
+ 8)  Take Azure Disk Snapshot
+ 9) sysprep - gnealize and shutdown
+ 10) Updating Image - mount previous snapshot to a VM, power on, Make changes, re-install Monitoring, dependency & Sepago Agents, reboot, take a azure disk snapshot, sysprep, shutdown
+ #>
 ##############################################################################################################################################################
 
 
 ### Variables
+# Added by KarlV
 # Get my functions and credentials
 . "C:\bin\resources.ps1"
 
@@ -74,14 +81,18 @@ $InstallDir = "C:\Users\azureadmin\Downloads\test"
 # Probably need this
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
+###--- End vars
 
-################   Re-install One Drive    ########################
-#  By Default One-drive installs for single users
-# Uninstall OneDrive 
-# Download the latest OneDriveSetup.exe from Micrsoft's site https://products.office.com/en-us/onedrive/download
-# Place in a temp folder - NOTE:  Change the folder path to your copy of OneDriveSetup.exe
-# OneDriveSetup also uninstalls. 
-###################################################################
+
+################   Re-install/Setup One Drive    ########################
+<# 
+   By Default One-drive installs for single users
+   Uninstall OneDrive 
+   Download the latest OneDriveSetup.exe from Micrsoft's site https://products.office.com/en-us/onedrive/download
+   Place in a temp folder - NOTE:  Change the folder path to your copy of OneDriveSetup.exe
+   OneDriveSetup also uninstalls. 
+ #>
+ ###################################################################
 
 # This one you can grab -
 Invoke-WebRequest -Uri "https://aka.ms/OneDriveWVD-Installer" -Outfile c:\temp\OneDriveSetup.exe
@@ -97,7 +108,7 @@ New-ItemProperty -Path "HKLM:\Software\Microsoft\Onedrive" -Name "AllUsersInstal
 $InstallDir\OneDriveSetup.exe /allusers
 
 
-#Configure OneDrive to start at sign-in for all users
+# Configure OneDrive to start at sign-in for all users
 New-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Run" `
     -Name "OneDrive" -PropertyType String `
     -Value "C:\Program Files (x86)\Microsoft OneDrive\OneDrive.exe /background" -Force
@@ -108,18 +119,22 @@ New-Item -Path "HKLM:\Software\Policies\Microsoft\OneDrive"
 New-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\OneDrive" `
     -Name "KFMSilentOptIn" -PropertyType String -Value "$AADTenantID" -Force
 
-#Silently configure user accounts
+# Silently configure user accounts
 New-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\OneDrive" `
     -Name "SilentAccountConfig" -PropertyType DWORD -Value 1 -Force
 
 
 
-#######----  Install Office  ----#######
-# You need to download and run the deployment tool to get the files you need
-# Reference: https://docs.microsoft.com/en-us/azure/virtual-desktop/install-office-on-wvd-master-image
-# Source: https://www.microsoft.com/en-us/download/details.aspx?id=49117
-# 
-# Create a custom control XML file - https://config.office.com/
+###################################################################
+<# 
+  ######----  Install Office  ----#######
+  You need to download and run the deployment tool to get the files you need
+  Reference: https://docs.microsoft.com/en-us/azure/virtual-desktop/install-office-on-wvd-master-image
+  Source: https://www.microsoft.com/en-us/download/details.aspx?id=49117
+  
+  Create a custom control XML file - https://config.office.com/
+#>
+###################################################################
 
 $InstallDir\Setup.exe /configure "$InstallDir\configuration-Office365-x64.xml"  # use a customize Image to control which office apps are installed
 
@@ -159,17 +174,17 @@ reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /V Sh
 #<snip>
 
 ### Teams Install
+# TBD - need to copy in from my script - Karl V
 
-
-### Upgdate Edge Browser
+### Update Edge Browser
 
 
 
 #          <<<----------------------------   Proceed Below after all app installs and configs  ---------------------------->>>
 # BGInfo - 
 # Add Registry Entry to BGinfo
-REG ADD "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "bginfo" /t REG_SZ /d "C:\temp\apps\BGInfo\bginfo.bat" /f
-
+New-ItemProperty -Path "HKLM:SOFTWARE\Microsoft\Windows\CurrentVersion\Run" `
+    -Name "bginfo" -PropertyType REG_SZ -Force
 
 
 # Disable Windows Defender Scanning of VHD
@@ -177,6 +192,7 @@ REG ADD "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "bginfo" /t REG_
 #  Change Group Policy Management Editor >> Administrative templates >> Windows components >> Windows Defender Antivirus >> Exclusions
 #    Extension Exclusions:  .vhd, .vhdx
 #    Turn Off Auto Exclusion: Disabled
+
 
 # Disable it in the registry
 Write-Host "Disabling Automatic Updates..."
@@ -247,7 +263,7 @@ Invoke-WebRequest -URI https://statics.teams.cdn.office.net/production-windows-x
 Set-Location c:\bin
 
 # Add - key as a workaround
-'HKLM:\Software\Citrix\PortICA' or 'HKLM\SOFTWARE\VMware, Inc\VMware VDM\Agent'
+#'HKLM:\Software\Citrix\PortICA' or 'HKLM\SOFTWARE\VMware, Inc\VMware VDM\Agent'
 
 # Download Web Socket
 Invoke-WebRequest -URI https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RE4AQBt -OutFile c:\bin\installwebrtc.msi
@@ -344,10 +360,6 @@ Set-NetFirewallRule -DisplayGroup "Remote Desktop" -Enabled True
 # Enable File and Printer sharing for ping
 Set-NetFirewallRule -DisplayName "File and Printer Sharing (Echo Request - ICMPv4-In)" -Enabled True
 
-# Add Defender exclusions for FSLogix
-Add-MpPreference -ExclusionPath $FSLUNC
-Add-MpPreference -ExclusionExtension ”.vhd”
-Add-MpPreference -ExclusionExtension ”.vhdx”
 
 
 
@@ -427,11 +439,9 @@ Add-MpPreference -ExclusionExtension ”.vhd”
 Add-MpPreference -ExclusionExtension ”.vhdx”
 Add-MpPreference -ExclusionPath ”$PATH”
 #>
-
 Add-MpPreference -ExclusionPath $FSLUNC
-
-# Don't run as a script on accident
-return
+Add-MpPreference -ExclusionExtension ”.vhd”
+Add-MpPreference -ExclusionExtension ”.vhdx”
 
 # Registry Keys
 $FSLogixKey           = "HKLM:\Software\FSLogix"

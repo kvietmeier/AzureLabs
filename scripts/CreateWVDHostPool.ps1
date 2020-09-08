@@ -1,41 +1,25 @@
 ###====================================================================================###
-### CreateWVDHostPool
-###    Created By: Karl Vietmeier                                                      ###
-###                                                                                    ###
-###  Create a FileShare - by generating a random name with a 4 digit random number     ###
-###  "Get-Random" creates a random number                                              ###
-###                                                                                    ###
+<# 
+ CreateWVDHostPool
+    Created By: Karl Vietmeier        
+                                                                               
+  Create a WVD Host Pool - by generating random names with a 4 digit random number  
+  "Get-Random" creates a random number                                           
+#>                                                                               
 ###====================================================================================###
-
-# 
 # So it won't run on accident
-#return
+return
 
-# Get my functions and credentials
-. "C:\bin\resources.ps1"
+### Get my functions and credentials
+# Credentials  (stored outside the repo)
+. '..\..\Certs\resources.ps1'
 
+# Functions (In this repo)
+. '.\FunctionLibrary.ps1'
 
-###=====================  Are you logged in?  ===================###        
-<# function Login ($context)
-{
-    $context = Get-AzContext
-    Write-Host "$context"
-    if (!$context -or ($context.Subscription.Id -ne $SubID)) 
-    {
-        # Save your creds
-        $creds = get-credential
-        Connect-AzAccount -Credential $creds -Subscription $SubID
-        
-        # Change subscription context (May not need this)
-        Select-AzSubscription -SubscriptionId $SubName
-    } 
-    else 
-    {
-        Write-Host "SubscriptionId '$SubID' already connected"
-    }
-} #>
-
-Login
+# Imported from "FunctionLibrary.ps1"
+# Are we connected to Azure with the corredt SubID?
+Check-Login
 
 ###==============================================================### 
 
@@ -46,7 +30,7 @@ $NewHostPool    = "hostpool$(Get-Random -Minimum 1000 -Maximum 2000)"
 $NewWorkspace   = "workspace$(Get-Random -Minimum 1000 -Maximum 2000)"
 $NewDesktopApp  = "appgrp$(Get-Random -Minimum 1000 -Maximum 2000)"
 $PoolType = "Pooled"
-$LBType   = "Breadfirst"
+$LBType   = "Breadthfirst"
 $Region   = "westus2"
 
 # Run the following cmdlet to sign in to the Windows Virtual Desktop environment:
@@ -107,13 +91,3 @@ New-AzRoleAssignment `
 # Run the following cmdlet to export the registration token to a variable, which you will
 # use later in Register the virtual machines to the Windows Virtual Desktop host pool.   
 $token = Get-AzWvdRegistrationInfo -ResourceGroupName <resourcegroupname> -HostPoolName <hostpoolname>
-
-
-###==============================================================###        
-
-
-###=================  Remove Account  ================###        
-#Remove-AzStorageAccount `
-#    -ResourceGroupName $AZResourceGroup `
-#    -AccountName $AZStorageAcct.StorageAccountName
-

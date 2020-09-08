@@ -50,12 +50,14 @@ Import-Module AzFilesHybrid
 # Grab and install TTttcp
 # <TBD>
 
+# Network Watcher
 
 
 ### Basic Networking
 #   https://docs.microsoft.com/en-us/powershell/module/nettcpip/test-netconnection?view=win10-ps
 # - Note - The WVD Gateway blocks ICMP but you can still test name resolution
 #   even if the ping fails.
+#   https://docs.microsoft.com/en-us/azure/virtual-network/what-is-ip-address-168-63-129-16
 Test-NetConnection
 
 # Test resolver against known host that responds to ICMP 
@@ -67,6 +69,9 @@ Test-NetConnection 8.8.8.8
 # Get more detailed information
 Test-NetConnection -ComputerName www.contoso.com -DiagnoseRouting -InformationLevel Detailed
 
+Test-NetConnection 168.63.129.16 -port 53
+
+test-netconnection 8.8.8.8 -port 53
 
 ###--- DNS Resolving
 # https://docs.microsoft.com/en-us/powershell/module/dnsclient/resolve-dnsname?view=win10-ps
@@ -93,16 +98,17 @@ Test-NetConnection -ComputerName ([System.Uri]::new($AZStorageAcct.Context.FileE
 ## Check the AZF Setup (need AZ Storage Module loaded)
 Debug-AzStorageAccountAuth -StorageAccountName $AZStorageAcct -ResourceGroupName $AZResourceGroup -Verbose
 
+<# 
+   Host OS routes - "Get-NetRoute"
+   https://docs.microsoft.com/en-us/powershell/module/nettcpip/get-netroute?view=win10-ps
+  
+   Need Az Module and be connected to your Subscription (see above)
+   Check the Azure route table - in some cases info in the host OS can be misleading/not useful
+   in an "all Azure" infrastructure.
+   https://docs.microsoft.com/en-us/powershell/module/az.network/get-azeffectiveroutetable?view=azps-4.6.0
 
-###--- Check the Azure route table - in some cases info in the host OS can be misleading/not useful
-#   in an "all Azure" infrastructure.
-#   Host OS routes - "Get-NetRoute"
-#   https://docs.microsoft.com/en-us/powershell/module/nettcpip/get-netroute?view=win10-ps
+#>
 
-
-# Get Azure effective route table
-# https://docs.microsoft.com/en-us/powershell/module/az.network/get-azeffectiveroutetable?view=azps-4.6.0
-# Need Az Module and be connected to your Subscription (see above)
 $NIC1 = "wvd-mgmtserver803"
 $NIC2 = "testvm-0-nic"
 $NIC3 = "testvm-1-nic"
@@ -133,4 +139,28 @@ Get-AzEffectiveRouteTable `
 Get-AzEffectiveRouteTable `
   -NetworkInterfaceName $NIC3  `
   -ResourceGroupName $RGroup1 | Format-Table
+
+
+### Get effective NSG security rules
+<# 
+   https://docs.microsoft.com/en-us/powershell/module/az.network/get-azeffectivenetworksecuritygroup?view=azps-4.6.1 
+   Get-AzEffectiveNetworkSecurityGroup
+     -NetworkInterfaceName <String>
+    [-ResourceGroupName <String>]
+    [-DefaultProfile <IAzureContextContainer>]
+    [<CommonParameters>]
+   
+   Get-AzEffectiveNetworkSecurityGroup -NetworkInterfaceName "MyNetworkInterface" -ResourceGroupName "myResourceGroup"
+ #>
+
+Get-AzEffectiveNetworkSecurityGroup `
+  -NetworkInterfaceName "$NIC3"  `
+  -ResourceGroupName $RGroup1 | Format-Table
+
+
+
+
+
+
+
 

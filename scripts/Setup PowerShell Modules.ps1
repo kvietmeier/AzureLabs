@@ -42,14 +42,19 @@ Install-Module -Name Az.DesktopVirtualization `
 # I needed this to do some GPO work - optional
 Install-Module -Name GPRegistryPolicy
 
-# For AzureFiles AD Setup - download and follow install instructions:
-# AzFilesHybrid:   https://github.com/Azure-Samples/azure-files-samples/releases
-# Unzip to a folder and run the CopyToPSPath.ps1 script to put the module in the search path.  
-# After you unzip and run the copy script - cd out of the directory and just run:
+<# 
+  For AzureFiles AD Setup - download and follow install instructions:
+  AzFilesHybrid:   https://github.com/Azure-Samples/azure-files-samples/releases
+  Unzip to a folder and run the CopyToPSPath.ps1 script to put the module in the search path.  
+  After you unzip and run the copy script you can importthe module
+
+  This code will install it for you automatically
+#>
 
 $AZFmoduleLoc  = "https://github.com/Azure-Samples/azure-files-samples/releases/download/v0.2.0/AzFilesHybrid.zip"
 $AZFZip     = "C:\Users\azureadmin\Downloads\AZFilesPSModule.zip"
 $AZFExtractDir = "C:\Users\azureadmin\Downloads\AZFilesPSModule"
+$Downloads = "C:\Users\azureadmin\Downloads"
 $AZFScript     = "C:\Users\azureadmin\Downloads\AZFilesPSModule\CopyToPSPath.ps1"
 
 Invoke-WebRequest -Uri $AZFmoduleLoc -OutFile $AZFZip
@@ -60,6 +65,7 @@ Import-Module AzFilesHybrid
 
 # Cleanup
 Remove-Item $AZFOutFile
+Set-Location $Downloads
 Remove-Item -Recurse $AZFExtractDir
 
 

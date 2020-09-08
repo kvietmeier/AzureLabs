@@ -1,10 +1,15 @@
 ###====================================================================================###
-###  <scriptname>.ps1                                                                  ###
-###    Created By: Karl Vietmeier                                                      ###
-###                                                                                    ###
-###  Description                                                                       ###
-###   Just a dump of setup code for a project                                          ###
-###                                                                                    ###
+<# 
+  ImageBuilder-setup.ps1                      
+    Created By: Karl Vietmeier          
+                                       
+  Description                         
+   Just a dump of setup code for a project
+
+   Pulled From this GitHub
+   https://github.com/danielsollondon/azvmimagebuilder/blob/master/quickquickstarts/0_Creating_a_Custom_Windows_Managed_Image/readme.md
+
+#>
 ###====================================================================================###
 
 ### Here for safety - comment/uncomment as desired
@@ -20,9 +25,6 @@ return
 # Imported from "FunctionLibrary.ps1"
 # Are we connected to Azure with the corredt SubID?
 Check-Login
-
-###----------------- Pulled From this GitHub ----------------------------###
-# https://github.com/danielsollondon/azvmimagebuilder/blob/master/quickquickstarts/0_Creating_a_Custom_Windows_Managed_Image/readme.md
 
 ###======  STEP 1
 

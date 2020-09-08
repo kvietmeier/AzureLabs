@@ -37,16 +37,10 @@ $VMName= "Win10VM-$(Get-Random -Minimum 1000 -Maximum 2000)"
 # Create/Use network resources.
 $SubNet = "subnet02"
 $vNet = "VnetCore"
+$NSG4rdp ""
+
 
 ###--- End Vars
-
-# Public IP
-$PIP = New-AzPublicIpAddress `
-     -ResourceGroupName $ResourceGroup `
-        -Location $Region `
-        -Name "$VMName-PIP" `
-        -AllocationMethod Static `
-        -IdleTimeoutInMinutes 4
 
 # Create NSG
 $NSGRuleRDP = New-AzNetworkSecurityRuleConfig `
@@ -57,21 +51,33 @@ $NSGRuleRDP = New-AzNetworkSecurityRuleConfig `
               -DestinationAddressPrefix * `
               -DestinationPortRange 3389 -Access Allow
 
-$NSG  = New-AzNetworkSecurityGroup `
-        -ResourceGroupName $resourceGroup `
-        -Location $location `
-        -Name myNetworkSecurityGroup `
-        -SecurityRules $nsgRuleRDP
+# Public IP
+$PIP = New-AzPublicIpAddress `
+       -ResourceGroupName $ResourceGroup `
+       -Location $Region `
+       -Name "$VMName-PIP" `
+       -AllocationMethod Static `
+       -IdleTimeoutInMinutes 4
 
-$NIC  = New-AzNetworkInterface `
-        -Name $VMName -ResourceGroupName $ResourceGroup `
-        -Location $Region `
-        -SubnetId $vnet.Subnets[0].Id `
-        -PublicIpAddressId $pip.Id `
-        -NetworkSecurityGroupId $nsg.Id
+# Create a NIC for the VM
+$NIC = New-AzNetworkInterface `
+       -Name $VMName -ResourceGroupName $ResourceGroup `
+       -Location $Region `
+       -SubnetId $SubNet `
+       -PublicIpAddressId $PIP `
+       -NetworkSecurityGroupId $NSG4rdp
 
 
-<# $subnetConfig = New-AzVirtualNetworkSubnetConfig -Name mySubnet -AddressPrefix 192.168.1.0/24
+# Create a virtual machine configuration using $imageVersion.Id to specify the image version.
+$vmConfig = New-AzVMConfig -VMName $vmName -VMSize Standard_D1_v2 | `
+Set-AzVMSourceImage -Id $galleryImage.Id | Add-AzVMNetworkInterface -Id $NIC.id
+
+# Create a virtual machine
+New-AzVM -ResourceGroupName $resourceGroup -Location $location -VM $vmConfig
+
+
+<# 
+$subnetConfig = New-AzVirtualNetworkSubnetConfig -Name mySubnet -AddressPrefix 192.168.1.0/24
 $vnet = New-AzVirtualNetwork -ResourceGroupName $resourceGroup -Location $location `
   -Name MYvNET -AddressPrefix 192.168.0.0/16 -Subnet $subnetConfig
 $pip = New-AzPublicIpAddress -ResourceGroupName $resourceGroup -Location $location `
@@ -83,13 +89,5 @@ $nsg = New-AzNetworkSecurityGroup -ResourceGroupName $resourceGroup -Location $l
   -Name myNetworkSecurityGroup -SecurityRules $nsgRuleRDP
 $nic = New-AzNetworkInterface -Name $vmName -ResourceGroupName $resourceGroup -Location $location `
   -SubnetId $vnet.Subnets[0].Id -PublicIpAddressId $pip.Id -NetworkSecurityGroupId $nsg.Id
- #>
-# Create a virtual machine configuration using $imageVersion.Id to specify the image version.
+#>
 
-
-$vmConfig = New-AzVMConfig -VMName $vmName -VMSize Standard_D1_v2 | `
-Set-AzVMSourceImage -Id $galleryImage.Id | `
-Add-AzVMNetworkInterface -Id $nic.Id
-
-# Create a virtual machine
-New-AzVM -ResourceGroupName $resourceGroup -Location $location -VM $vmConfig

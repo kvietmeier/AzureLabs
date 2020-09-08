@@ -57,6 +57,8 @@ $FSLUNC = "\\storageaccount.file.core.windows.net\share\"
     Add-MpPreference -ExclusionPath ”$PATH”
  #>
 Add-MpPreference -ExclusionPath $FSLUNC
+Add-MpPreference -ExclusionExtension ”.vhd”
+Add-MpPreference -ExclusionExtension ”.vhdx”
 
 # Registry Keys
 $FSLogixKey           = "HKLM:\Software\FSLogix"
