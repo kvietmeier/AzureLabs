@@ -10,7 +10,7 @@ Collection of scripts for working within Azure and with Windows Virtual Desktop.
 │   └───examples
 ```
 
-The "users" folder is a script I grabbed off GitHub to add users to AD.
+The "users" folder is a script I grabbed off GitHub to add users to AD.<br>
 The "examples" folder has code snippets and scripts I have downloaded - they are not mine. 
 
 
