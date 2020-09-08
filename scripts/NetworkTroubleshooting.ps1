@@ -3,7 +3,7 @@
   Script/Filename:  NetworkTroubleShooting.ps1
   Commands to validate/test network connectivity
   Created by:  Karl Vietmeier
-    Not really a script
+    Not really a script but a collection of PowerShell and Azure Tools/Commands
   
    Useful tool NTttcp (like iperf):
    https://gallery.technet.microsoft.com/NTttcp-Version-528-Now-f8b12769/file/159655/1/NTttcp-v5.33.zip
@@ -38,26 +38,43 @@ $AZFileShare = "userprofiles"
 $SMBSharePath = "\\kvstor1551.file.core.windows.net\userprofiles\"
 
 
-# Install a bunch of PS Modules (In FunctionLibrary.ps1)
+# Install required and useful PS Modules for administration (In FunctionLibrary.ps1)
 Install-PSModules
 
-# For AzureFiles AD Setup - download and follow install instructions:
-# AzFilesHybrid:   https://github.com/Azure-Samples/azure-files-samples/releases
-# Unzip to a folder and run the CopyToPSPath.ps1 script to put the module in the search path.  
-# After you unzip and run the copy script - cd out of the directory and just run:
+<# 
+  AzureFiles AD Module Setup - Download and follow install instructions:
+  AzFilesHybrid:   https://github.com/Azure-Samples/azure-files-samples/releases
+  Unzip to a folder and run the CopyToPSPath.ps1 script to put the module in the search path.  
+  
+  Script ../Setup PowerShell Modules.ps1 will install this non-interactively for you
+  
+  Or - After you unzip and run the copy script - cd out of the directory and just run:
+#>
 Import-Module AzFilesHybrid 
 
 # Grab and install TTttcp
 # <TBD>
 
-# Network Watcher
+<# 
+  Azure Native Tool - Like TCPdump for Azure SDN: 
+  Network Watcher
+  https://azure.microsoft.com/en-us/services/network-watcher/
 
+  * Remotely capture packet data for your virtual machines
+  * Monitor your virtual machine network security using flow logs and security group view
+  * Diagnose your VPN connectivity issues
+#>
 
 ### Basic Networking
-#   https://docs.microsoft.com/en-us/powershell/module/nettcpip/test-netconnection?view=win10-ps
-# - Note - The WVD Gateway blocks ICMP but you can still test name resolution
-#   even if the ping fails.
-#   https://docs.microsoft.com/en-us/azure/virtual-network/what-is-ip-address-168-63-129-16
+<# 
+  "Test-NetConnection"
+  https://docs.microsoft.com/en-us/powershell/module/nettcpip/test-netconnection?view=win10-ps
+    - Note - The WVD Gateway blocks ICMP but you can still test name resolution even if the ping fails.
+  
+  Common Question - 
+  https://docs.microsoft.com/en-us/azure/virtual-network/what-is-ip-address-168-63-129-16
+#>
+
 Test-NetConnection
 
 # Test resolver against known host that responds to ICMP 
@@ -99,14 +116,13 @@ Test-NetConnection -ComputerName ([System.Uri]::new($AZStorageAcct.Context.FileE
 Debug-AzStorageAccountAuth -StorageAccountName $AZStorageAcct -ResourceGroupName $AZResourceGroup -Verbose
 
 <# 
-   Host OS routes - "Get-NetRoute"
+   For "in host" routes, what the OS sees use: "Get-NetRoute"
    https://docs.microsoft.com/en-us/powershell/module/nettcpip/get-netroute?view=win10-ps
   
-   Need Az Module and be connected to your Subscription (see above)
-   Check the Azure route table - in some cases info in the host OS can be misleading/not useful
-   in an "all Azure" infrastructure.
+   To check the routing table from the Azure SDN perspective use: "Get-AzEffectiveRouteTable"
+   Requirement: Need Az Module and be connected to your Subscription (see above)
+   In some cases info in the host OS can be misleading/not useful especially in an "all Azure" infrastructure.
    https://docs.microsoft.com/en-us/powershell/module/az.network/get-azeffectiveroutetable?view=azps-4.6.0
-
 #>
 
 $NIC1 = "wvd-mgmtserver803"
@@ -120,12 +136,12 @@ $VM = Get-AzVM -Name $VMName1 -ResourceGroupName $RGroup1
 $VM.NetworkProfile
 
 <# 
-Syntax -
-Get-AzEffectiveRouteTable `
-  -NetworkInterfaceName "<Name of NIC resource>" `
-  -ResourceGroupName "<RG Name>" `
-  | Format-Table
- #>
+  Syntax -
+  Get-AzEffectiveRouteTable `
+    -NetworkInterfaceName "<Name of NIC resource>" `
+    -ResourceGroupName "<RG Name>" `
+    | Format-Table
+#>
 
  # Examples
 Get-AzEffectiveRouteTable `
@@ -142,16 +158,19 @@ Get-AzEffectiveRouteTable `
 
 
 ### Get effective NSG security rules
-<# 
+<#
+   While you are in the terminal, logged in to Azure, you can get more info without clicking through 
+   5 levels of Portal menues:
    https://docs.microsoft.com/en-us/powershell/module/az.network/get-azeffectivenetworksecuritygroup?view=azps-4.6.1 
+   
    Get-AzEffectiveNetworkSecurityGroup
      -NetworkInterfaceName <String>
-    [-ResourceGroupName <String>]
-    [-DefaultProfile <IAzureContextContainer>]
-    [<CommonParameters>]
+     [-ResourceGroupName <String>]
+     [-DefaultProfile <IAzureContextContainer>]
+     [<CommonParameters>]
    
    Get-AzEffectiveNetworkSecurityGroup -NetworkInterfaceName "MyNetworkInterface" -ResourceGroupName "myResourceGroup"
- #>
+#>
 
 Get-AzEffectiveNetworkSecurityGroup `
   -NetworkInterfaceName "$NIC3"  `
