@@ -7,9 +7,11 @@ Collection of scripts for working within Azure and with Windows Virtual Desktop.
 ```
 ├───scripts
 │   └───users
+│   └───examples
 ```
 
 The "users" folder is a script I grabbed off GitHub to add users to AD.
+The "examples" folder has code snippets and scripts I have downloaded - they are not mine. 
 
 
 ### Usage
@@ -32,6 +34,17 @@ $AIAuser = "user@contoso.com"
 $AIAPassword = "really should encrypt this"
 ```
 
+Some of these "scripts" aren't meant to be run as a single script but are collections of useful 
+commands and code snippets to be run interactively using the ISE or VSC.
+
+Especially - 
+```
+scripts/NetworkTroubleshooting.ps1
+```
+and 
+```
+scripts/Setup PowerShell Modules.ps1
+```
 
 ## Author
 
