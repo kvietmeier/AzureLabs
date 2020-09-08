@@ -52,11 +52,11 @@ Karl Vietmeier
 [@KarlVietmeier](https://twitter.com/karlvietmeier)
 
 ## Acknowledgments
-My colleagues on the Windows Virtual Desktop GBB Team -
-Adam Whitlach
-John Kelbly
-Marc Wolfson
-John Jenner
+My colleagues on the Windows Virtual Desktop GBB Team -<br>
+  Adam Whitlach<br>
+  John Kelbly<br>
+  Marc Wolfson<br>
+  John Jenner<br>
 
 
 ## References
