@@ -4,7 +4,9 @@
     Created By: Karl Vietmeier      
                                     
   Description                      
-    Install Teams for WVD - non-interactively 
+    Install Teams for WVD - non-interactively
+
+    Need to fix the paths - 
   #>                                            
 ###====================================================================================###
 
@@ -22,19 +24,21 @@ return
 # Are we connected to Azure with the corredt SubID?
 Check-Login
 
+$DownloadDir = "c:\bin"
+
 # Download Teams Installer (might fail on version)
 Invoke-WebRequest -URI https://statics.teams.cdn.office.net/production-windows-x64/1.3.00.21759/Teams_windows_x64.msi -OutFile c:\bin\installteams.msi
 
 # Change to download dir
-Set-Location c:\bin
+Set-Location $DownloadDir
 
 # Add - key as a workaround
 #'HKLM:\Software\Citrix\PortICA' or 'HKLM\SOFTWARE\VMware, Inc\VMware VDM\Agent'
 
-# Download Web Socket
+# Download Web Socket (For media redirection)
 Invoke-WebRequest -URI https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RE4AQBt -OutFile c:\bin\installwebrtc.msi
 
-# Install
+# Install WebSocket
 .\installwebrtc.msi /quiet
 
 # Enable Teams for VDI so you can install in Machine mode and redirect video

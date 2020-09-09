@@ -55,3 +55,27 @@ Get-AzWvdHostPool -ResourceGroupName $AZResourceGroup -Name TestPool01 | format-
 
 Remove-AzWvdApplicationGroup -ResourceGroupName $AZResourceGroup -Name $AppGroup
 Remove-AzWvdHostPool -ResourceGroupName TempRG-01 -Name Foobar02
+
+
+### Remove OneDrive Components
+Taskkill.exe /F /IM "OneDrive.exe"
+Taskkill.exe /F /IM "Explorer.exe"`
+
+if (Test-Path "C:\\Windows\\System32\\OneDriveSetup.exe") {
+    Start-Process "C:\\Windows\\System32\\OneDriveSetup.exe"`
+     -ArgumentList "/uninstall"`
+     -Wait
+}
+if (Test-Path "C:\\Windows\\SysWOW64\\OneDriveSetup.exe") {
+    Start-Process "C:\\Windows\\SysWOW64\\OneDriveSetup.exe"`
+      -ArgumentList "/uninstall"`
+      -Wait 
+}
+
+Remove-Item -Path "C:\\Windows\\ServiceProfiles\\LocalService\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\OneDrive.lnk" -Force
+
+# Remove the automatic start item for OneDrive from the default user profile registry hive
+Remove-Item -Path "C:\\Windows\\ServiceProfiles\\NetworkService\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\OneDrive.lnk" -Force 
+Start-Process C:\\Windows\\System32\\Reg.exe -ArgumentList "Load HKLM\\Temp C:\\Users\\Default\\NTUSER.DAT" -Wait
+Start-Process C:\\Windows\\System32\\Reg.exe -ArgumentList "Delete HKLM\\Temp\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run /v OneDriveSetup /f" -Wait
+Start-Process C:\\Windows\\System32\\Reg.exe -ArgumentList "Unload HKLM\\Temp" -Wait Start-Process -FilePath C:\\Windows\\Explorer.exe -Wait

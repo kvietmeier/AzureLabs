@@ -1,8 +1,11 @@
 ###====================================================================================###
 <# 
 
-                 Modify Registry Settings to Optmize Session Hosts  
-                   For Session Timeouts and other key settings      
+  Modify Registry Settings and disable services to Optmize Session Hosts  
+  - Session Timeouts
+  - Time Zone mapping to client
+  - 5K resolution
+  - etc.
 
 #>                                                     
 ###====================================================================================###
@@ -10,7 +13,7 @@ return
 
 function SessionTimeouts ()
 {
-   # Configuring session timeout policies...
+   # Configuring RDP session timeout policies...
     
     # Set registry key and path for commands
     $RegKey = "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
@@ -102,7 +105,6 @@ New-ItemProperty -Path "." -Name "MaxYResolution" -PropertyType DWORD -Value "28
 # Install Chrome - non-interactive
 $LocalTempDir = $env:TEMP; $ChromeInstaller = "ChromeInstaller.exe"; (new-object System.Net.WebClient).DownloadFile('http://dl.google.com/chrome/install/375.126/chrome_installer.exe', "$LocalTempDir\$ChromeInstaller"); & "$LocalTempDir\$ChromeInstaller" /silent /install; $Process2Monitor = "ChromeInstaller"; Do { $ProcessesFound = Get-Process | ?{$Process2Monitor -contains $_.Name} | Select-Object -ExpandProperty Name; If ($ProcessesFound) { "Still running: $($ProcessesFound -join ', ')" | Write-Host; Start-Sleep -Seconds 2 } else { rm "$LocalTempDir\$ChromeInstaller" -ErrorAction SilentlyContinue -Verbose } } Until (!$ProcessesFound)
 
-
 ###---- Cosmetic Settings Only but common tweaks (these can be reset by sysprep)
 # Desktop Icons and Small Icons; Enable Search/cortana
 
@@ -143,13 +145,13 @@ New-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\Search" `
     1 = Show search icon
     2 = Show search box
  #>
-
-
+ 
 # Need to restart explorer - run seperatly
 taskkill /f /im explorer.exe
 start explorer.exe
 
 ###---- End: Cosmetic Settings Only but common tweaks
+
 
 ### rem Set the Office Update UI behavior.
 reg add HKLM\SOFTWARE\Policies\Microsoft\office\16.0\common\officeupdate /v hideupdatenotifications /t REG_DWORD /d 1 /f
@@ -166,7 +168,7 @@ powercfg /setactive SCHEME_MIN
 # Set startup type of the Windows Time (w32time) service to Automatic
 Set-Service -Name w32time -StartupType Automatic
 
-# Set services to their defaluts - just to be sure
+# Set services to their defaults - just to be sure
 Get-Service -Name BFE, Dhcp, Dnscache, IKEEXT, iphlpsvc, nsi, mpssvc, RemoteRegistry |
   Where-Object StartType -ne Automatic |
     Set-Service -StartupType Automatic
@@ -175,6 +177,25 @@ Get-Service -Name Netlogon, Netman, TermService |
   Where-Object StartType -ne Manual |
     Set-Service -StartupType Manual
 
+
 # Windows Defender Exclusion for profile disks
 Add-MpPreference -ExclusionExtension ”.vhd”
 Add-MpPreference -ExclusionExtension ”.vhdx”
+
+
+### Disable IEESC
+function Disable-IEESC
+{
+    $AdminKey = "HKLM:\\SOFTWARE\\Microsoft\\Active Setup\\Installed Components\\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}"
+
+    Set-ItemProperty -Path $AdminKey -Name "IsInstalled" -Value 0
+
+    Stop-Process -Name Explorer
+
+    if ((Get-ItemProperty -Path $AdminKey -Name 'IsInstalled').isinstalled -eq 0) 
+    {
+        Write-Host “IE Enhanced Security Configuration (ESC) has been disabled.” -ForegroundColor Green
+    } else { Write-Host "Failed to disable, use Server Manager"}
+}
+
+Disable-IEESC

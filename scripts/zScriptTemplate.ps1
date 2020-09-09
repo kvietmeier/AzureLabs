@@ -1,10 +1,12 @@
 ###====================================================================================###
-###  <scriptname>.ps1                                                                  ###
-###    Created By: Karl Vietmeier                                                      ###
-###                                                                                    ###
-###  Description                                                                       ###
-###     Use this for new scripts                                                       ###
-###                                                                                    ###
+<#   
+  FileName: <scriptname>.ps1
+  Created By: Karl Vietmeier
+    
+  Description:
+   Use this for new scripts
+
+#>
 ###====================================================================================###
 
 ### Here for safety - comment/uncomment as desired

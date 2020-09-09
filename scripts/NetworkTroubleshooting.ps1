@@ -10,6 +10,8 @@
    https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-bandwidth-testing
 
 #>
+
+# 0497048306
 ###========================================================================###
 
 ### For safety - comment/uncomment as desired
@@ -55,17 +57,30 @@ Import-Module AzFilesHybrid
 # Grab and install TTttcp
 # <TBD>
 
+
+###--- Network Watcher
 <# 
   Azure Native Tool - Like TCPdump for Azure SDN: 
-  Network Watcher
   https://azure.microsoft.com/en-us/services/network-watcher/
 
   * Remotely capture packet data for your virtual machines
   * Monitor your virtual machine network security using flow logs and security group view
   * Diagnose your VPN connectivity issues
+
+  Install extension in VM - 
+  Set-AzVMExtension `
+    -ResourceGroupName "myResourceGroup1" `
+    -Location "WestUS" `
+    -VMName "myVM1" `
+    -Name "networkWatcherAgent" `
+    -Publisher "Microsoft.Azure.NetworkWatcher" `
+    -Type "NetworkWatcherAgentWindows" `
+    -TypeHandlerVersion "1.4"
+
 #>
 
-### Basic Networking
+
+###--- Basic Networking
 <# 
   "Test-NetConnection"
   https://docs.microsoft.com/en-us/powershell/module/nettcpip/test-netconnection?view=win10-ps

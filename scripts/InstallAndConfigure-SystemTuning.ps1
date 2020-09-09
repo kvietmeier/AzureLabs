@@ -1,10 +1,11 @@
 ###====================================================================================###
 <# 
 
-  <scriptname>.ps1 
-    Created By: Karl Vietmeier  
+  Name: InstallAndConfigure-SystemTuning.ps1 
+  Created By: Karl Vietmeier  
                                 
-  Description                   
+  Description:                   
+  Tuning parameters for network/storage performance
   https://docs.microsoft.com/en-us/windows-server/remote/remote-desktop-services/rds_vdi-recommendations-1909
 
 #>
@@ -73,25 +74,3 @@ New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\LanmanWorkstatio
     -Force    
 
 ###---- End Tuning
-
-
-
-### Remove OneDrive Components
-Taskkill.exe /F /IM "OneDrive.exe"
-Taskkill.exe /F /IM "Explorer.exe"`
-    if (Test-Path "C:\\Windows\\System32\\OneDriveSetup.exe")`
-     { Start-Process "C:\\Windows\\System32\\OneDriveSetup.exe"`
-         -ArgumentList "/uninstall"`
-         -Wait }
-    if (Test-Path "C:\\Windows\\SysWOW64\\OneDriveSetup.exe")`
-     { Start-Process "C:\\Windows\\SysWOW64\\OneDriveSetup.exe"`
-         -ArgumentList "/uninstall"`
-         -Wait }
-Remove-Item -Path
-"C:\\Windows\\ServiceProfiles\\LocalService\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\OneDrive.lnk" -Force
-
-# Remove the automatic start item for OneDrive from the default user profile registry hive
-Remove-Item -Path "C:\\Windows\\ServiceProfiles\\NetworkService\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\OneDrive.lnk" -Force 
-Start-Process C:\\Windows\\System32\\Reg.exe -ArgumentList "Load HKLM\\Temp C:\\Users\\Default\\NTUSER.DAT" -Wait
-Start-Process C:\\Windows\\System32\\Reg.exe -ArgumentList "Delete HKLM\\Temp\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run /v OneDriveSetup /f" -Wait
-Start-Process C:\\Windows\\System32\\Reg.exe -ArgumentList "Unload HKLM\\Temp" -Wait Start-Process -FilePath C:\\Windows\\Explorer.exe -Wait
