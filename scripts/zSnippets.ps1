@@ -12,6 +12,7 @@
 return
 
 ### Get my functions and credentials
+cd ..\AzureLabs\scripts\
 # Credentials  (stored outside the repo)
 . '..\..\Certs\resources.ps1'
 
@@ -22,7 +23,10 @@ return
 # Are we connected to Azure with the corredt SubID?
 Check-Login
 
-# RDP settings
+
+
+
+###----- RDP settings
 # https://docs.microsoft.com/en-us/windows-server/remote/remote-desktop-services/clients/rdp-files
 # Use Update-AzWvdHostPool
 Update-AzWvdHostPool -ResourceGroupName ResourceGroupName `
@@ -56,6 +60,8 @@ Get-AzWvdHostPool -ResourceGroupName $AZResourceGroup -Name TestPool01 | format-
 Remove-AzWvdApplicationGroup -ResourceGroupName $AZResourceGroup -Name $AppGroup
 Remove-AzWvdHostPool -ResourceGroupName TempRG-01 -Name Foobar02
 
+###------------------
+
 
 ### Remove OneDrive Components
 Taskkill.exe /F /IM "OneDrive.exe"
@@ -79,3 +85,97 @@ Remove-Item -Path "C:\\Windows\\ServiceProfiles\\NetworkService\\AppData\\Roamin
 Start-Process C:\\Windows\\System32\\Reg.exe -ArgumentList "Load HKLM\\Temp C:\\Users\\Default\\NTUSER.DAT" -Wait
 Start-Process C:\\Windows\\System32\\Reg.exe -ArgumentList "Delete HKLM\\Temp\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run /v OneDriveSetup /f" -Wait
 Start-Process C:\\Windows\\System32\\Reg.exe -ArgumentList "Unload HKLM\\Temp" -Wait Start-Process -FilePath C:\\Windows\\Explorer.exe -Wait
+
+###----------------
+
+
+###---- Snapshots
+# https://docs.microsoft.com/en-us/azure/virtual-machines/windows/snapshot-copy-managed-disk
+
+# Vars
+$ResourceGroupName = 'WVDLandScape01' 
+$Region = 'westus2' 
+$vmName = 'testvm-1'
+$SnapshotName = 'TestSnapshot01'
+
+# Get the VM info
+$vm = Get-AzVM `
+    -ResourceGroupName $ResourceGroupName `
+    -Name $vmName
+
+# Create the SS Config
+$snapshot =  New-AzSnapshotConfig `
+    -SourceUri $vm.StorageProfile.OsDisk.ManagedDisk.Id `
+    -Location $Region `
+    -CreateOption copy
+
+# Take the SS
+New-AzSnapshot `
+    -Snapshot $snapshot `
+    -SnapshotName $SnapshotName `
+    -ResourceGroupName $ResourceGroupName
+
+
+
+### Create incremental snapshot
+$diskName = "yourDiskNameHere>"
+$resourceGroupName = "yourResourceGroupNameHere"
+$snapshotName = "yourDesiredSnapshotNameHere"
+
+# Get the disk that you need to backup by creating an incremental snapshot
+$yourDisk = Get-AzDisk -DiskName $diskName -ResourceGroupName $resourceGroupName
+
+# Create an incremental snapshot by setting the SourceUri property with the value of the Id property of the disk
+$snapshotConfig=New-AzSnapshotConfig -SourceUri $yourDisk.Id -Location $yourDisk.Location -CreateOption Copy -Incremental 
+New-AzSnapshot -ResourceGroupName $resourceGroupName -SnapshotName $snapshotName -Snapshot $snapshotConfig
+
+
+### List snapshots
+$snapshots = Get-AzSnapshot -ResourceGroupName $ResourceGroupName
+$snapshots = Get-AzSnapshot -ResourceGroupName WVDLandscape01
+
+$incrementalSnapshots = New-Object System.Collections.ArrayList
+
+foreach ($snapshot in $snapshots)
+{
+    
+    if($snapshot.Incremental -and $snapshot.CreationData.SourceResourceId -eq $yourDisk.Id -and $snapshot.CreationData.SourceUniqueId -eq $yourDisk.UniqueId){
+
+        $incrementalSnapshots.Add($snapshot)
+    }
+}
+
+$incrementalSnapshots
+
+
+###----  Find unattached disks
+# Set deleteUnattachedDisks=1 if you want to delete unattached Managed Disks
+# Set deleteUnattachedDisks=0 if you want to see the Id of the unattached Managed Disks
+
+$deleteUnattachedDisks=0
+$managedDisks = Get-AzDisk
+
+foreach ($md in $managedDisks) {
+    # ManagedBy property stores the Id of the VM to which Managed Disk is attached to
+    # If ManagedBy property is $null then it means that the Managed Disk is not attached to a VM
+    if($md.ManagedBy -eq $null){
+        if($deleteUnattachedDisks -eq 1){
+            Write-Host "Deleting unattached Managed Disk with Id: $($md.Id)"
+            $md | Remove-AzDisk -Force
+            Write-Host "Deleted unattached Managed Disk with Id: $($md.Id) "
+        }else{
+            #$md.Id
+            $1, $2, $sub, $4, $RG, $6, $7, $8, $DiskID   = $md.Id -split "/", 9
+            $properties = @{$DiskID, $RG, $sub}
+            New-Object -TypeName [PSCustomObject]@{
+                DiskID = $DiskID
+                ResourceGroup = $RG
+                Subscription = $sub
+            }
+            
+            Write-Host ($DiskID, $RG, $sub) -Separator "             "
+        }
+    }
+ }
+
+
