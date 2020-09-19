@@ -164,18 +164,17 @@ foreach ($md in $managedDisks) {
             $md | Remove-AzDisk -Force
             Write-Host "Deleted unattached Managed Disk with Id: $($md.Id) "
         }else{
-            #$md.Id
+            $md.Id
             $1, $2, $sub, $4, $RG, $6, $7, $8, $DiskID   = $md.Id -split "/", 9
-            $properties = @{$DiskID, $RG, $sub}
-            New-Object -TypeName [PSCustomObject]@{
-                DiskID = $DiskID
+            <# 
+            $properties = @{
+                DiskName = $DiskID
                 ResourceGroup = $RG
                 Subscription = $sub
             }
-            
-            Write-Host ($DiskID, $RG, $sub) -Separator "             "
+            New-Object -TypeName PSCustomObject -Property $properties | Format-Table
+ #>
+            #Write-Host ($DiskID, $RG, $sub) -Separator "             "
         }
     }
  }
-
-

@@ -57,6 +57,14 @@ Import-Module AzFilesHybrid
 # Grab and install TTttcp
 # <TBD>
 
+### Virtual Networks
+# https://docs.microsoft.com/en-us/azure/virtual-machines/windows/ps-common-network-ref
+
+# Dump the AddressSpace/subnets for vNet
+$vnet = Get-AzVirtualNetwork -Name TestvNet01 -ResourceGroupName TempRG-01
+$vnet.AddressSpace
+$vnet.Subnets.AddressPrefix 
+
 
 ###--- Network Watcher
 <# 
