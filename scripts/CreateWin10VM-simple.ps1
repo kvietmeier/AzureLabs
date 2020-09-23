@@ -33,8 +33,12 @@ $ResourceGroup = "TempRG-01"
 $Region = "westus2"
 $VMSize = "Standard_DS3"
 
+# Set-AzureRmVMBgInfoExtension -ResourceGroupName "ContosoRG" -VMName "ContosoVM" -Name "ExtensionName" -TypeHandlerVersion "2.1" -Location "West Europe"
 
-$VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword)
+# VM Information
+$VMLocalAdminUser = "azureadmin"
+$VMLocalAdminSecurePassword = ConvertTo-SecureString "Chalc0pyrite" -AsPlainText -Force
+$VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
 
 
 # Create VM and PubIP names with random 4 digit number.

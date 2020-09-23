@@ -26,6 +26,7 @@ return
 # Are we connected to Azure with the corredt SubID?
 Check-Login
 
+### End my template
 
 ### Managed Disks - 
 # Set deleteUnattachedDisks=1 if you want to delete unattached Managed Disks
