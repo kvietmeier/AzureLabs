@@ -28,6 +28,10 @@ Check-Login
 
 ### End my template
 
+### NOTE:
+### You will need to be logged into your Azure Subscription to run these commands.
+
+
 ### Managed Disks - 
 # Set deleteUnattachedDisks=1 if you want to delete unattached Managed Disks
 # Set deleteUnattachedDisks=0 if you want to see the Id of the unattached Managed Disks
