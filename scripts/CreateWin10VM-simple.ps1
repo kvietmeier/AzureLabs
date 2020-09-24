@@ -30,7 +30,7 @@ Check-Login
 
 ###---- End - Get my functions and credentials
 
-###--- Create some variables for the new VM.
+###---- Create some variables for the new VM.
 $ResourceGroup = "TempRG-$(Get-Random -Minimum 1000 -Maximum 2000)"
 $Region = "westus2"
 $VMSize = "Standard_DS3"
