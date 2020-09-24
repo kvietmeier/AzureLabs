@@ -1,10 +1,14 @@
 ###====================================================================================###
 <#   
-  FileName: CreateWin10VM.ps1
+  FileName: CreateWin10VM-2.ps1
   Created By: Karl Vietmeier
-    
+  
+  Status: Incomplete, untested
+
   Description:
     Create VM - Trying to get a good - quick standup of VM script.
+    This is a long version where all the VM elements are created manually
+    rather than using defaults.
 
 #>
 ###====================================================================================###
@@ -12,7 +16,7 @@
 ### Here for safety - comment/uncomment as desired
 return
 
-### Get my functions and credentials
+###---- Get my functions and credentials ----###
 # Credentials  (stored outside the repo)
 . '..\..\Certs\resources.ps1'
 
@@ -22,6 +26,7 @@ return
 # Imported from "FunctionLibrary.ps1"
 # Are we connected to Azure with the corredt SubID?
 Check-Login
+###---- End my functions and credentials ----###
 
 
 # Define variables for networking part

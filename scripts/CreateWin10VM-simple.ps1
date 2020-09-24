@@ -17,7 +17,7 @@
 ### Here for safety - comment/uncomment as desired
 return
 
-###---- Get my functions and credentials
+###---- Get my functions and credentials ----###
 # Credentials  (stored outside the repo)
 . '..\..\Certs\resources.ps1'
 
@@ -27,8 +27,8 @@ return
 # Imported from "FunctionLibrary.ps1"
 # Are we connected to Azure with the corredt SubID?
 Check-Login
+###---- End my functions and credentials ----###
 
-###---- End - Get my functions and credentials
 
 ###---- Create some variables for the new VM.
 $ResourceGroup = "TempRG-$(Get-Random -Minimum 1000 -Maximum 2000)"
