@@ -31,10 +31,6 @@ Check-Login
 
 
 ###---- Create some variables for the new VM.
-$ResourceGroup = "TempRG-$(Get-Random -Minimum 1000 -Maximum 2000)"
-$Region = "westus2"
-$VMSize = "Standard_DS3"
-
 # Set-AzureRmVMBgInfoExtension -ResourceGroupName "ContosoRG" -VMName "ContosoVM" -Name "ExtensionName" -TypeHandlerVersion "2.1" -Location "West Europe"
 
 <# 
@@ -45,8 +41,11 @@ $VMLocalAdminSecurePassword = ConvertTo-SecureString "############" -AsPlainText
 $VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
 #>
 
-# Create VM and PubIP names with random 4 digit number.
+# Region and VM Image params
+$ResourceGroup = "TempRG-$(Get-Random -Minimum 1000 -Maximum 2000)"
 $VMName= "Win10VM-$(Get-Random -Minimum 1000 -Maximum 2000)"
+$Region = "westus2"
+$VMSize = "Standard_DS3"
 $Image = "Windows-10"
 
 # Create/Use network resources.
