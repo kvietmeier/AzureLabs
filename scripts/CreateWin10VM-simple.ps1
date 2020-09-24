@@ -52,10 +52,9 @@ $SubNet = "subnet02"
 $vNet = "VnetCore"
 $PubIP = "PubIP-$(Get-Random -Minimum 1000 -Maximum 2000)"
 
-
 ###--- End Vars
 
-# Define VM Parameters
+# Define the VM Parameters in a hash to pass to "New-AzVM"
 $vmParams = @{
     ResourceGroupName   = $ResourceGroup
     Location            = $Region
@@ -69,13 +68,13 @@ $vmParams = @{
     OpenPorts           = "3389"
 }
 
-# Create VM
+# Create the VM using info in the hash above
 $newVM = New-AzVM @vmParams
-
-
 $newVM
 
-<# 
+<#
+This is placeholder code I'm using to sort out getting the right info for "-Image" 
+in the hash above.
 ###---  Finding Images ---###
 # https://docs.microsoft.com/en-us/azure/virtual-machines/windows/cli-ps-findimage
 
