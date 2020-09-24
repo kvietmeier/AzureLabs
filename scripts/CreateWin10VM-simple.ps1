@@ -5,11 +5,14 @@
                                                                     
   Description                                                      
     Create a Win10 VM for testing                                 
-    Sometimes you just need a VM for testing with some standard defaults     
+    Sometimes you just need a VM for testing with some standard defaults and using 
+    existing infrastructure   
+    
+  Status:  Working, tested
                                                                 
-    Simple version
-    https://docs.microsoft.com/en-us/powershell/module/az.compute/new-azvm?view=azps-4.6.1
-    https://docs.microsoft.com/en-us/azure/virtual-machines/windows/cli-ps-findimage
+  Resources:
+   https://docs.microsoft.com/en-us/powershell/module/az.compute/new-azvm?view=azps-4.6.1
+   https://docs.microsoft.com/en-us/azure/virtual-machines/windows/cli-ps-findimage
 
 #>
 ###====================================================================================###
@@ -29,10 +32,15 @@ return
 Check-Login
 ###---- End my functions and credentials ----###
 
+<# BGinfo - not implemented place holder
+Set-AzureRmVMBgInfoExtension -ResourceGroupName "ContosoRG" `
+  -VMName "ContosoVM" `
+  -Name "ExtensionName" `
+  -TypeHandlerVersion "2.1" `
+  -Location "West Europe"
+#>
 
-###---- Create some variables for the new VM.
-# Set-AzureRmVMBgInfoExtension -ResourceGroupName "ContosoRG" -VMName "ContosoVM" -Name "ExtensionName" -TypeHandlerVersion "2.1" -Location "West Europe"
-
+###---- Define parameters for the VM.
 <# 
 # VM Information - sourced from resources.ps1 - uncomment here to use locally
 # in the script
@@ -41,21 +49,24 @@ $VMLocalAdminSecurePassword = ConvertTo-SecureString "############" -AsPlainText
 $VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
 #>
 
-# Region and VM Image params
-$ResourceGroup = "TempRG-$(Get-Random -Minimum 1000 -Maximum 2000)"
-$VMName= "Win10VM-$(Get-Random -Minimum 1000 -Maximum 2000)"
-$Region = "westus2"
-$VMSize = "Standard_DS3"
-$Image = "Windows-10"
+# Region and VM Image parameters
+$ResourceGroup  = "TempRG-$(Get-Random -Minimum 1000 -Maximum 2000)"
+$VMName         = "Win10VM-$(Get-Random -Minimum 1000 -Maximum 2000)"
+$Region         = "westus2"
+$VMSize         = "Standard_D2_v3"
+$Image          = "Win2019Datacenter"
 
-# Create/Use network resources.
+# Create/Use network resources. 
+# For this use case I want to spin up a quick test VM leveraging existing 
+# vNets and Subnets, but go ahead and create a Public IP.
 $SubNet = "subnet02"
-$vNet = "VnetCore"
-$PubIP = "PubIP-$(Get-Random -Minimum 1000 -Maximum 2000)"
+$vNet   = "VnetCore"
+$PubIP  = "PubIP-$(Get-Random -Minimum 1000 -Maximum 2000)"
+$NSG    = "AllowRemoteByIP"
 
-###--- End Vars
-
-# Define the VM Parameters in a hash to pass to "New-AzVM"
+# Put the VM Parameters in a hash table to pass to "New-AzVM"
+# I use a defined NSG that opens port 3389 to only one IP, swap the
+# comments if you want to let the ARM process create one for you.
 $vmParams = @{
     ResourceGroupName   = $ResourceGroup
     Location            = $Region
@@ -66,34 +77,10 @@ $vmParams = @{
     VirtualNetworkName  = $vNet
     SubnetName          = $SubNet
     PublicIpAddressName = $PubIP
-    OpenPorts           = "3389"
+    SecurityGroupName   = $NSG
+    #OpenPorts           = "3389"
 }
 
 # Create the VM using info in the hash above
 $newVM = New-AzVM @vmParams
 $newVM
-
-<#
-This is placeholder code I'm using to sort out getting the right info for "-Image" 
-in the hash above.
-###---  Finding Images ---###
-# https://docs.microsoft.com/en-us/azure/virtual-machines/windows/cli-ps-findimage
-
-* List the publishers:
-Get-AzVMImagePublisher -Location $Region | Select PublisherName
-
-* Fill in your chosen publisher name and list the offers:
-$pubName="MicrosoftWindowsDesktop"
-$pubName="MicrosoftWindowsDesktop"
-Get-AzVMImageOffer -Location $Region -PublisherName $pubName | Select Offer
-
-* Fill in your chosen offer name and list the SKUs:
-$offerName="Windows-10"
-$offerName="windows-10-2004-vhd-server-prod-stage"
-Get-AzVMImageSku -Location $Region -PublisherName $pubName -Offer $offerName | Select Skus
-
-* Fill in your chosen SKU name and get the image version:
-$skuName="rs5-pro"
-Get-AzVMImage -Location $Region -PublisherName $pubName -Offer $offerName -Sku $skuName | Select Version
-
-#>
