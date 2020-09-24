@@ -66,7 +66,7 @@ Invoke-Expression -Command $AZFScript
 Import-Module AzFilesHybrid 
 
 # Cleanup
-Remove-Item $AZFOutFile
+Remove-Item $AZFZip
 Set-Location $Downloads
 Remove-Item -Recurse $AZFExtractDir
 

@@ -3,7 +3,7 @@
   Name: CleanupDisks.ps1                                                                 
   Created By: Karl Vietmeier                                                     
 
-  Status:  Untested
+  Status:  Working
 
   Description:
     Find and delete disks - copied from:

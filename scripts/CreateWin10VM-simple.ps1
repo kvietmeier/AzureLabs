@@ -29,7 +29,7 @@ return
 Check-Login
 
 ###--- Create some variables for the new VM.
-$ResourceGroup = "TempRG-01"
+$ResourceGroup = "TempRG-$(Get-Random -Minimum 1000 -Maximum 2000)"
 $Region = "westus2"
 $VMSize = "Standard_DS3"
 
@@ -55,15 +55,15 @@ $PubIP = "PubIP-$(Get-Random -Minimum 1000 -Maximum 2000)"
 
 # Define VM Parameters
 $vmParams = @{
-    ResourceGroupName   = "$ResourceGroup"
-    Location            = "$Region"
-    Credential          = "$VMCred"
-    Name                = "$VMName"
-    ImageName           = "$Image"
-    Size                = "$VMSize"
-    VirtualNetworkName  = "$vNet"
-    SubnetName          = "$SubNet"
-    PublicIpAddressName = "$PubIP"
+    ResourceGroupName   = $ResourceGroup
+    Location            = $Region
+    Credential          = $VMCred
+    Name                = $VMName
+    ImageName           = $Image
+    Size                = $VMSize
+    VirtualNetworkName  = $vNet
+    SubnetName          = $SubNet
+    PublicIpAddressName = $PubIP
     OpenPorts           = "3389"
 }
 
@@ -72,3 +72,26 @@ $newVM = New-AzVM @vmParams
 
 
 $newVM
+
+<# 
+###---  Finding Images ---###
+# https://docs.microsoft.com/en-us/azure/virtual-machines/windows/cli-ps-findimage
+
+* List the publishers:
+Get-AzVMImagePublisher -Location $Region | Select PublisherName
+
+* Fill in your chosen publisher name and list the offers:
+$pubName="MicrosoftWindowsDesktop"
+$pubName="MicrosoftWindowsDesktop"
+Get-AzVMImageOffer -Location $Region -PublisherName $pubName | Select Offer
+
+* Fill in your chosen offer name and list the SKUs:
+$offerName="Windows-10"
+$offerName="windows-10-2004-vhd-server-prod-stage"
+Get-AzVMImageSku -Location $Region -PublisherName $pubName -Offer $offerName | Select Skus
+
+* Fill in your chosen SKU name and get the image version:
+$skuName="rs5-pro"
+Get-AzVMImage -Location $Region -PublisherName $pubName -Offer $offerName -Sku $skuName | Select Version
+
+#>
