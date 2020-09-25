@@ -32,15 +32,7 @@ return
 Check-Login
 ###---- End my functions and credentials ----###
 
-<# BGinfo - not implemented place holder
-Set-AzureRmVMBgInfoExtension -ResourceGroupName "ContosoRG" `
-  -VMName "ContosoVM" `
-  -Name "ExtensionName" `
-  -TypeHandlerVersion "2.1" `
-  -Location "West Europe"
-#>
-
-###---- Define parameters for the VM.
+###----   Define parameters for the VM   ----###
 <# 
 # VM Information - sourced from resources.ps1 - uncomment here to use locally
 # in the script
@@ -49,9 +41,12 @@ $VMLocalAdminSecurePassword = ConvertTo-SecureString "############" -AsPlainText
 $VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
 #>
 
+# Create a 4 digit random ID for naming
+$RandomID  = $(Get-Random -Minimum 1000 -Maximum 2000)
+
 # Region and VM Image parameters
-$ResourceGroup  = "TempRG-$(Get-Random -Minimum 1000 -Maximum 2000)"
-$VMName         = "Win10VM-$(Get-Random -Minimum 1000 -Maximum 2000)"
+$ResourceGroup  = "TempRG-$RandomID"
+$VMName         = "Win10VM-$RandomID"
 $Region         = "westus2"
 $VMSize         = "Standard_D2_v3"
 $Image          = "Win2019Datacenter"
@@ -61,7 +56,7 @@ $Image          = "Win2019Datacenter"
 # vNets and Subnets, but go ahead and create a Public IP.
 $SubNet = "subnet02"
 $vNet   = "VnetCore"
-$PubIP  = "PubIP-$(Get-Random -Minimum 1000 -Maximum 2000)"
+$PubIP  = "PubIP-$RandomID"
 $NSG    = "AllowRemoteByIP"
 
 # Put the VM Parameters in a hash table to pass to "New-AzVM"
@@ -83,4 +78,14 @@ $vmParams = @{
 
 # Create the VM using info in the hash above
 $newVM = New-AzVM @vmParams
+
+# Enable BGInfo
+Set-AzVMBgInfoExtension `
+  -ResourceGroupName $ResourceGroup `
+  -VMName $VMName `
+  -Name "ExtensionName" `
+  -TypeHandlerVersion "2.1" `
+  -Location $Region
+
+
 $newVM

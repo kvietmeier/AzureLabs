@@ -201,6 +201,13 @@ Get-AzEffectiveNetworkSecurityGroup `
 
 
 
+  ###--- What WVD Gateway will I hit from my current client?
+# Desktop Client
+Invoke-RestMethod -Uri "https://afd-rdgateway-r1.wvd.microsoft.com/api/health" | Select-Object -ExpandProperty RegionUrl 
+
+# Web Client
+Invoke-RestMethod -Uri "https://rdweb.wvd.microsoft.com/api/health" | Select-Object -ExpandProperty RegionUrl 
+
 
 
 
