@@ -18,20 +18,22 @@
 return
 ###
 
-### Get my functions and credentials
+###---- Get my functions and credentials ----###
 # Credentials  (stored outside the repo)
 . '..\..\Certs\resources.ps1'
 
 # Functions (In this repo)
 . '.\FunctionLibrary.ps1'
 
-# Imported from "resources.ps1" - uncomment and set yourself
-#$SubID = "SubID of Subscription"
-#$SubName = "Subscription Name"
-
 # Imported from "FunctionLibrary.ps1"
 # Are we connected to Azure with the corredt SubID?
 Check-Login
+
+###---- End my functions and credentials ----###
+
+# Imported from "resources.ps1" - uncomment and set yourself
+#$SubID = "SubID of Subscription"
+#$SubName = "Subscription Name"
 
 # Will Need for various tests - 
 $AZResourceGroup  = "WVDLandscape01"

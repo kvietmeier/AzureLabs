@@ -12,6 +12,7 @@
                                                                 
   Resources:
    https://docs.microsoft.com/en-us/powershell/module/az.compute/new-azvm?view=azps-4.6.1
+   https://docs.microsoft.com/en-us/powershell/module/az.compute/new-azvmconfig?view=azps-4.7.0
    https://docs.microsoft.com/en-us/azure/virtual-machines/windows/cli-ps-findimage
 
 #>
@@ -50,6 +51,7 @@ $VMName         = "Win10VM-$RandomID"
 $Region         = "westus2"
 $VMSize         = "Standard_D2_v3"
 $Image          = "Win2019Datacenter"
+#$Image          = "Win10"
 
 # Create/Use network resources. 
 # For this use case I want to spin up a quick test VM leveraging existing 
