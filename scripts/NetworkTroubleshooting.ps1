@@ -33,12 +33,13 @@ return
 # Are we connected to Azure with the corredt SubID?
 Check-Login
 
-# Will Need for variousd tests - 
-$AZResourceGroup = "WVDLandscape01"
-$AZStorageAcct = "kvstor1551"
-$AZFileShare = "userprofiles"
-$SMBSharePath = "\\kvstor1551.file.core.windows.net\userprofiles\"
-
+# Will Need for various tests - 
+$AZResourceGroup  = "WVDLandscape01"
+$AZStorageAcct    = "kvstor1551"
+$AZFileShare      = "userprofiles"
+$SMBSharePath     = "\\kvstor1551.file.core.windows.net\userprofiles\"
+$VMName           = "testvm-1"
+$Region           = "westus2"
 
 # Install required and useful PS Modules for administration (In FunctionLibrary.ps1)
 Install-PSModules
@@ -68,23 +69,32 @@ $vnet.Subnets.AddressPrefix
 
 ###--- Network Watcher
 <# 
-  Azure Native Tool - Like TCPdump for Azure SDN: 
-  https://azure.microsoft.com/en-us/services/network-watcher/
+Azure Native Tool - Like TCPdump for Azure SDN: 
+https://azure.microsoft.com/en-us/services/network-watcher/
 
-  * Remotely capture packet data for your virtual machines
-  * Monitor your virtual machine network security using flow logs and security group view
-  * Diagnose your VPN connectivity issues
+* Remotely capture packet data for your virtual machines
+* Monitor your virtual machine network security using flow logs and security group view
+* Diagnose your VPN connectivity issues
 
-  Install extension in VM - 
-  Set-AzVMExtension `
-    -ResourceGroupName "myResourceGroup1" `
-    -Location "WestUS" `
-    -VMName "myVM1" `
-    -Name "networkWatcherAgent" `
-    -Publisher "Microsoft.Azure.NetworkWatcher" `
-    -Type "NetworkWatcherAgentWindows" `
-    -TypeHandlerVersion "1.4"
+Install extension in VM - 
+Set-AzVMExtension `
+  -ResourceGroupName "myResourceGroup1" `
+  -Location "WestUS" `
+  -VMName "myVM1" `
+  -Name "networkWatcherAgent" `
+  -Publisher "Microsoft.Azure.NetworkWatcher" `
+  -Type "NetworkWatcherAgentWindows" `
+  -TypeHandlerVersion "1.4"
 
+Doesn't work - 
+Set-AzVMExtension `
+  -ResourceGroupName $ResourceGroup `
+  -Location $Region `
+  -VMName $VMName `
+  -Name "networkWatcherAgent" `
+  -Publisher "Microsoft.Azure.NetworkWatcher" `
+  -Type "NetworkWatcherAgentWindows" `
+  -TypeHandlerVersion "1.4"
 #>
 
 
