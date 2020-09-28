@@ -10,6 +10,8 @@
     This is a long version where all the VM elements are created manually
     rather than using defaults.
 
+    Good examples.
+
 #>
 ###====================================================================================###
 
@@ -74,11 +76,9 @@ $ResourceGroup = "TempRG-01"
 $Region = "westus2"
 $VMSize = "Standard_DS3"
 
-# Set-AzureRmVMBgInfoExtension -ResourceGroupName "ContosoRG" -VMName "ContosoVM" -Name "ExtensionName" -TypeHandlerVersion "2.1" -Location "West Europe"
-
 # VM Information
 $VMLocalAdminUser = "azureadmin"
-$VMLocalAdminSecurePassword = ConvertTo-SecureString "Chalc0pyrite" -AsPlainText -Force
+$VMLocalAdminSecurePassword = ConvertTo-SecureString "############" -AsPlainText -Force
 $VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
 
 
@@ -86,20 +86,18 @@ $VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUse
 $VMName= "Win10VM-$(Get-Random -Minimum 1000 -Maximum 2000)"
 $Image = "Windows-10"
 
-# Create/Use network resources.
-$SubNet = "subnet02"
-$vNet = "VnetCore"
-$PubIP = "PubIP-$(Get-Random -Minimum 1000 -Maximum 2000)"
-
-
-# Create Admin Credentials
-$adminUsername = Read-Host 'Admin username'
-$adminPassword = Read-Host -AsSecureString 'Admin password with least 12 characters'
-$adminCreds    = New-Object PSCredential $adminUsername, $adminPassword
-
 # Create a public IP and NIC
-$pip = New-AzPublicIpAddress -Name $PubIP -ResourceGroupName $ResourceGroup -Location $location -AllocationMethod Static 
-$nic = New-AzNetworkInterface -Name $nicName -ResourceGroupName $ResourceGroup -Location $location -SubnetId $Subnet.Id -PublicIpAddressId $pip.Id -NetworkSecurityGroupId $nsg.Id
+$pip = New-AzPublicIpAddress -Name $PubIP `
+    -ResourceGroupName $ResourceGroup `
+    -Location $location `
+    -AllocationMethod Static 
+
+$nic = New-AzNetworkInterface -Name $nicName `
+    -ResourceGroupName $ResourceGroup `
+    -Location $location `
+    -SubnetId $Subnet.Id `
+    -PublicIpAddressId $pip.Id `
+    -NetworkSecurityGroupId $nsg.Id
 
 # Set VM Configuration
 $vmConfig = New-AzVMConfig -VMName $vmName -VMSize $vmSize

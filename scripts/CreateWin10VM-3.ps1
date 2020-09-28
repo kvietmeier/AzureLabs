@@ -55,7 +55,7 @@ $DNSName        = "win10vm$RandomID"
 $PubIP          = "PubIP-$RandomID"
 $NICId          = "NIC-$RandomID"
 
-# Windows Image and VM Size to Use
+# Image and Size to Use
 $VMSize         = "Standard_D2_v3"
 $PublisherName  = "MicrosoftWindowsDesktop"
 $Offer          = "Windows-10"
@@ -85,7 +85,7 @@ For this use case we want to spin up a quick test VM leveraging an existing
 vNet and Subnet.  The Subnet in this case already has an NSG associated with it.
 #>
 
-# Use existing network resources: vNet, Subnet, NSG
+# Use existing vNet/Subnet
 $vNetName  = "VnetCore"
 $vNetRG    = "CoreInfrastructure-rg"
 $NsgName   = "AllowRemoteByIP"
@@ -112,13 +112,12 @@ $VMNIC = New-AzNetworkInterface `
     -NetworkSecurityGroupId $NSG.Id `
     -IpConfiguration $NewIPConfig
 
-###---- End NIC Configuration ----###
+###---- End NIC configuration
 
 # Add the NIC to the VM Configuration
 Add-AzVMNetworkInterface -VM $NewVMConfig -Id $VMNIC.Id
 
-# OS definition and Credentials for user - Credentials are stored
-# in an external file.
+# OS definition and Credentials for user
 $NewVMConfig = Set-AzVMOperatingSystem `
     -VM $NewVMConfig `
     -Windows `
@@ -138,8 +137,6 @@ $NewVMConfig = Set-AzVMSourceImage `
 # Create the VM using info in the layered config above
 New-AzVM -ResourceGroupName $ResourceGroup -Location $Region -VM $NewVMConfig -Verbose
 
-
-<# 
 # Enable BGInfo
 Set-AzVMBgInfoExtension `
   -ResourceGroupName $ResourceGroup `
@@ -147,4 +144,3 @@ Set-AzVMBgInfoExtension `
   -Name "ExtensionName" `
   -TypeHandlerVersion "2.1" `
   -Location $Region
-#>

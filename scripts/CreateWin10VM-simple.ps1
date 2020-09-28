@@ -5,8 +5,10 @@
                                                                     
   Description                                                      
     Create a Win10 VM for testing                                 
-    Sometimes you just need a VM for testing with some standard defaults and using 
-    existing infrastructure   
+    Sometimes you just need a VM for testing with some standard defaults 
+    It will create a new vnet and subnet but use an existing NSG
+
+    Note - this method will create new resources like vnets etc in the ResourceGroup.
     
   Status:  Working, tested
                                                                 
@@ -79,7 +81,7 @@ $vmParams = @{
 }
 
 # Create the VM using info in the hash above
-$newVM = New-AzVM @vmParams
+$NewVM = New-AzVM @vmParams
 
 # Enable BGInfo
 Set-AzVMBgInfoExtension `
@@ -89,5 +91,4 @@ Set-AzVMBgInfoExtension `
   -TypeHandlerVersion "2.1" `
   -Location $Region
 
-
-$newVM
+$NewVM
