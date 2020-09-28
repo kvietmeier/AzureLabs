@@ -74,6 +74,3 @@ Remove-Item -Recurse $AZFExtractDir
 ###- Might need this - I needed it in VSC - YMMV
 #Unblock-File `
 #    -Path C:\Users\wvdadmin01\Documents\WindowsPowerShell\Modules\AzFilesHybrid\0.2.0.0\AzFilesHybrid.psm1
-
-
-###======== END - PowerShell commands for setting up Azure Files with AD Auth.  ========###

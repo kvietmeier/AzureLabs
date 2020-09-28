@@ -1,13 +1,15 @@
-###============== Library of common functions ===================###
-#  call with "." sourcing
-#  . "path_to_library.ps1"
-#  
-#
-#  Functions:
-#   InstallPSModules - Install modules you may need
-#   Check-Login: Check to see if you are already connected to Azure, if not, 
-#                prompt for Credentials and connect
+###============== Library of Common Functions ===================###
+<#
 
+  Call with "." sourcing
+  . "path_to_library.ps1"
+
+  Functions:
+   InstallPSModules - Install modules you may need
+   Check-Login: Check to see if you are already connected to Azure, if not, 
+                prompt for Credentials and connect
+
+#>
 
 ###=====================  Are you logged in?  ===================###        
 function Check-Login ()
@@ -31,8 +33,6 @@ function Check-Login ()
     }
 }
 
-###==============================================================### 
-
 ### Login Creds - an insecure hack
 # - In secrets.ps1
 #$AIAuser
@@ -55,6 +55,9 @@ function Install-PSModules ()
     # Run these as an Admin:
     # You might need to set this - (set it back later if you need to)
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force
+    
+    # Trust the Gallery - so we don't get prompted all the time
+    Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
 
     # May need to Upgrade PowerShellGet and other modules - upgrade NuGet first
     Install-PackageProvider -Name NuGet -Force
@@ -69,8 +72,4 @@ function Install-PSModules ()
 
     # WVD Modules
     Install-Module -Name Az.DesktopVirtualization -RequiredVersion 2.0.0 -SkipPublisherCheck
-
-    
-
-
 }

@@ -66,6 +66,7 @@ $SKU            = "20h1-entn"
 $Version        = "latest"
 
 <# Sourced - a Running VM config
+Image: Windows 10 Enterprise 2004
 "publisher": "MicrosoftWindowsDesktop",
 "offer": "Windows-10",
 "sku": "20h1-entn",
