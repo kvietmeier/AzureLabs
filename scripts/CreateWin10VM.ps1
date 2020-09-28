@@ -69,12 +69,13 @@ $Version        = "latest"
 "version": "latest"
 #>
 
-<###---- Start Setting up the VM ----###
+<#
+###---- Start Setting up the VM ----###
 Creating a Virtual Machine is a multi-step process where you build up configuration
-objects amd apply them all the the "New-AzVM" command
+objects and apply them all the the "New-AzVM" command
 #>
 
-# Create the resource group
+# Create the resource group for the VM and resources
 New-AzResourceGroup -Name $ResourceGroup -Location $Region
 
 # VM Name and Size
@@ -82,7 +83,7 @@ $NewVMConfig = New-AzVMConfig -VMName $VMName -VMSize $VMSize
 
 <###---- Create the NIC Configuration ----###
 For this use case we want to spin up a quick test VM leveraging an existing 
-vNet and Subnet.  The Subnet in this case already has an NSG associated with it.
+vNet, Subnet, and NSG. 
 #>
 
 # Use existing network resources: vNet, Subnet, NSG
