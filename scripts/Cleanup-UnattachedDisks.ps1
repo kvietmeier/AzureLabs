@@ -26,7 +26,7 @@
 # Are we connected to Azure with the corredt SubID?
 Check-Login
 
-### End my template
+###----- End my template
 
 ### NOTE:
 ### You will need to be logged into your Azure Subscription to run these commands.
