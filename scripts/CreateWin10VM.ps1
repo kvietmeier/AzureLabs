@@ -1,7 +1,8 @@
 ###====================================================================================###
 <# 
   CreateWin10VM.ps1                                                    
-    Created By: Karl Vietmeier                                        
+    Created By: Karl Vietmeier
+                kavietme@microsoft.com                                       
                                                                     
   Description                                                      
     Create a Win10 VM for testing                                 
@@ -9,6 +10,8 @@
     existing network infrastructure   
 
   Status:  Working, tested
+
+  To Do:  Setup storage - OS disk, rather than take the defaults.
                                                                 
   Resources:
    https://docs.microsoft.com/en-us/powershell/module/az.compute/new-azvm?view=azps-4.6.1
@@ -69,10 +72,9 @@ $Version        = "latest"
 "version": "latest"
 #>
 
-<#
-###---- Start Setting up the VM ----###
+<###=================  Start Setting up the VM  ==================###
 Creating a Virtual Machine is a multi-step process where you build up configuration
-objects and apply them all the the "New-AzVM" command
+PSObjects and apply them all with the "New-AzVM" command
 #>
 
 # Create the resource group for the VM and resources
@@ -81,7 +83,7 @@ New-AzResourceGroup -Name $ResourceGroup -Location $Region
 # VM Name and Size
 $NewVMConfig = New-AzVMConfig -VMName $VMName -VMSize $VMSize
 
-<###---- Create the NIC Configuration ----###
+<###================ Create the NIC Configuration ================###
 For this use case we want to spin up a quick test VM leveraging an existing 
 vNet, Subnet, and NSG. 
 #>
@@ -113,10 +115,10 @@ $VMNIC = New-AzNetworkInterface `
     -NetworkSecurityGroupId $NSG.Id `
     -IpConfiguration $NewIPConfig
 
-###---- End NIC Configuration ----###
-
 # Add the NIC to the VM Configuration
 Add-AzVMNetworkInterface -VM $NewVMConfig -Id $VMNIC.Id
+
+###=================== End - NIC Configuration ===================###
 
 # OS definition and Credentials for user - Credentials are stored
 # in an external file.
@@ -138,14 +140,3 @@ $NewVMConfig = Set-AzVMSourceImage `
 
 # Create the VM using info in the layered config above
 New-AzVM -ResourceGroupName $ResourceGroup -Location $Region -VM $NewVMConfig -Verbose
-
-
-<# 
-# Enable BGInfo
-Set-AzVMBgInfoExtension `
-  -ResourceGroupName $ResourceGroup `
-  -VMName $VMName `
-  -Name "ExtensionName" `
-  -TypeHandlerVersion "2.1" `
-  -Location $Region
-#>
