@@ -19,6 +19,9 @@ return
 ###
 
 ###---- Get my functions and credentials ----###
+
+Set-Location ../AzureLabs/scripts
+
 # Credentials  (stored outside the repo)
 . '..\..\Certs\resources.ps1'
 

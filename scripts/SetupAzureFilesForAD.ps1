@@ -65,6 +65,7 @@ Write-Host "SMB Elevated Contributor AD Group GUID:   $ElevContribGroupId"
 Write-Host "SMB Contributor AD Group GUID:            $ContribGroupId" 
 Write-Host ""
 
+Read-Host "Press ENTER to continue..."
 
 # Not very sensitive, set here to over-ride or comment out to use externally stored values
 $AZResourceGroup = "WVDLandscape01"

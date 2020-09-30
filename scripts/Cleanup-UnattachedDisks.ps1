@@ -9,6 +9,8 @@
     Find and delete disks - copied from:
     https://docs.microsoft.com/en-us/azure/virtual-machines/windows/find-unattached-disks
 
+    Added error checking for restricted blob stores
+
 #>                                                                        
 ###====================================================================================###
 
@@ -33,6 +35,10 @@ Check-Login
 
 
 ### Managed Disks - 
+Write-Host ""
+Write-Host "Checking for unattached Managed Disks"
+Write-Host ""
+
 # Set deleteUnattachedDisks=1 if you want to delete unattached Managed Disks
 # Set deleteUnattachedDisks=0 if you want to see the Id of the unattached Managed Disks
 $deleteUnattachedDisks=0
@@ -51,6 +57,11 @@ foreach ($md in $managedDisks) {
     }
  }
 
+
+Write-Host ""
+Write-Host "Checking for unattached VHD in blob storage"
+Write-Host ""
+
 ### Unmanaged Disks - 
 # Set deleteUnattachedVHDs=$true if you want to delete unattached VHDs
 # Set deleteUnattachedVHDs=$false if you want to see the Uri of the unattached VHDs
@@ -59,7 +70,11 @@ $storageAccounts = Get-AzStorageAccount
 foreach($storageAccount in $storageAccounts){
     $storageKey = (Get-AzStorageAccountKey -ResourceGroupName $storageAccount.ResourceGroupName -Name $storageAccount.StorageAccountName)[0].Value
     $context = New-AzStorageContext -StorageAccountName $storageAccount.StorageAccountName -StorageAccountKey $storageKey
-    $containers = Get-AzStorageContainer -Context $context
+    
+    $containers = Get-AzStorageContainer -Context $context -ErrorAction SilentlyContinue -ErrorVariable AccessError
+
+    if ($AccessError) { Write-Output ($storageAccount.StorageAccountName + ":   Access Denied") }
+
     foreach($container in $containers){
         $blobs = Get-AzStorageBlob -Container $container.Name -Context $context
         #Fetch all the Page blobs with extension .vhd as only Page blobs can be attached as disk to Azure VMs
@@ -75,6 +90,6 @@ foreach($storageAccount in $storageAccounts){
                         $_.ICloudBlob.Uri.AbsoluteUri
                     }
             }
-        }
+        } 
     }
 }

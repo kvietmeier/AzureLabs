@@ -13,7 +13,7 @@
 . '.\FunctionLibrary.ps1'
 
 # Imported from "FunctionLibrary.ps1"
-# Are we connected to Azure with the corredt SubID?
+# Are we connected to Azure with the correct SubID?
 Check-Login
 
 Write-Host "==================================="
