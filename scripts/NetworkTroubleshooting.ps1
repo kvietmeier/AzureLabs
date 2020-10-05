@@ -11,7 +11,6 @@
 
 #>
 
-# 0497048306
 ###========================================================================###
 
 ### For safety - comment/uncomment as desired
@@ -66,10 +65,13 @@ Import-Module AzFilesHybrid
 ### Virtual Networks
 # https://docs.microsoft.com/en-us/azure/virtual-machines/windows/ps-common-network-ref
 
-# Dump the AddressSpace/subnets for vNet
-$vnet = Get-AzVirtualNetwork -Name TestvNet01 -ResourceGroupName TempRG-01
-$vnet.AddressSpace
-$vnet.Subnets.AddressPrefix 
+# Dump the AddressSpace/subnets/DHCP Options for vNet
+$RGName = "CoreInfrastructure-rg"
+$VNetName = "VnetCore"
+$vnet = Get-AzVirtualNetwork -Name $VNetName -ResourceGroupName $RGName
+Write-Output $vnet.DhcpOptions
+Write-Output $vnet.AddressSpace
+Write-Output $vnet.Subnets.AddressPrefix 
 
 
 ###--- Network Watcher
@@ -113,6 +115,22 @@ Set-AzVMExtension `
   https://docs.microsoft.com/en-us/azure/virtual-network/what-is-ip-address-168-63-129-16
 #>
 
+
+
+### ICMP Based Tools - ping etc
+# Always the first place to start - they test the resolver too. 
+
+## Built-in
+# pathping.exe
+# Works like tracert
+# https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/pathping
+#
+# tracert
+# As you expect
+# https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/tracert 
+
+
+## PowerShell - 
 Test-NetConnection
 
 # Test resolver against known host that responds to ICMP 

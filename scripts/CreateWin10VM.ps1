@@ -60,18 +60,17 @@ $NICId          = "NIC-$RandomID"
 
 # Windows Image and VM Size to Use
 $VMSize         = "Standard_D2_v3"
+# Image: Windows 10 Enterprise 2004
+#$PublisherName  = "MicrosoftWindowsDesktop"
+#$Offer          = "Windows-10"
+#$SKU            = "20h1-entn"
+#$Version        = "latest"
+# Image: Windows 10 Multi Session 2004
 $PublisherName  = "MicrosoftWindowsDesktop"
-$Offer          = "Windows-10"
-$SKU            = "20h1-entn"
+$Offer          = "office-365"
+$SKU            = "19h2-evd-o365pp"
 $Version        = "latest"
 
-<# Sourced - a Running VM config
-Image: Windows 10 Enterprise 2004
-"publisher": "MicrosoftWindowsDesktop",
-"offer": "Windows-10",
-"sku": "20h1-entn",
-"version": "latest"
-#>
 
 <###=================  Start Setting up the VM  ==================###
 Creating a Virtual Machine is a multi-step process where you build up configuration
