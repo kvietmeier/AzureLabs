@@ -16,7 +16,7 @@ function SessionTimeouts ()
    # Configuring RDP session timeout policies...
     
     # Set registry key and path for commands
-    $RegKey = "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
+    $RegKey = "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
     set-location -Path $RegKey
 
     # Registry settings
@@ -39,7 +39,7 @@ New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\
     -Force
 
 # Enable timezone redirection
-New-ItemProperty -Path "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" `
+New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" `
     -Name "fEnableTimeZoneRedirection" -PropertyType "DWORD" -Value "1" `
     -Force
 
@@ -54,10 +54,10 @@ New-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\StorageS
     -Force
 
 # Make sure that the environmental variables TEMP and TMP are set to their default values
-Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" `
+New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" `
     -Name "TEMP" -Value "%SystemRoot%\TEMP" -PropertyType ExpandString -Force
 
-Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" `
+New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" `
     -Name "TMP" -Value "%SystemRoot%\TEMP" -PropertyType ExpandString -Force
 
 
@@ -112,10 +112,13 @@ New-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\HideD
     -Name "{20D04FE0-3AEA-1069-A2D8-08002B30309D}" -PropertyType DWORD -Value 0 -Force
 New-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel" `
     -Name "{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}" -PropertyType DWORD -Value 0 ` -Force
-New-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu" `
+
+# Not Found
+<# New-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu" `
     -Name "{20D04FE0-3AEA-1069-A2D8-08002B30309D}" -PropertyType DWORD -Value 0 -Force
 New-Itemproperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu" `
     -Name "{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}" -PropertyType DWORD -Value 0 -Force
+#>
 
 New-Itemproperty "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
     -Name TaskbarSmallIcons -PropertyType DWORD -Value 1 -Force
@@ -153,7 +156,7 @@ start explorer.exe
 ###---- End: Cosmetic Settings Only but common tweaks
 
 
-### rem Set the Office Update UI behavior.
+### Set the Office Update UI behavior.
 reg add HKLM\SOFTWARE\Policies\Microsoft\office\16.0\common\officeupdate /v hideupdatenotifications /t REG_DWORD /d 1 /f
 reg add HKLM\SOFTWARE\Policies\Microsoft\office\16.0\common\officeupdate /v hideenabledisableupdates /t REG_DWORD /d 1 /f
 
@@ -183,7 +186,7 @@ Add-MpPreference -ExclusionExtension ”.vhd”
 Add-MpPreference -ExclusionExtension ”.vhdx”
 
 
-### Disable IEESC
+### Disable IEESC - if IE isn't installed won't work
 function Disable-IEESC
 {
     $AdminKey = "HKLM:\\SOFTWARE\\Microsoft\\Active Setup\\Installed Components\\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}"
@@ -198,4 +201,4 @@ function Disable-IEESC
     } else { Write-Host "Failed to disable, use Server Manager"}
 }
 
-Disable-IEESC
+#Disable-IEESC

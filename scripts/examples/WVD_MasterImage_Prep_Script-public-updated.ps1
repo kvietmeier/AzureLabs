@@ -98,11 +98,14 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 Invoke-WebRequest -Uri "https://aka.ms/OneDriveWVD-Installer" -Outfile c:\temp\OneDriveSetup.exe
 
 # Uninstall One Drive
-$InstallDir\OneDriveSetup.exe /uninstall
+Set-Location $InstallDir
+.\OneDriveSetup.exe /uninstall
+
 
 # Re-Create the key and entry (we are only going to use 64bit versions of everything)
-New-Item -Path "HKLM:\Software\Microsoft\Onedrive" 
-New-ItemProperty -Path "HKLM:\Software\Microsoft\Onedrive" -Name "AllUsersInstall" -PropertyType DWORD -Value 1
+# Already exists -
+#New-Item -Path "HKLM:\Software\Microsoft\Onedrive" 
+New-ItemProperty -Path "HKLM:\Software\Microsoft\Onedrive" -Name "AllUsersInstall" -Type DWORD -Value 1
 
 # Re- Install OneDrive
 $InstallDir\OneDriveSetup.exe /allusers

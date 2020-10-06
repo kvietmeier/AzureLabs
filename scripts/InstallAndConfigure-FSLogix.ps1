@@ -107,6 +107,9 @@ New-ItemProperty -Path "." -Name "SizeInMBs" -PropertyType "DWORD" -Value "$Prof
 # Machine should try to take the RW role and if it can't, it should fall back to a RO role.
 New-ItemProperty -Path "." -Name "ProfileType" -PropertyType "DWORD" -Value "3"  
 
+# Keep more logfiles
+New-ItemProperty -Path "." -Name "LogFileKeepingPeriod" -PropertyType "DWORD" -Value "7"  
+
 # Cosmetic - change the way each user folder is created
 New-ItemProperty -Path "." -Name "FlipFlopProfileDirectoryName" -PropertyType "DWORD" -Value "1"  
 
