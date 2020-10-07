@@ -25,6 +25,7 @@ They are accesed like this:
 . '.\FunctionLibrary.ps1'
 ```
 
+
 An example of the variables stored in the "resources.ps1" file:
 ```
 # AIA Subscription Information
@@ -34,16 +35,19 @@ $AIAuser = "user@contoso.com"
 $AIAPassword = "really should encrypt this"
 ```
 
+The script:
+```
+Setup PowerShell Modules.ps1
+```
+Will setup your laptop/workstation to run these scripts/snippets.
+
+<br>
 Some of these "scripts" aren't meant to be run as a single script but are collections of useful 
 commands and code snippets to be run interactively using the ISE or VSC.
 
 Especially - 
 ```
 scripts/NetworkTroubleshooting.ps1
-```
-and 
-```
-scripts/Setup PowerShell Modules.ps1
 ```
 
 ## Author
