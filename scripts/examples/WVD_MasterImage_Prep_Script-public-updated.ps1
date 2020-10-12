@@ -76,7 +76,7 @@ NOTE: Windows 10 has a 8 times sysprep limit. Therefore, if you are building a m
 #$AADTenant = "xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  #your AAD Tenant ID
 
 # Where you are installing Office Apps from
-$InstallDir = "C:\Users\azureadmin\Downloads\test"
+$InstallDir = "C:\temp"
 
 # Probably need this
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted
@@ -139,7 +139,7 @@ New-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\OneDrive" `
 #>
 ###################################################################
 
-$InstallDir\Setup.exe /configure "$InstallDir\configuration-Office365-x64.xml"  # use a customize Image to control which office apps are installed
+$InstallDir\office\Setup.exe /configure "$InstallDir\office\configuration-Office365-x64.xml"  # use a customize Image to control which office apps are installed
 
 # Create C:\temp\apps\Office\OfficeUpdates.bat
 # You need to mount the NTUSER.dat registry hive

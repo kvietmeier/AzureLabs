@@ -35,7 +35,7 @@ SessionTimeouts
 
 # Disable Automatic Updates
 New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" `
-    -Name "NoAutoUpdate" -PropertyType "REG_DWORD" -Value "1" `
+    -Name "NoAutoUpdate" -PropertyType "DWORD" -Value "1" `
     -Force
 
 # Enable timezone redirection
@@ -140,8 +140,10 @@ New-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advan
     -Name TaskbarSmallIcons -PropertyType DWORD -Value 1 -Force
 New-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
     -Name ShowCortanaButton -PropertyType DWORD -Value 1 -Force
-New-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\Search" `
-    -Name SearchboxTaskbarMode -PropertyType DWORD -Value 2 -Force
+
+# - missing?
+#New-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\Search" `
+#    -Name SearchboxTaskbarMode -PropertyType DWORD -Value 2 -Force
 
 <# SearchboxTaskbarMode DWORD
     0 = Hidden

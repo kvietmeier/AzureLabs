@@ -64,6 +64,9 @@ Import-Module AzFilesHybrid
 
 ### Virtual Networks
 # https://docs.microsoft.com/en-us/azure/virtual-machines/windows/ps-common-network-ref
+# https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-udr-overview
+# https://docs.microsoft.com/en-us/azure/virtual-network/diagnose-network-routing-problem
+
 
 # Dump the AddressSpace/subnets/DHCP Options for vNet
 $RGName = "CoreInfrastructure-rg"

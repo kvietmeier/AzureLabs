@@ -22,13 +22,12 @@
       <Language ID="en-us" />
     </Product>
   </Add>
+  <Updates Enabled="FALSE"/>
+  <Display Level="None" AcceptEULA="TRUE" />
+  <Logging Level=" Standard" Path="%temp%\WVDOfficeInstall" />
+  <Property Name="FORCEAPPSHUTDOWN" Value="TRUE"/>
+  <Property Name="SharedComputerLicensing" Value="1"/>
   <RemoveMSI/>
-    <Updates Enabled="FALSE"/>
-    <Display Level="None" AcceptEULA="TRUE" />
-    <Logging Level=" Standard" Path="%temp%\WVDOfficeInstall" />
-    <Property Name="FORCEAPPSHUTDOWN" Value="TRUE"/>
-    <Property Name="SharedComputerLicensing" Value="1"/>
-
 
   <!--  <Updates Enabled="TRUE" Channel="Monthly" /> -->
 

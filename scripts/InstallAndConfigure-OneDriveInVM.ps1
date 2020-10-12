@@ -1,14 +1,19 @@
 ###====================================================================================###
 <#   
-  FileName: <scriptname>.ps1
+  FileName: InstallAndConfigureOneDrive.ps1
   Created By: Karl Vietmeier
     
   Description:
-   Use this for new scripts
+   Install OneDrive for WVD
 
+   By Default One-drive installs for single users
+   Download the latest OneDriveSetup.exe from Micrsoft's site:
+   https://products.office.com/en-us/onedrive/download
+   
+   Place in a temp folder - NOTE:  Change the folder path to your copy of OneDriveSetup.exe
+   OneDriveSetup also uninstalls. 
 #>
 ###====================================================================================###
-
 ### Here for safety - comment/uncomment as desired
 return
 
@@ -23,26 +28,13 @@ return
 # Are we connected to Azure with the corredt SubID?
 Check-Login
 
-
-################   Re-install/Setup One Drive    ########################
-<# 
-   By Default One-drive installs for single users
-   Uninstall OneDrive 
-   Download the latest OneDriveSetup.exe from Micrsoft's site:
-   https://products.office.com/en-us/onedrive/download
-   Place in a temp folder - NOTE:  Change the folder path to your copy of OneDriveSetup.exe
-   OneDriveSetup also uninstalls. 
-#>
-########################################################################
-
-# Set these as appropriate
+# Need for OneDrive Known Folder Redirection
 #$AADTenant = "xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  #your AAD Tenant ID
-$InstallDir = "C:\Users\azureadmin\Downloads\test"
 
 # This one you can grab -
-Invoke-WebRequest -Uri "https://aka.ms/OneDriveWVD-Installer" -Outfile $InstallDir\OneDriveSetup.exe
+Invoke-WebRequest -Uri "https://aka.ms/OneDriveWVD-Installer" -Outfile c:\temp\OneDriveSetup.exe
 
-# Uninstall One Drive
+# Uninstall One Drive if it is there
 Set-Location $InstallDir
 .\OneDriveSetup.exe /uninstall
 

@@ -60,16 +60,23 @@ $NICId          = "NIC-$RandomID"
 
 # Windows Image and VM Size to Use
 $VMSize         = "Standard_D2_v3"
+
+###--- Images
 # Image: Windows 10 Enterprise 2004
 #$PublisherName  = "MicrosoftWindowsDesktop"
 #$Offer          = "Windows-10"
 #$SKU            = "20h1-entn"
 #$Version        = "latest"
-# Image: Windows 10 Multi Session 2004
+# Image: Windows 10 Enterprise 1909
 $PublisherName  = "MicrosoftWindowsDesktop"
-$Offer          = "office-365"
-$SKU            = "19h2-evd-o365pp"
+$Offer          = "Windows-10"
+$SKU            = "19h2-ent"
 $Version        = "latest"
+# Image: Windows 10 Multi Session 2004
+#$PublisherName  = "MicrosoftWindowsDesktop"
+#$Offer          = "office-365"
+#$SKU            = "19h2-evd-o365pp"
+#$Version        = "latest"
 
 
 <###=================  Start Setting up the VM  ==================###

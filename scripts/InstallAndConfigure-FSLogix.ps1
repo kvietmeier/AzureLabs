@@ -1,19 +1,19 @@
 ###========================================================================================###
-###  Creating FSLogix Registry Settings
-#    Written By:  Karl Vietmeier
-#    
-#    Purpose: Modifying and adding Registry entries for FSLogix with PowerShell
-#    
-#    References:
-#    * PowerShell
-#      https://docs.microsoft.com/en-us/powershell/scripting/samples/working-with-registry-entries
-#
-#    * FSLogix
-#      https://docs.microsoft.com/en-us/fslogix/profile-container-configuration-reference
-#      https://docs.microsoft.com/en-us/fslogix/office-container-configuration-reference
-#
-#    This is best done through GPO
-#
+<###  Creating FSLogix Registry Settings
+    Written By:  Karl Vietmeier
+    
+    Purpose: Modifying and adding Registry entries for FSLogix with PowerShell
+    
+    References:
+    * PowerShell
+      https://docs.microsoft.com/en-us/powershell/scripting/samples/working-with-registry-entries
+
+    * FSLogix
+      https://docs.microsoft.com/en-us/fslogix/profile-container-configuration-reference
+      https://docs.microsoft.com/en-us/fslogix/office-container-configuration-reference
+
+    This is best done through GPO
+#>
 ###========================================================================================###
 
 # Don't run as a script on accident
@@ -23,10 +23,10 @@ return
 function InstallFSLogix () {
 
     # Download the .zip and expand it
-    Invoke-Webrequest -Uri "https://aka.ms/fslogix_download" -OutFile c:\bin\InstallFSLogix.zip
-    Set-Location C:\bin
+    Invoke-Webrequest -Uri "https://aka.ms/fslogix_download" -OutFile c:\temp\InstallFSLogix.zip
+    Set-Location C:\temp
     Expand-Archive .\InstallFSLogix.zip
-    Set-Location C:\bin\InstallFSLogix\x64\Release
+    Set-Location C:\temp\InstallFSLogix\x64\Release
 
     # Install - 
     $AgentInstaller = "FSLogixAppsSetup.exe"

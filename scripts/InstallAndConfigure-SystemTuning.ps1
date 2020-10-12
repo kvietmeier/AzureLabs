@@ -26,7 +26,6 @@ return
 Check-Login
 
 ###-------- Tuning Parameters
-# https://docs.microsoft.com/en-us/windows-server/administration/performance-tuning/
 
 # DisableBandwidthThrottling
 # HKLM:\System\CurrentControlSet\Services\LanmanWorkstation\Parameters\DisableBandwidthThrottling
