@@ -38,12 +38,18 @@ Invoke-WebRequest -Uri "https://aka.ms/OneDriveWVD-Installer" -Outfile c:\temp\O
 Set-Location $InstallDir
 .\OneDriveSetup.exe /uninstall
 
+### Check to see if the registry path/key exist
 # Re-Create the key and entry (we are only going to use 64bit versions of everything)
-# Already exists -
-#New-Item -Path "HKLM:\Software\Microsoft\Onedrive" 
-New-ItemProperty -Path "HKLM:\Software\Microsoft\Onedrive" -Name "AllUsersInstall" -Type DWORD -Value 1
+$OneDrivePath = "HKLM:\Software\Microsoft\Onedrive" 
 
-# Re- Install OneDrive
+if (!(Test-Path $OneDrivePath)) {
+    New-Item -Path $OneDrivePath
+}
+else {
+    New-ItemProperty -Path $OneDrivePath -Name "AllUsersInstall" -Type DWORD -Value 1
+}
+
+# Re-Install OneDrive
 .\OneDriveSetup.exe /allusers
 
 # Configure OneDrive to start at sign-in for all users
@@ -51,8 +57,10 @@ New-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Run" `
     -Name "OneDrive" -PropertyType String `
     -Value "C:\Program Files (x86)\Microsoft OneDrive\OneDrive.exe /background" -Force
 
-# Uses the AADTenent variable above #Redirect and move Windows known 
-# folders to OneDrive - Make sure to change the AAD ID to match your own AAD!!!! 
+<# Using the AADTenent variable from above -  
+   Redirect and move Windows known folders to OneDrive
+   Make sure to change the AAD ID to match your own AAD!!!!
+#>
 New-Item -Path "HKLM:\Software\Policies\Microsoft\OneDrive" 
 New-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\OneDrive" `
     -Name "KFMSilentOptIn" -PropertyType String -Value "$AADTenantID" -Force

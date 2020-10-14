@@ -53,13 +53,18 @@ Install-Module -Name GPRegistryPolicy
   This code will install it for you automatically (Check the version - it could be newer)
 #>
 
-$AZFmoduleLoc  = "https://github.com/Azure-Samples/azure-files-samples/releases/download/v0.2.0/AzFilesHybrid.zip"
-$AZFZip     = "C:\Users\azureadmin\Downloads\AZFilesPSModule.zip"
-$AZFExtractDir = "C:\Users\azureadmin\Downloads\AZFilesPSModule"
-$Downloads = "C:\Users\azureadmin\Downloads"
-$AZFScript     = "C:\Users\azureadmin\Downloads\AZFilesPSModule\CopyToPSPath.ps1"
+# These can change - 
+$DownloadDir    = "C:\temp"
+$AZFVer         = "v0.2.0"
+$AZFUrl         = "https://github.com/Azure-Samples/azure-files-samples/releases/download/"
 
-Invoke-WebRequest -Uri $AZFmoduleLoc -OutFile $AZFZip
+# These are "fixed" based on first 3
+$AZFModuleURL   = $AZFUrl + $AZFVer + '/AzFilesHybrid.zip'
+$AZFZip         = $DownloadDir + '\AZFilesPSModule.zip'
+$AZFExtractDir  = $DownloadDir + '\AZFilesPSModule'
+$AZFScript      = $AZFExtractDir + '\CopyToPSPath.ps1'
+
+Invoke-WebRequest -Uri $AZFModuleURL -OutFile $AZFZip
 Expand-Archive -LiteralPath $AZFZip -DestinationPath $AZFExtractDir
 Set-Location $AZFExtractDir
 Invoke-Expression -Command $AZFScript
@@ -67,7 +72,7 @@ Import-Module AzFilesHybrid
 
 # Cleanup
 Remove-Item $AZFZip
-Set-Location $Downloads
+Set-Location $DownloadDir
 Remove-Item -Recurse $AZFExtractDir
 
 
