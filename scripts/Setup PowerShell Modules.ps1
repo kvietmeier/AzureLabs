@@ -13,35 +13,52 @@ return
 # Check PS Version - 
 $PSVersionTable.PSVersion
 
-# You might need to set this - (set it back later if you need to)
+function PreReqs () {
+  # Run these as an Admin:
+  # May need to Upgrade PowerShellGet and other modules so just do it - upgrade NuGet first
+  Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force 
+  Install-Module -Name PowerShellGet -Force
+}
+
+function InstallAZModules () {
+  # Install Azure and AD Modules - probably have these but this will upgrade them
+  Install-Module -Name "Az" `
+     -Repository 'PSGallery' `
+      -Scope 'CurrentUser' `
+      -Confirm:$false `
+      -AllowClobber -Force -Verbose
+
+  Install-Module -Name "AzureAD" `
+      -Repository 'PSGallery' `
+      -Scope 'CurrentUser' `
+      -Confirm:$false `
+      -AllowClobber -Force -Verbose
+
+  # WVD Module
+  Install-Module -Name "Az.DesktopVirtualization" `
+      -Repository 'PSGallery' `
+      -RequiredVersion 2.0.0 `
+      -SkipPublisherCheck `
+      -Confirm:$false `
+      -AllowClobber -Force -Verbose
+
+  # I needed this to do some GPO work - optional
+  Install-Module -Name "GPRegistryPolicy" `
+      -Repository 'PSGallery' `
+      -Confirm:$false `
+      -AllowClobber -Force -Verbose
+
+}
+
+# Standard: You might need to set this - (set it back later if you need to)
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force
 
-# Trust the Gallery - so we don't get prompted all the time
+# Trust the Gallery - So we don't get prompted all the time
 Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
 
-# Run these as an Admin:
-# May need to Upgrade PowerShellGet and other modules - upgrade NuGet first
-Install-PackageProvider -Name NuGet -Force
-Install-Module -Name PowerShellGet -Force
+PreReqs
+InstallAZModules
 
-# Azure and AD Modules - probably have these but this will upgrade them
-Install-Module -Name "Az" `
-    -Repository 'PSGallery' `
-    -Scope 'CurrentUser' `
-    -AllowClobber -Force -Verbose
-
-Install-Module -Name "AzureAD" `
-    -Repository 'PSGallery' `
-    -Scope 'CurrentUser' `
-    -AllowClobber -Force -Verbose
-
-# WVD Modules
-Install-Module -Name Az.DesktopVirtualization `
-    -RequiredVersion 2.0.0 `
-    -SkipPublisherCheck
-
-# I needed this to do some GPO work - optional
-Install-Module -Name GPRegistryPolicy
 
 <# 
   For AzureFiles AD Setup - 
@@ -64,6 +81,14 @@ $AZFZip         = $DownloadDir + '\AZFilesPSModule.zip'
 $AZFExtractDir  = $DownloadDir + '\AZFilesPSModule'
 $AZFScript      = $AZFExtractDir + '\CopyToPSPath.ps1'
 
+# Check to see if C:\temp exists - if not create it
+if (!(Test-Path $DownloadDir))
+{
+  Write-Host "Creating C:\temp"
+  New-Item -ItemType Directory -Force -Path $DownloadDir
+  $removeDir = "True" # We created it, so remove it afterward
+}
+
 Invoke-WebRequest -Uri $AZFModuleURL -OutFile $AZFZip
 Expand-Archive -LiteralPath $AZFZip -DestinationPath $AZFExtractDir
 Set-Location $AZFExtractDir
@@ -74,6 +99,12 @@ Import-Module AzFilesHybrid
 Remove-Item $AZFZip
 Set-Location $DownloadDir
 Remove-Item -Recurse $AZFExtractDir
+
+if ($removeDir = "True")
+{
+  Write-Host "Removing C:\temp"
+  Remove-Item -Recurse $DownloadDir
+}
 
 
 ###- Might need this - I needed it in VSC - YMMV
