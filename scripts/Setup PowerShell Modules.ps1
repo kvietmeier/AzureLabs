@@ -1,13 +1,18 @@
 ###=================================================================================###
 <# 
-  PowerShell commands to Install some required modules for working in Azure. 
-      Written By: Karl Vietmeier                                             
+  Filename: Setup PowerShell Modules.ps1
+  
+  Description:
+  PowerShell commands to install the modules you need for working in Azure and
+  with Windows Virtual Desktop. 
+      
+  Written By: Karl Vietmeier                                             
                                                                             
   These Are common modules for AD, Azure, AzureFiles, WVD, and GPO
   *** Includes code to non-interatively install AZFiles Module       
 #>
 ###=================================================================================###
-return
+#return
 
 ### Required PS Modules:
 # Check PS Version - 
@@ -15,19 +20,30 @@ $PSVersionTable.PSVersion
 
 function PreReqs () {
   # Run these as an Admin:
+  # Standard: You might need to set this - (set it back later if you need to)
+  Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force
+
   # May need to Upgrade PowerShellGet and other modules so just do it - upgrade NuGet first
+  # - you will need this min version (as of 10/15/2020) to run/install Set-PSRepository
   Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force 
-  Install-Module -Name PowerShellGet -Force
+  
+  # Trust the Gallery - So we don't get prompted all the time
+  Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
+  
+  # Install upgrade PowerShellGet
+  Install-Module -Name PowerShellGet `
+    -AllowClobber -Force -Verbose
 }
 
 function InstallAZModules () {
-  # Install Azure and AD Modules - probably have these but this will upgrade them
+  # Install Azure Az modules - probably have these but this will upgrade them
   Install-Module -Name "Az" `
      -Repository 'PSGallery' `
       -Scope 'CurrentUser' `
       -Confirm:$false `
       -AllowClobber -Force -Verbose
 
+  # Azure AD Module    
   Install-Module -Name "AzureAD" `
       -Repository 'PSGallery' `
       -Scope 'CurrentUser' `
@@ -50,17 +66,11 @@ function InstallAZModules () {
 
 }
 
-# Standard: You might need to set this - (set it back later if you need to)
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force
-
-# Trust the Gallery - So we don't get prompted all the time
-Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
-
 PreReqs
 InstallAZModules
 
-
-<# 
+<#
+###################################################################################
   For AzureFiles AD Setup - 
   Reference: Download and follow install instructions:
   AzFilesHybrid:   https://github.com/Azure-Samples/azure-files-samples/releases
@@ -68,6 +78,7 @@ InstallAZModules
   After you unzip and run the copy script you can import the module
 
   This code will install it for you automatically (Check the version - it could be newer)
+###################################################################################
 #>
 
 # These can change - 
@@ -103,6 +114,7 @@ Remove-Item -Recurse $AZFExtractDir
 if ($removeDir = "True")
 {
   Write-Host "Removing C:\temp"
+  Set-Location "C:\"
   Remove-Item -Recurse $DownloadDir
 }
 
