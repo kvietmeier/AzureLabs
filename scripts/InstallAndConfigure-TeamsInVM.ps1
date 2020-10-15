@@ -6,34 +6,43 @@
   Description                      
     Install Teams for WVD - non-interactively
 
-    Need to fix the paths - 
   #>                                            
 ###====================================================================================###
-
 ### Here for safety - comment/uncomment as desired
-return
+#return
 
-### Get my functions and credentials
-# Credentials  (stored outside the repo)
-. '..\..\Certs\resources.ps1'
+# These might need updating
+$DownloadDir  = "C:\temp"
+$TeamsVer     = "1.3.00.21759"
+$WebRTCVer    = "RE4AQBt"
 
-# Functions (In this repo)
-. '.\FunctionLibrary.ps1'
+# These are fixed or derived from the previous 2
+# Overkill?  Edit in one place in case things change.
+$TeamsURL     = "https://statics.teams.cdn.office.net/production-windows-x64/"
+$TeamsMSI     = "/Teams_windows_x64.msi"
+$TeamsURI     = $TeamsURL + $TeamsVer + $TeamsMSI 
+$TeamsOut     = $DownloadDir + "\installteams.msi"
+$WebRTCURL    = "https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/"
+$WebRTCMSI    = "\installwebrtc.msi"
+$WebRTCURI    = $WebRTCURL + $WebRTCVer
+$WebRTCOut    = $DownloadDir + $WebRTCMSI
 
-# Imported from "FunctionLibrary.ps1"
-# Are we connected to Azure with the corredt SubID?
-Check-Login
+# Check to see if C:\temp exists - if not create it
+if (!(Test-Path $DownloadDir))
+{
+  Write-Host "Creating C:\temp"
+  New-Item -ItemType Directory -Force -Path $DownloadDir
+  $removeDir = "True" # We created it, so remove it afterward
+}
 
-$DownloadDir = "c:\temp"
-
-# Download Teams Installer (might fail on version)
-Invoke-WebRequest -URI https://statics.teams.cdn.office.net/production-windows-x64/1.3.00.21759/Teams_windows_x64.msi -OutFile c:\temp\installteams.msi
+# Download Teams Installer (Verify version)
+Invoke-WebRequest -URI $TeamsURI -OutFile $TeamsOut
 
 # Change to download dir
 Set-Location $DownloadDir
 
 # Download Web Socket (For media redirection)
-Invoke-WebRequest -URI https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RE4AQBt -OutFile c:\bin\installwebrtc.msi
+Invoke-WebRequest -URI $WebRTCURI -OutFile $WebRTCOut
 
 # Install WebSocket
 .\installwebrtc.msi /quiet
@@ -46,3 +55,15 @@ New-ItemProperty -Path "HKLM:\Software\Microsoft\Teams" `
 
 # Install the app in "Per Machine Mode"
 msiexec /i installteams.msi /l*v teamslog.txt ALLUSER=1 /quiet
+
+# Remove C:\temp if we created it
+if ($removeDir = "True")
+{
+  Write-Host "Removing C:\temp"
+  Set-Location "C:\"
+  Remove-Item -Recurse $DownloadDir
+}
+
+
+
+
