@@ -16,7 +16,7 @@
 
 ### Required PS Modules:
 # Check PS Version - 
-$PSVersionTable.PSVersion
+#$PSVersionTable.PSVersion
 
 function PreReqs () {
   # Run these as an Admin:
@@ -45,6 +45,13 @@ function InstallAZModules () {
 
   # Azure AD Module    
   Install-Module -Name "AzureAD" `
+      -Repository 'PSGallery' `
+      -Scope 'CurrentUser' `
+      -Confirm:$false `
+      -AllowClobber -Force -Verbose
+
+  # Azure AD Preview Module    
+  Install-Module -Name "AzureADPreview" `
       -Repository 'PSGallery' `
       -Scope 'CurrentUser' `
       -Confirm:$false `

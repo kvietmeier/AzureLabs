@@ -12,6 +12,12 @@
 ### Here for safety - comment/uncomment as desired
 return
 
+# Stop on first error
+$ErrorActionPreference = "stop"
+
+# Run from the location of the script
+Set-Location $PSscriptroot
+
 ### Get my functions and credentials
 # Credentials  (stored outside the repo)
 . '..\..\Certs\resources.ps1'

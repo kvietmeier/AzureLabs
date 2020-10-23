@@ -144,6 +144,7 @@ Test-NetConnection 8.8.8.8
 
 # Get more detailed information
 Test-NetConnection -ComputerName www.contoso.com -DiagnoseRouting -InformationLevel Detailed
+Test-NetConnection -ComputerName outlook.office365.com -DiagnoseRouting -InformationLevel Detailed
 
 Test-NetConnection 168.63.129.16 -port 53
 

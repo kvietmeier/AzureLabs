@@ -170,6 +170,13 @@ netsh winhttp reset proxy
 # Set the power profile to the High Performance (not working)
 powercfg /setactive SCHEME_MIN
 
+# Set time to UTC - timezone mapping will fix it later
+Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\TimeZoneInformation `
+    -Name RealTimeIsUniversal `
+    -Value 1 `
+    -Type DWord `
+    -Force
+
 # Set startup type of the Windows Time (w32time) service to Automatic
 Set-Service -Name w32time -StartupType Automatic
 
