@@ -67,23 +67,42 @@ $NICId          = "NIC-$RandomID"
 # Windows Image and VM Size to Use
 $VMSize         = "Standard_D2_v3"
 
-###--- Images
+
+###=================  Image Definitions  ==================###
 # Image: Windows 10 Enterprise 2004
 #$PublisherName  = "MicrosoftWindowsDesktop"
 #$Offer          = "Windows-10"
 #$SKU            = "20h1-entn"
 #$Version        = "latest"
+
 # Image: Windows 10 Enterprise 1909
-$PublisherName  = "MicrosoftWindowsDesktop"
-$Offer          = "Windows-10"
-$SKU            = "19h2-ent"
-$Version        = "latest"
-# Image: Windows 10 Multi Session 2004
 #$PublisherName  = "MicrosoftWindowsDesktop"
-#$Offer          = "office-365"
-#$SKU            = "19h2-evd-o365pp"
+#$Offer          = "Windows-10"
+#$SKU            = "19h2-ent"
 #$Version        = "latest"
 
+# Image: Windows 10 Multi Session 2004
+$PublisherName  = "MicrosoftWindowsDesktop"
+$Offer          = "office-365"
+$SKU            = "19h2-evd-o365pp"
+$Version        = "latest"
+
+<# 
+###--- Use an Image from a Shared Image Gallery
+# Windows 10 2004 Enterprise
+#$ImageGallery   = "/subscriptions/" + $SubID + "/resourceGroups/ImageGallery-rg/providers/Microsoft.Compute/galleries/ClientImages"
+#$ImageID        = "/images/Win10Enterprise-Tools/versions/1.0.0"
+$GalleryName    = "ClientImages"
+$GalleryRG      = "ImageGallery-rg"
+$ImageName      = "Win10Enterprise-Tools"
+
+$ImageDefinition = Get-AzGalleryImageDefinition `
+   -GalleryName $GalleryName `
+   -ResourceGroupName $GalleryRG `
+   -Name $ImageName
+#>
+
+###=================   END: Images   ==================###
 
 <###=================  Start Setting up the VM  ==================###
 Creating a Virtual Machine is a multi-step process where you build up configuration

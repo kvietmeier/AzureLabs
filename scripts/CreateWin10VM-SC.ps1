@@ -23,8 +23,11 @@
 ### Here for safety - comment/uncomment as desired
 #return
 
+# Stop on first error
+$ErrorActionPreference = "stop"
+
+# Run from the location of the script
 Set-Location $PSscriptroot
-#Set-Location ../AzureLabs/scripts
 
 ###---- Get my functions and credentials ----###
 # Credentials  (stored outside the repo)
@@ -49,6 +52,7 @@ $VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUse
 #>
 
 $ErrorActionPreference = "stop"
+
 ###--- Use an Image from a Shared Image Gallery
 # Windows 10 2004 Enterprise
 #$ImageGallery   = "/subscriptions/" + $SubID + "/resourceGroups/ImageGallery-rg/providers/Microsoft.Compute/galleries/ClientImages"

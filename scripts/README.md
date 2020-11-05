@@ -11,13 +11,13 @@ Collection of scripts for working within Azure and with Windows Virtual Desktop.
 ```
 
 The "users" folder is a script I grabbed off GitHub to add users to AD.<br>
-The "examples" folder has code snippets and scripts I have downloaded - they are not mine. 
+The "examples" folder has code snippets and scripts I have downloaded - most are not mine. 
 
 
 ### Usage
 My scripts are "." sourcing 2 files, one is outside the repo and has variables with sensitive information
 like GUIDs, SubscriptionIDs/Names, and certificates. The other is in this repo and is a library of common 
-functions
+functions.
 
 They are accesed like this:
 ```
@@ -44,11 +44,13 @@ Will setup your laptop/workstation to run these scripts/snippets.
 <br>
 Some of these "scripts" aren't meant to be run as a single script but are collections of useful 
 commands and code snippets to be run interactively using the ISE or VSC.
+At some point I will merge them into larger scripts as functions but for now they exist as seperate utilities.
 
 Especially - 
 ```
 scripts/NetworkTroubleshooting.ps1
 ```
+This file is a collection of various Powershell and OS commands/utilities for troubleshooting networks.
 
 ## Author
 

@@ -1,39 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FrxProfileFolderRedirection ExcludeCommonFolders="0">
   <Excludes>
+    <!--Omit if folder is redirected to the network-->
+    <Exclude Copy="0">Downloads</Exclude>
 
-    <!--Office add-ins and other apps. May impact performance if excluded-->
+    <!--Office add-ins and other apps. May impact performance of some apps-->
     <Exclude Copy="0">AppData\Local\Apps</Exclude>
-
+    
+    <!--Omit if you don't see this path in your environment-->
+    <Exclude Copy="0">AppData\Local\CrashDumps</Exclude>
+    
     <!--May break per-user installed apps-->
     <Exclude Copy="0">AppData\Local\Downloaded Installations</Exclude>
-
+    
     <!--May impact performance of .NET apps-->
     <Exclude Copy="0">AppData\Local\Assembly</Exclude>
+    
+    <!--Only include if the JRE is in the environment. May impact performance of Java apps-->
+    <Exclude Copy="0">AppData\Local\Sun</Exclude>
+    
+    <!--Only include if the JRE is in the environment. May impact performance of Java apps-->
+    <Exclude Copy="0">AppData\Roaming\Sun\Java\Deployment\cache</Exclude>
 
-    <!--Google Chrome brower cache - size can also be managed via policy-->
+    <!--Omit if not using Remote Desktop Connection client inside a remote desktop-->
+    <Exclude Copy="0">AppData\Local\Microsoft\Terminal Server Client</Exclude>
+    
+    <!--Google Chrome brower cache-->
     <Exclude Copy="0">AppData\Local\Google\Chrome\User Data\Default\Cache</Exclude>
-
-    <!--Microsoft Edge (Chromium) cache - size can also be managed via policy-->
+    
+    <!--Microsoft Edge UWP browser cache-->
+    <Exclude Copy="0">AppData\Local\Packages\Microsoft.MicrosoftEdge_8wekyb3d8bbwe\AC\MicrosoftEdge\Cache</Exclude>
+    
+    <!--Microsoft Edge (Chromium) cache-->
     <Exclude Copy="0">AppData\Local\Microsoft\Edge SxS\User Data\Default\Cache</Exclude>
-
+    
+    <!-- Teams Related -->
     <!--Details here https://docs.microsoft.com/en-us/microsoftteams/teams-for-vdi#teams-cached-content-exclusion-list-for-non-persistent-setup-->
     <Exclude Copy="0">AppData\Roaming\Microsoft\Teams\media-stack</Exclude>
-
+    
     <!--Details here https://techcommunity.microsoft.com/t5/fslogix-blog/teams-setup-rapidly-grows-my-profile-disk/ba-p/1539064-->
     <Exclude Copy="0">AppData\Roaming\Microsoft\Teams\Service Worker</Exclude>
 
     <!--Details here https://docs.microsoft.com/en-us/microsoftteams/teams-for-vdi#non-persistent-setup-->
     <Exclude Copy="0">AppData\Roaming\Microsoft\Teams\meeting-addin\Cache</Exclude>
 
-    <!--Omit if you need to keep crash dumps for troubleshooting-->
-    <Exclude Copy="0">AppData\Local\CrashDumps</Exclude>
-
-    <!--Omit if not using Remote Desktop Connection client inside a remote desktop-->
-    <Exclude Copy="0">AppData\Local\Microsoft\Terminal Server Client</Exclude>
-
   </Excludes>
-  <Includes>
   <Includes />
-
 </FrxProfileFolderRedirection>

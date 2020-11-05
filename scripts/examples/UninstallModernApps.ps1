@@ -1,6 +1,9 @@
 return
 ### Uninstall Modern apps
 # https://www.askvg.com/guide-how-to-remove-all-built-in-apps-in-windows-10/
+# To uninstall Windows Store: (Be very careful!)
+get-appxpackage *windowsstore* | remove-appxpackage
+
 
 Get-AppxPackage -allusers *3dbuilder* | Remove-AppxPackage
 Get-AppxPackage -allusers *windowscommunicationsapps* | Remove-AppxPackage
@@ -8,17 +11,14 @@ Get-AppxPackage -allusers *solitairecollection* | Remove-AppxPackage
 Get-AppxPackage -allusers *bingfinance* | Remove-AppxPackage
 Get-AppxPackage -allusers *windowsstore* | Remove-AppxPackage
 
+
 # To uninstall Messaging and Skype Video apps together:
 get-appxpackage -allusers *messaging* | remove-appxpackage
-Get-AppxPackage -allusers *Skype* | Remove-AppxPackage
-Get-AppxPackage -allusers *Xbox* | Remove-AppxPackage
-
-Get-AppxPackage | Select Name, Skype
-Get-AppxPackage
-
-
-# To uninstall Skype:
 get-appxpackage -allusers *skypeapp* | remove-appxpackage
+Get-AppxPackage -allusers *Skype* | Remove-AppxPackage
+
+
+Get-AppxPackage -allusers *Xbox* | Remove-AppxPackage
 
 # To uninstall Paid Wi-Fi & Cellular:
 get-appxpackage -allusers *oneconnect* | remove-appxpackage
@@ -133,9 +133,6 @@ get-appxpackage *bingweather* | remove-appxpackage
 
 # To uninstall Windows Holographic:
 get-appxpackage *holographic* | remove-appxpackage
-
-# To uninstall Windows Store: (Be very careful!)
-get-appxpackage *windowsstore* | remove-appxpackage
 
 # To uninstall Xbox:
 get-appxpackage *xbox* | remove-appxpackage

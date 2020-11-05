@@ -7,6 +7,15 @@
   - 5K resolution
   - etc.
 
+  ToDos:
+  Shutdown event tracker - 
+  HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Reliability
+    ShutdownReasonOn DWORD
+    ShutdownReasonUI DWORD
+
+    <delete> = Disable
+    1 = Enable
+
 #>                                                     
 ###====================================================================================###
 return
@@ -210,4 +219,4 @@ function Disable-IEESC
     } else { Write-Host "Failed to disable, use Server Manager"}
 }
 
-#Disable-IEESC
+#Disable-IEESC    
