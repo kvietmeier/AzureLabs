@@ -81,7 +81,7 @@ $VMSize         = "Standard_D2_v3"
 #$SKU            = "19h2-ent"
 #$Version        = "latest"
 
-# Image: Windows 10 Multi Session 2004
+# Image: Windows 10 Multi Session 2004 w/O365
 $PublisherName  = "MicrosoftWindowsDesktop"
 $Offer          = "office-365"
 $SKU            = "19h2-evd-o365pp"

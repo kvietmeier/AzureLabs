@@ -10,6 +10,12 @@
 ### Here for safety - comment/uncomment as desired
 return
 
+# Stop on first error
+$ErrorActionPreference = "stop"
+
+# Run from the location of the script
+Set-Location $PSscriptroot
+
 ### Get my functions and credentials
 # Credentials  (stored outside the repo)
 . '..\..\Certs\resources.ps1'
@@ -69,7 +75,7 @@ Read-Host "Press ENTER to continue..."
 
 # Not very sensitive, set here to over-ride or comment out to use externally stored values
 $AZResourceGroup = "WVDLandscape01"
-$AZStorageAcct = "kvstor1551"
+$AZStorageAcct = "kv82579fslogix01"
 $AZFileShare = "profiles"
 
 ###--- Set Variables for each of the icacls options and "net use"

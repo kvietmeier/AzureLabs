@@ -8,15 +8,11 @@
       
   Written By: Karl Vietmeier                                             
                                                                             
-  These Are common modules for AD, Azure, AzureFiles, WVD, and GPO
+  These are common modules for Azure AD, Azure, AzureFiles, WVD, and GPO
   *** Includes code to non-interatively install AZFiles Module       
 #>
 ###=================================================================================###
 #return
-
-### Required PS Modules:
-# Check PS Version - 
-#$PSVersionTable.PSVersion
 
 function PreReqs () {
   # Run these as an Admin:
