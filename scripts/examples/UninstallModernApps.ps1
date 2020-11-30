@@ -9,7 +9,6 @@ Get-AppxPackage -allusers *3dbuilder* | Remove-AppxPackage
 Get-AppxPackage -allusers *windowscommunicationsapps* | Remove-AppxPackage
 Get-AppxPackage -allusers *solitairecollection* | Remove-AppxPackage
 Get-AppxPackage -allusers *bingfinance* | Remove-AppxPackage
-Get-AppxPackage -allusers *windowsstore* | Remove-AppxPackage
 
 
 # To uninstall Messaging and Skype Video apps together:
@@ -20,6 +19,9 @@ Get-AppxPackage -allusers *Skype* | Remove-AppxPackage
 
 Get-AppxPackage -allusers *Xbox* | Remove-AppxPackage
 
+# To uninstall 3D Builder:
+get-appxpackage *3dbuilder* | remove-appxpackage
+
 # To uninstall Paid Wi-Fi & Cellular:
 get-appxpackage -allusers *oneconnect* | remove-appxpackage
 
@@ -29,13 +31,8 @@ get-appxpackage -allusers *bingfinance* | remove-appxpackage
 # To uninstall Microsoft Wallet:
 get-appxpackage -allusers *wallet* | remove-appxpackage
 
-
 # To uninstall SkypeForBus:
 Get-AppxPackage *Skype.for.Business* | Remove-AppxPackage
-
-
-# To uninstall 3D Builder:
-get-appxpackage *3dbuilder* | remove-appxpackage
 
 # To uninstall Alarms & Clock:
 get-appxpackage *alarms* | remove-appxpackage
@@ -73,14 +70,11 @@ get-appxpackage *zune* | remove-appxpackage
 # To uninstall Maps:
 get-appxpackage *maps* | remove-appxpackage
 
-
-
 # To uninstall Microsoft Solitaire Collection:
 get-appxpackage *solitaire* | remove-appxpackage
 
 # To uninstall Microsoft Wi-Fi:
 get-appxpackage *connectivitystore* | remove-appxpackage
-
 
 # To uninstall Money, News, Sports and Weather apps together:
 get-appxpackage *bing* | remove-appxpackage
@@ -93,7 +87,6 @@ get-appxpackage *bingnews* | remove-appxpackage
 
 # To uninstall OneNote:
 get-appxpackage *onenote* | remove-appxpackage
-
 
 # To uninstall Paint 3D:
 get-appxpackage *mspaint* | remove-appxpackage
@@ -133,6 +126,3 @@ get-appxpackage *bingweather* | remove-appxpackage
 
 # To uninstall Windows Holographic:
 get-appxpackage *holographic* | remove-appxpackage
-
-# To uninstall Xbox:
-get-appxpackage *xbox* | remove-appxpackage

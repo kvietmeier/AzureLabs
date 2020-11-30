@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--Example FSLogix Exclusions File - Karl Vietmeier-->
+<!--These are examples, you may not need all of these-->
 <FrxProfileFolderRedirection ExcludeCommonFolders="0">
   <Excludes>
     <!--Omit if folder is redirected to the network-->
@@ -16,6 +17,8 @@
     <Exclude Copy="0">AppData\Local\Sun</Exclude>
     <!--Only include if the JRE is in the environment. May impact performance of Java apps-->
     <Exclude Copy="0">AppData\Roaming\Sun\Java\Deployment\cache</Exclude>
+    <!--================-->
+    <!--Browser Settings-->
     <!--Omit if not using Remote Desktop Connection client inside a remote desktop-->
     <Exclude Copy="0">AppData\Local\Microsoft\Terminal Server Client</Exclude>
     <!--Google Chrome brower cache-->
@@ -24,6 +27,7 @@
     <Exclude Copy="0">AppData\Local\Packages\Microsoft.MicrosoftEdge_8wekyb3d8bbwe\AC\MicrosoftEdge\Cache</Exclude>
     <!--Microsoft Edge (Chromium) cache-->
     <Exclude Copy="0">AppData\Local\Microsoft\Edge SxS\User Data\Default\Cache</Exclude>
+    <!--===============-->
     <!-- Teams Related -->
     <!--Details here https://docs.microsoft.com/en-us/microsoftteams/teams-for-vdi#teams-cached-content-exclusion-list-for-non-persistent-setup-->
     <Exclude Copy="0">AppData\Roaming\Microsoft\Teams\media-stack</Exclude>
@@ -31,6 +35,7 @@
     <Exclude Copy="0">AppData\Roaming\Microsoft\Teams\Service Worker</Exclude>
     <!--Details here https://docs.microsoft.com/en-us/microsoftteams/teams-for-vdi#non-persistent-setup-->
     <Exclude Copy="0">AppData\Roaming\Microsoft\Teams\meeting-addin\Cache</Exclude>
+    <!--=================-->
   </Excludes>
   <Includes />
 </FrxProfileFolderRedirection>
