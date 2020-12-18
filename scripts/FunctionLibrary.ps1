@@ -34,42 +34,86 @@ function Check-Login ()
 }
 
 ### Login Creds - an insecure hack
-# - In secrets.ps1
+# - In an external file - edit for your use here
 #$AIAuser
 #$AIApassword
-function Check-Login-noprompt ($AIAPassword, $AIAuser)
+function Login-NoPrompt ($AIAPassword, $AIAuser)
 {
-    $securepasswd = ConvertTo-SecureString $AIAPassword -AsPlainText -Force
-    $cred = New-Object System.Management.Automation.PSCredential ($AIAuser, $securepasswd)
-    Connect-AzAccount -Credential $cred -Subscription $SubID
+    $context = Get-AzContext
+    Write-Host "" 
+    Write-Host "Is my AZ Account Connected?" 
 
+    if (!$context -or ($context.Subscription.Id -ne $SubID)) 
+    {
+        # Use credentials stored in a secure variable sourced from another file
+        $securepasswd = ConvertTo-SecureString $AIAPassword -AsPlainText -Force
+        $cred = New-Object System.Management.Automation.PSCredential ($AIAuser, $securepasswd)
+        Connect-AzAccount -Credential $cred -Subscription $SubID
+        
+        # Change subscription context (May not need this)
+        Select-AzSubscription -SubscriptionId $SubName
+    } 
+    else 
+    {
+        Write-Host "SubscriptionId '$SubID' already connected"
+        Write-Host "" 
+    }
 }
 
 function Install-PSModules ()
 {
+
     Write-Host ""
-    Write-Host "Installing Some PowerShell Modules"
+    Write-Host "Installing Some useful PowerShell Modules"
     Write-Host ""
 
-    ### You are going to need some modules - of course :)
     # Run these as an Admin:
-    # You might need to set this - (set it back later if you need to)
+    # Standard: You might need to set this - (set it back later if you need to)
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force
-    
-    # Trust the Gallery - so we don't get prompted all the time
+
+    # May need to Upgrade PowerShellGet and other modules so just do it - upgrade NuGet first
+    # - you will need this min version (as of 10/15/2020) to run/install Set-PSRepository
+    Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force 
+  
+    # Trust the Gallery - So we don't get prompted all the time
     Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
+  
+    # Install upgrade PowerShellGet
+    Install-Module -Name PowerShellGet -AllowClobber -Force -Verbose
 
-    # May need to Upgrade PowerShellGet and other modules - upgrade NuGet first
-    Install-PackageProvider -Name NuGet -Force
-    Install-Module -Name PowerShellGet -Force
+    # Install Azure Az modules - probably have these but this will upgrade them
+    Install-Module -Name "Az" `
+       -Repository 'PSGallery' `
+       -Scope 'CurrentUser' `
+       -Confirm:$false `
+       -AllowClobber -Force -Verbose
 
-    # Azure and AD Modules - probably have these
-    Install-Module -Name "Az" -Repository 'PSGallery' -Scope 'CurrentUser' -AllowClobber -Force -Verbose
-    Install-Module -Name "AzureAD" -Repository 'PSGallery' -Scope 'CurrentUser' -AllowClobber -Force -Verbose
+    # Azure AD Module    
+    Install-Module -Name "AzureAD" `
+       -Repository 'PSGallery' `
+       -Scope 'CurrentUser' `
+       -Confirm:$false `
+       -AllowClobber -Force -Verbose
 
-    # I needed this to do some GPO work
-    Install-Module -Name GPRegistryPolicy
+    # Azure AD Preview Module    
+    Install-Module -Name "AzureADPreview" `
+        -Repository 'PSGallery' `
+        -Scope 'CurrentUser' `
+        -Confirm:$false `
+        -AllowClobber -Force -Verbose
 
-    # WVD Modules
-    Install-Module -Name Az.DesktopVirtualization -RequiredVersion 2.0.0 -SkipPublisherCheck
+    # WVD Module
+    Install-Module -Name "Az.DesktopVirtualization" `
+        -Repository 'PSGallery' `
+        -RequiredVersion 2.0.0 `
+        -SkipPublisherCheck `
+        -Confirm:$false `
+        -AllowClobber -Force -Verbose
+
+    # I needed this to do some GPO work - optional
+    Install-Module -Name "GPRegistryPolicy" `
+        -Repository 'PSGallery' `
+        -Confirm:$false `
+        -AllowClobber -Force -Verbose
+
 }

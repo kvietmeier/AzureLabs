@@ -5,7 +5,7 @@
                                                                                    
   Description:                                                                     
    Create an arbitrary number of files of any size to generate fileIO             
-   Will crank CPU up to 100%                                                      
+   Will crank CPU up to 100%                                                    
 #>
 ###====================================================================================###
 
@@ -15,7 +15,16 @@ $FileSize = "2048"
 $TargetDir = "c:\temp"
 $NumFiles = "10000"
 
+Get-Location
+
+
 # Check for $TargetDir
+if (!(Test-Path $TargetDir))
+{
+  Write-Host "Creating C:\temp"
+  New-Item -ItemType Directory -Force -Path $TargetDir
+  $removeDir = "True" # We created it, so remove it afterward
+}
 
 # Create a fixed size byte array for later use.  make it the required file size.
 $ByteArray = New-Object byte[] $FileSize
@@ -45,6 +54,15 @@ $RNGObject = New-Object Security.Cryptography.RNGCryptoServiceProvider
     $stream.close()
 
 }
+
+# Remove the directory we created
+if ($removeDir = "True")
+{
+  Write-Host "Removing C:\temp"
+  Set-Location "C:\"
+  Remove-Item -Recurse $TargetDir
+}
+
 
 # How long did it all take?
 $StopWatch.stop()

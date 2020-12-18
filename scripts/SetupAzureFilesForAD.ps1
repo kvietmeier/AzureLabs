@@ -267,7 +267,7 @@ Invoke-Expression -Command ('icacls $DriveLetter $Grant "${ElevateContrib}${Full
 Invoke-Expression -Command ('icacls $DriveLetter $Grant "${Contrib}${ModifyContrib}"')
 Invoke-Expression -Command ('icacls $DriveLetter $Grant "${DomainAdmin}${Modify}"')
 
-icacls :
+icacls $DriveLetter
 
 #$BuiltinBuiltin = "Builtin\Builtin"
 #Invoke-Expression -Command ('icacls $DriveLetter $Remove "${BuiltinBuiltin}"')

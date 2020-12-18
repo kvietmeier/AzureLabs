@@ -29,7 +29,7 @@ Set-Location ../AzureLabs/scripts
 
 # Imported from "FunctionLibrary.ps1"
 # Are we connected to Azure with the corredt SubID?
-Check-Login
+Login-NoPrompt
 
 ###---- End my functions and credentials ----###
 
@@ -118,6 +118,7 @@ Set-AzVMExtension `
   https://docs.microsoft.com/en-us/azure/virtual-network/what-is-ip-address-168-63-129-16
 #>
 
+# On the VM
 # Find a list of DCs in the domain:
 nltest /dclist:<domainname>
 
@@ -140,10 +141,11 @@ Get list of DCs in domain 'northamerica' from '\\CY1-NA-DC-08'.
                                  AzureADKerberos [RODC]
 The command completed successfully
 
-
-
 ### ICMP Based Tools - ping etc
 # Always the first place to start - they test the resolver too. 
+
+# Enable ICMPv4-In without disabling Windows Firewall
+New-NetFirewallRule –DisplayName "Allow ICMPv4-In" –Protocol ICMPv4
 
 ## Built-in
 # pathping.exe
@@ -164,7 +166,7 @@ Test-NetConnection ya.ru
 # Test ICMP echo against known top level DNS server IP
 Test-NetConnection 8.8.8.8
 
-# Get more detailed information
+# Get more detailed information (Run as Administrator)
 Test-NetConnection -ComputerName www.contoso.com -DiagnoseRouting -InformationLevel Detailed
 Test-NetConnection -ComputerName outlook.office365.com -DiagnoseRouting -InformationLevel Detailed
 

@@ -27,6 +27,9 @@
 $ErrorActionPreference = "stop"
 
 # Run from the location of the script
+#function SetLocation { Set-Location $PSscriptroot }
+#SetLocation
+
 Set-Location $PSscriptroot
 
 ###---- Get my functions and credentials ----###
