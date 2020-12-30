@@ -7,7 +7,8 @@
   Description                                                      
     Create a Win10 VM for testing                                 
     Sometimes you just need a VM for testing with some standard defaults and using 
-
+    Creates it in South Central
+    
   Status:  Working, tested
 
   To Do:  Setup storage - OS disk, rather than take the defaults.

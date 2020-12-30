@@ -68,3 +68,11 @@ if($val.EnableLUA -ne 0)
  set-itemproperty -Path hklm:software\microsoft\windows\currentversion\policies\system -Name "EnableLUA" -value 0
 } 
 #>
+
+<# 
+Example VHD Paths - 
+\\kv82578msix01.file.core.windows.net\vhdshare\VLC\VLC.3.0.11.vhd
+\\kv82578msix01.file.core.windows.net\vhdshare\NotePadPP\NotePadPP8.8.8.vhd
+\\kv82578msix01.file.core.windows.net\vhdshare\GoogleChrome\GoogleChrome.vhd
+\\kv82578msix01.file.core.windows.net\vhdshare\VSC\Machine\VSCPerMachine.vhd
+#>

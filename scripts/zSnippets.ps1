@@ -28,6 +28,10 @@ Check-Login
 
 ###----- RDP settings
 # https://docs.microsoft.com/en-us/windows-server/remote/remote-desktop-services/clients/rdp-files
+
+$AZResourceGroup = "TempRG-01"
+$AppGroup = "TestLogin-DAG"
+
 # Use Update-AzWvdHostPool
 Update-AzWvdHostPool -ResourceGroupName ResourceGroupName `
     -Name HostPoolName `
@@ -39,24 +43,20 @@ Update-AzWvdHostPool -ResourceGroupName ResourceGroupName `
     -CustomRdpProperty $null `
     -Ring $null `
     -ValidationEnvironment:$false
-    
-Update-AzWvdHostPool -ResourceGroupName Test-rg -Name Testpool -CustomRdpProperty "audiocapturemode:i:1;use multimon:i:0"
-Set-RdsHostPool -TenantName MyTenant -HostPoolName MyPool -CustomRdpProperty "audiocapturemode:i:1;use multimon:i:0"
 
+
+Update-AzWvdHostPool -ResourceGroupName Test-rg -Name Testpool -CustomRdpProperty "audiocapturemode:i:1;use multimon:i:0"
+ # Or - 
 $properties="audiocapturemode:i:1;use multimon:i:0"
 Update-AzWvdHostPool -ResourceGroupName $AZResourceGroup -Name TestPool01 -CustomRdpProperty $properties
 
-$AZResourceGroup = "TempRG-01"
-$AppGroup = "TestLogin-DAG"
+Get-AzWvdHostPool -ResourceGroupName $AZResourceGroup -Name TestPool01 | format-list Name, CustomRdpProperty
 
+###--- Misc HostPool Commands
 Get-AzWvdHostPool -ResourceGroupName $AZResourceGroup
 Get-AzWvdHostPool -ResourceGroupName $AZResourceGroup -Name TestPool01
 Get-AzWvdApplicationGroup -ResourceGroupName $AZResourceGroup
 Get-AzWvdApplicationGroup -ResourceGroupName $AZResourceGroup -Name $AppGroup | format-list Name
-
-Get-AzWvdHostPool -ResourceGroupName $AZResourceGroup -Name TestPool01 | format-list Name, CustomRdpProperty
-
-
 Remove-AzWvdApplicationGroup -ResourceGroupName $AZResourceGroup -Name $AppGroup
 Remove-AzWvdHostPool -ResourceGroupName TempRG-01 -Name Foobar02
 
