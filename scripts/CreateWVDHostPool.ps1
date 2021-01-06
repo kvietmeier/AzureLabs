@@ -23,20 +23,26 @@ Check-Login
 
 ###==============================================================### 
 
-$AZResourceGroup = "WVDLandscape01"
 
 # Create names with random 4 digit number.
-$NewHostPool    = "hostpool$(Get-Random -Minimum 1000 -Maximum 2000)"
-$NewWorkspace   = "workspace$(Get-Random -Minimum 1000 -Maximum 2000)"
-$NewDesktopApp  = "appgrp$(Get-Random -Minimum 1000 -Maximum 2000)"
-$PoolType = "Pooled"
-$LBType   = "Breadthfirst"
-$Region   = "westus2"
+$RandomID = $(Get-Random -Minimum 1000 -Maximum 2000)
+$AZResourceGroup = "WVDLandscape-$RandomID"
+$NewHostPool     = "HostPool-$RandomID"
+$NewWorkspace    = "Workspace-$RandonmID"
+$NewDesktopApp   = "AppGroup-$RandomID"
+$PoolType        = "Pooled"
+$LBType          = "Breadthfirst"
+$Region          = "westus2"
 
-# Run the following cmdlet to sign in to the Windows Virtual Desktop environment:
-# This cmdlet will create the host pool, workspace and desktop app group. Additionally,
-# it will register the desktop app group to the workspace. You can either create a 
-# workspace with this cmdlet or use an existing workspace.
+New-AzResourceGroup -Name $AZResourceGroup -Location $Region
+
+<#
+  Run the following cmdlet to sign in to the Windows Virtual Desktop environment:
+  This cmdlet will create the host pool, workspace and desktop app group. Additionally,
+  it will register the desktop app group to the workspace. You can either create a 
+  workspace with this cmdlet or use an existing workspace. 
+#>
+
 New-AzWvdHostPool `
     -ResourceGroupName $AZResourceGroup `
     -Name $NewHostPool `
@@ -50,15 +56,17 @@ New-AzWvdHostPool `
 # Run the next cmdlet to create a registration token to authorize a session 
 # host to join the host pool and save it to a new file on your local computer. 
 New-AzWvdRegistrationInfo `
-    -ResourceGroupName <resourcegroupname> `
-    -HostPoolName <hostpoolname> `
+    -ResourceGroupName  $AZResourceGroup `
+    -HostPoolName  $NewHostPool `
     -ExpirationTime $((get-date).ToUniversalTime().AddDays(1).ToString('yyyy-MM-ddTHH:mm:ss.fffffffZ'))
 
+<# 
 # For example, if you want to create a token that expires in two hours, run this cmdlet:
 New-AzWvdRegistrationInfo `
     -ResourceGroupName <resourcegroupname> `
     -HostPoolName <hostpoolname> `
-    -ExpirationTime $((get-date).ToUniversalTime().AddHours(2).ToString('yyyy-MM-ddTHH:mm:ss.fffffffZ'))
+    -ExpirationTime $((get-date).ToUniversalTime().AddHours(2).ToString('yyyy-MM-ddTHH:mm:ss.fffffffZ')) 
+#>
 
 # Run this cmdlet to add Azure Active Directory users to the default desktop 
 # app group for the host pool. 

@@ -58,6 +58,7 @@ $Region = "westus2"
 $RandomID = $(Get-Random -Minimum 1000 -Maximum 2000)
 
 # Resource names 
+$StorageAccount ="kv82578TempSA-$RandomID"
 $ResourceGroup  = "TempRG-$RandomID"
 $VMName         = "Win10VM-$RandomID"
 $DNSName        = "win10vm$RandomID"
@@ -69,10 +70,10 @@ $VMSize         = "Standard_D2_v3"
 
 
 ###=================  Image Definitions  ==================###
-# Image: Windows 10 Enterprise 2004
+# Image: Windows 10 Enterprise 2004 H2
 #$PublisherName  = "MicrosoftWindowsDesktop"
 #$Offer          = "Windows-10"
-#$SKU            = "20h1-entn"
+#$SKU            = "20h2-entn"
 #$Version        = "latest"
 
 # Image: Windows 10 Enterprise 1909
@@ -81,11 +82,20 @@ $VMSize         = "Standard_D2_v3"
 #$SKU            = "19h2-ent"
 #$Version        = "latest"
 
-# Image: Windows 10 Multi Session 2004 w/O365
+# Image: Windows 10 Multi Session 2020 2H w/O365
 $PublisherName  = "MicrosoftWindowsDesktop"
 $Offer          = "office-365"
-$SKU            = "19h2-evd-o365pp"
+$SKU            = "20h2-evd-o365pp"
 $Version        = "latest"
+
+<# 
+  office-365 SKUs
+   1903-evd-o365pp
+   19h2-evd-o365pp
+   20h1-evd-o365pp
+   20h2-evd-o365pp
+  
+#>
 
 <# 
 ###--- Use an Image from a Shared Image Gallery
@@ -141,34 +151,47 @@ $NewIPConfig = New-AzNetworkInterfaceIpConfig -Name "IPConfig-1" -Subnet $SubNet
 
 # Create the NIC using the PS Objects
 $VMNIC = New-AzNetworkInterface `
-    -Name $NICId `
-    -ResourceGroupName $ResourceGroup `
-    -Location $Region `
-    -NetworkSecurityGroupId $NSG.Id `
-    -IpConfiguration $NewIPConfig
+  -Name $NICId `
+  -ResourceGroupName $ResourceGroup `
+  -Location $Region `
+  -NetworkSecurityGroupId $NSG.Id `
+  -IpConfiguration $NewIPConfig
 
 # Add the NIC to the VM Configuration
 Add-AzVMNetworkInterface -VM $NewVMConfig -Id $VMNIC.Id
 
 ###=================== End - NIC Configuration ===================###
 
+###===================    Disk/Storage SetUp   ===================###
+# For boot diagnostics - keep it with VM
+#$NewVMConfig = Set-AzVMBootDiagnostic `
+#  -VM $NewVMConfig `
+#  -Enable `
+#  -ResourceGroupName $ResourceGroup `
+#  -StorageAccountName $StorageAccount
+
+
+
+###===================   End - Storage Setup   ===================###
+
 # OS definition and Credentials for user - Credentials are stored
 # in an external file.
 $NewVMConfig = Set-AzVMOperatingSystem `
-    -VM $NewVMConfig `
-    -Windows `
-    -ComputerName $VMName `
-    -Credential $VMCred `
-    -ProvisionVMAgent `
-    -EnableAutoUpdate
+  -VM $NewVMConfig `
+  -Windows `
+  -ComputerName $VMName `
+  -Credential $VMCred `
+  -ProvisionVMAgent `
+  -EnableAutoUpdate
 
 # Source Image
 $NewVMConfig = Set-AzVMSourceImage `
-    -VM $NewVMConfig `
-    -PublisherName $PublisherName `
-    -Offer $Offer `
-    -Skus $SKU `
-    -Version $Version
+  -VM $NewVMConfig `
+  -PublisherName $PublisherName `
+  -Offer $Offer `
+  -Skus $SKU `
+  -Version $Version
 
-# Create the VM using info in the layered config above
+
+###----> Create the VM using info in the layered config above
 New-AzVM -ResourceGroupName $ResourceGroup -Location $Region -VM $NewVMConfig -Verbose

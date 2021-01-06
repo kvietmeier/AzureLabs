@@ -22,19 +22,39 @@ return
 ###------ Install FSLogix if required
 function InstallFSLogix () {
 
-    # Download the .zip and expand it
-    Invoke-Webrequest -Uri "https://aka.ms/fslogix_download" -OutFile c:\temp\InstallFSLogix.zip
-    Set-Location C:\temp
-    Expand-Archive .\InstallFSLogix.zip
-    Set-Location C:\temp\InstallFSLogix\x64\Release
+  $DownloadDir        = "C:\temp"
+  $FSLogixZip         = $DownloadDir + '\InstallFSLogix.zip'
+  $FSLogixInstallDir  = $DownloadDir + '\InstallFSLogix\x64\Release'
 
-    # Install - 
-    $AgentInstaller = "FSLogixAppsSetup.exe"
-    $Switches = "/install /quiet /norestart"
-    $OS = (Get-WmiObject Win32_OperatingSystem).Caption
+  # Check to see if C:\temp exists - if not create it
+  if (!(Test-Path $DownloadDir))
+  {
+    Write-Host "Creating C:\temp"
+    New-Item -ItemType Directory -Force -Path $DownloadDir
+    $RemoveDir = "True" # We created it, so remove it afterward
+  }
 
-    # Install the FSLogix Apps agent
-    Start-Process -Wait ".\$AgentInstaller" -ArgumentList $Switches
+  # Download and extract
+  Invoke-Webrequest -Uri "https://aka.ms/fslogix_download" -OutFile $FSLogixZip
+  Set-Location $DownloadDir
+  Expand-Archive .\InstallFSLogix.zip
+  Set-Location $FSLogixInstallDir
+
+  # Install - 
+  $AgentInstaller = "FSLogixAppsSetup.exe"
+  $Switches = "/install /quiet /norestart"
+  $OS = (Get-WmiObject Win32_OperatingSystem).Caption
+
+  # Install the FSLogix Apps agent
+  Start-Process -Wait ".\$AgentInstaller" -ArgumentList $Switches
+
+  # Cleanup install dir
+  if ($RemoveDir = "True")
+  {
+    Write-Host "Removing C:\temp"
+    Set-Location "C:\"
+    Remove-Item -Recurse $DownloadDir
+  }
 
 }
 # Uncomment function
@@ -63,7 +83,7 @@ Add-MpPreference -ExclusionExtension ”.vhdx”
 # Registry Keys
 $FSLogixKey           = "HKLM:\Software\FSLogix"
 $FSLogixUserProfile   = "HKLM:\Software\FSLogix\Profiles"
-$ProfileSize          = "1024"
+$ProfileSize          = "15000"
 
 
 ###========================================================================================###
@@ -75,7 +95,7 @@ Recommended values
 Enabled                                     "1"
 VHDLocations                                "$FSLUNC"
 VolumeType                                  "vhdx"
-SizeInMBs                                   "1024"
+SizeInMBs                                   "15000"
 ProfileType                                 "3"
 FlipFlopProfileDirectoryName                "1"
 DeleteLocalProfileWhenVHDShouldApply        "1"

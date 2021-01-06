@@ -178,3 +178,57 @@ foreach ($md in $managedDisks) {
         }
     }
  }
+
+ 
+Function GetStorageAcctKeys   
+{  
+    $ResourceGroup  = "WVDLandScape01"   
+    $StorageAccount = "kv82579msix01"
+
+    Write-Host -ForegroundColor Green "Retrieving the storage accounts keys for $StorageAccount..."  
+
+    <# Grab the storage account keys  
+         .Value[0] = key1; .Value[1] = key2; .Value[2] = kerb1; .Value[3] = kerb2
+    #>
+    $StorAccounts  = Get-AzStorageAccount  
+    $StorAcctKey1  = (Get-AzStorageAccountKey -ResourceGroupName $ResourceGroup -Name $storageAccount -ListKerbKey).Value[0]  
+    $StorAcctKey2  = (Get-AzStorageAccountKey -ResourceGroupName $ResourceGroup -Name $storageAccount -ListKerbKey).Value[0]  
+    $StorAcctKerb1 = (Get-AzStorageAccountKey -ResourceGroupName $ResourceGroup -Name $storageAccount -ListKerbKey).Value[0]  
+    $StorAcctKerb2 = (Get-AzStorageAccountKey -ResourceGroupName $ResourceGroup -Name $storageAccount -ListKerbKey).Value[0]  
+  
+    Write-Host -ForegroundColor Yellow "Key 1: " $StorAcctKey1  
+    Write-Host -ForegroundColor Yellow "Key 2: " $StorAcctKey2  
+    Write-Host -ForegroundColor Yellow "Kerb1: " $StorAcctKerb1  
+    Write-Host -ForegroundColor Yellow "Kerb2: " $StorAcctKerb2  
+  
+}
+GetStorageAcctKeys
+
+function ResetStorageAcctKeys
+{
+   # Be very careful with this process - you will need to update the keys everywhere 
+   # they are used after this
+   $ResourceGroup  = "WVDLandScape01"   
+   $StorageAccount = "kv82579msix01"
+
+   Write-Host -ForegroundColor Green "Refreshing the storage accounts key (2)..."  
+ 
+   ## Refresh the storage account key 2  
+   New-AzStorageAccountKey -ResourceGroupName $ResourceGroup -Name $StorageAccount -KeyName key2  
+ 
+   ## Retrive the new storage account key 2  
+   $StorAcctKey2= (Get-AzStorageAccountKey -ResourceGroupName $ResourceGroup -Name $StorageAccount).Value[1]  
+   Write-Host -ForegroundColor Yellow "Storage Account Key 2: " $storAcctKey2          
+}
+
+
+# Uncomment if you want a new key - if you reset kerb1, anything using it will have to be updated
+#New-AzStorageAccountKey -ResourceGroupName $AZResourceGroup -name $AZStorageAccountName -KeyName kerb1
+
+<### Grab key1
+  .Value[0] = key1; .Value[1] = key2; .Value[2] = kerb1; .Value[3] = kerb2
+#>
+$StorageAcctKey = (Get-AzStorageAccountKey -ResourceGroupName $AZResourceGroup -Name $AZStorageAccountName -ListKerbKey).Value[0]
+
+# Create the computer account password using the storage account key
+$CompPassword = $StorageAcctKey | ConvertTo-Securestring -asplaintext -force

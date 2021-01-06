@@ -1,4 +1,5 @@
-<################################################################################################################
+<#
+###############################################################################################################
 This is the "Manual" process to configure AD authentication for Azure Files
    (automated!)
   Assumes you've already created:
@@ -16,24 +17,54 @@ This code came from a larger script written by John Kelbly I made some minor cha
 but did add the "Credentials" flag to the "New-ADComputer" for the case when the account running the code 
 lacks sufficient domain privledges (Service Account).
 
-###############################################################################################################-#>
+###############################################################################################################
+#>
+
 # Add this to avoid mistakes
 return
 
+# Stop on first error
+$ErrorActionPreference = "stop"
 
-#################################
-# Azure Settings & other parms
-#################################
+# Run from the location of the script during run time
+Set-Location $PSscriptroot
 
-$AZResourceGroup        = "myresourcegroup"
-$AZStorageAccountName   = "mystorageaccount"
-$ADOUDistinguishedName  = "OU=StorageAccounts,DC=fabrikam,DC=com"
-$AZSubscriptionID       = "xx1xx111-111x-111x-x11x-xx1x11x1111x"
+# If running line-by-line, use this if you need to be in a certain
+# folder location.
+Set-Location ../AzureLabs/scripts
+
+
+###====================================================================###
+#              Get my functions and credentials
+###====================================================================###
+
+# Credentials  (stored outside the repo)
+. '..\..\Certs\resources.ps1'
+
+# Functions (In this repo)
+. '.\FunctionLibrary.ps1'
+
+# Imported from "FunctionLibrary.ps1"
+# Are we connected to Azure with the corredt SubID?
+Check-Login
+
+
+###====================================================================###
+#              Azure Tenant and local AD information
+###====================================================================###
+<#
+I pull these in from my sourced files above, you can uncomment these lines
+for your own use
+#>
+#$AZResourceGroup        = "myresourcegroup"
+#$AZStorageAccountName   = "mystorageaccount"
+#$ADOUDistinguishedName  = "OU=StorageAccounts,DC=fabrikam,DC=com"
+#$AZSubscriptionID       = "xx1xx111-111x-111x-x11x-xx1x11x1111x" 
 
 <# 
-  AD Settings
+  AD Settings:
   You need to run to following to get all the parameters you need
-  "SetAzStorageAccount" expects a PSObject:
+  and check for AD connectivity. 
 #>
 $Forest = Get-ADforest
 $Domain = Get-ADdomain
@@ -44,43 +75,58 @@ if ((!($Forest)) -or (!($Domain))) {
     exit
 }
 
-#################################
-# Step 1 - Create/Get kerborous key
-#################################
 
-# Need to be authenticated to Azure Portal
-Connect-AzAccount
+###====================================================================###
+#     Step 1 - Authenticate to Azure Portal
+###====================================================================###
+
+#---  Need to be authenticated to Azure Portal
+#---  Uncomment these - my version using a function call (above) to do this
+#Connect-AzAccount
 
 # Select the target subscription for the current session
-Select-AzSubscription -SubscriptionId $AZSubscriptionID
+#Select-AzSubscription -SubscriptionId $AZSubscriptionID
 
-# Uncomment if you want a new key - if you reset kerb1, anything using it will have to be updated
+
+###====================================================================###
+#     Step 2 - Create/Get kerborous key
+###====================================================================###
+
+# Remove/comment - just added for testing
+$AZStorageAccountName   = "kv82579msix01"
+
+# Uncomment if you want a new key
+# BUT - if you reset a key anything using it will have to be updated
 #New-AzStorageAccountKey -ResourceGroupName $AZResourceGroup -name $AZStorageAccountName -KeyName kerb1
-$Keys = get-azstorageaccountkey -ResourceGroupName $AZResourceGroup -Name $AZStorageAccountName -listkerbkey
-$kerbkey = $keys | where-object {$_.keyname -eq 'kerb1'} 
 
-$StorageAcctKey = `
-    (Get-AzStorageAccountKey `
-    -ResourceGroupName $AZResourceGroup `
-    -Name $AZStorageAcct).Value[0]
-
+# Grab key1
+# Array index -
+# .Value[0] = key1; .Value[1] = key2; .Value[2] = kerb1; .Value[3] = kerb2
+$StorageAcctKey = (Get-AzStorageAccountKey -ResourceGroupName $AZResourceGroup -Name $AZStorageAccountName -ListKerbKey).Value[0]
 
 # Create the computer account password using the storage account key
-$CompPassword = $kerbkey.value | ConvertTo-Securestring -asplaintext -force
+$CompPassword = $StorageAcctKey | ConvertTo-Securestring -asplaintext -force
 
-#################################
-# Step 2 Create Computer Account and SPN, and get AD information
-#################################
+###====================================================================###
+#     Step 2 - Create Computer Account and SPN and get AD information.
+#     This step adds the storage account as a computer account in the 
+#     domain.
+###====================================================================###
 <# 
-  SPN should look like: cifs/your-storage-account-name-here.file.core.windows.net	
+  SPN = "Service Principle Name"
+  Should look like: cifs/your-storage-account-name-here.file.core.windows.net	
 
-  NOTE - That only works for Azure Commercial - the DNS domain is different for other Azure clouds!
-         Also note that I've done NO ERROR CHECKING/RECOVERY!
+  NOTE - This only works for Azure Commercial
+         The DNS domain is different for other Azure clouds!
 #>
 
 <#
-  Capture the account credentials of the service or admin account for adding computer accounts
-  if the user running the script has insufficient privledges
+  Capture the account credentials of the service or admin account used to add computer accounts
+  to the domain.
+  IMPORTANT: This can be a different account if the user running the script has insufficient privledges.
+  
+  This will create a pop-up to allow you to enter the username/password that
+  will get stored as a PSObject for later use
 #>
 $AdminCreds = get-credential
 
@@ -95,14 +141,22 @@ New-ADComputer `
     -AccountPassword $CompPassword
     -Credentials $AdminCreds  # Needed if the current user has insufficient privledges
 
-# Save the PSObject for later
+# Save the PSObject for later - you need the SID for the next step.
 $Computer = get-ADComputer $AZStorageAccountName
 
-#################################
-# Step 3 update Storage account
-#################################
+###=================================================================###
+#     Step 3 - Update Storage Account
+#     This step uses the Azure credentials you authenticated with
+#     using "Connect-AzAccount"
+###=================================================================###
+<# 
+  This step creates the "link" between the AD computer account added above
+  and the Storage Account in Azure.
+  It sets the feature flag on the target storage account with:
+  "EnableActiveDirectoryDomainServicesForFile"
+  NOTE: "SetAzStorageAccount" expects PSObjects
+#>
 
-# Set the feature flag on the target storage account and provide the required AD domain information
 Set-AzStorageAccount `
     -ResourceGroupName $AZResourceGroup `
     -Name $AZStorageAccountName `
@@ -115,9 +169,9 @@ Set-AzStorageAccount `
     -ActiveDirectoryAzureStorageSid $Computer.sid
 
 
-#################################
-#Step 4 Confirm settings
-#################################
+###=================================================================###
+# Step 4 Confirm settings
+###=================================================================###
 #
 # Get the target storage account
 $storageaccount = Get-AzStorageAccount -ResourceGroupName $AZResourceGroup -Name $AZStorageAccountName
