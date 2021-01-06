@@ -1,26 +1,25 @@
+###############################################################################################################
 <#
-###############################################################################################################
-This is the "Manual" process to configure AD authentication for Azure Files
-   (automated!)
-  Assumes you've already created:
-	1) Storage account, and have "owner" rights to manually add roles in portal
-	2) An OU in AD
-	3) You have AAD synced to AD
-	4) Are executing commands on a domain joined VM as a domain admin
+  This is the "Manual" process to configure AD authentication for Azure Files
+     (automated!)
+    Assumes you've already created:
+  	1) Storage account, and have "owner" rights to manually add roles in portal
+  	2) An OU in AD
+  	3) You have AAD synced to AD
+  	4) Are executing commands on a domain joined VM as a domain admin
  
- Process here: https://docs.microsoft.com/en-us/azure/storage/files/storage-files-identity-auth-active-directory-enable
- Questions - johnkel at Microsoft.com
-              or
-             kavietme at Microsoft.com
+  Process here: https://docs.microsoft.com/en-us/azure/storage/files/storage-files-identity-auth-active-directory-enable
+  Questions - johnkel at Microsoft.com
+                or
+              kavietme at Microsoft.com
 
-This code came from a larger script written by John Kelbly I made some minor changes, mostly formatting
-but did add the "Credentials" flag to the "New-ADComputer" for the case when the account running the code 
-lacks sufficient domain privledges (Service Account).
+  This code came from a larger script written by John Kelbly I made some minor changes, mostly formatting
+  but did add the "Credentials" flag to the "New-ADComputer" for the case when the account running the code 
+  lacks sufficient domain privledges (Service Account).
 
-This version of the script doesn't modify the NTFS ACLs.
-
-###############################################################################################################
+  This version of the script doesn't modify the NTFS ACLs.
 #>
+###############################################################################################################
 
 # Add this to avoid mistakes - uncomment to run as script
 return
