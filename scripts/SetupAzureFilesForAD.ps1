@@ -1,10 +1,10 @@
 ###################################################################################################################
-###  
-###  Name: SetupAzureFilesForAD.ps1
-###  Written By:  Karl Vietmeier
-###  Source Doc: 
-###  https://docs.microsoft.com/en-us/azure/storage/files/storage-files-identity-auth-active-directory-enable
-### 
+<#   
+    Name: SetupAzureFilesForAD.ps1
+    Written By:  Karl Vietmeier
+    Source Doc: 
+    https://docs.microsoft.com/en-us/azure/storage/files/storage-files-identity-auth-active-directory-enable
+#>
 ##################################################################################################################
 
 ### Here for safety - comment/uncomment as desired
@@ -28,23 +28,24 @@ Set-Location $PSscriptroot
 Check-Login
 
 ###=================================== Prereqs =======================================###
-# 1: The correct set of PowerShell Modules
-# 2: An AD environment sync'd to Azure AD
-# 3: Domain Admin account sync'd up to AAD
-# 4: An Azure storage account
-# 5: A fileshare in that account
-# 6: Verify port 445 connectivity
-# - If you have TLS errors with PS (Server 2016) - you might need this:
-# [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]'Tls11,Tls12'
+<# 
+  1: The correct set of PowerShell Modules
+  2: An AD environment sync'd to Azure AD
+  3: Domain Admin account sync'd up to AAD
+  4: An Azure storage account
+  5: A fileshare in that account
+  6: Verify port 445 connectivity
+  - If you have TLS errors with PS (Server 2016) - you might need this:
+  [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]'Tls11,Tls12'
 
-
-###===== Manual Workflow
-# 1.) Enable Azure Files AD authentication on your storage account.
-# 2.) Assign access permissions for a share to the Azure AD identity 
-#     (a user, group, or service principal) that is in sync with the target AD identity.
-# 3.) Configure ACLs over SMB for directories and files.
-# 4.) Mount an Azure file share from an AD domain joined VM.
-# 5.) Rotate AD account password (Optional)
+  ===== Manual Workflow
+  1.) Enable Azure Files AD authentication on your storage account.
+  2.) Assign access permissions for a share to the Azure AD identity 
+      (a user, group, or service principal) that is in sync with the target AD identity.
+  3.) Configure ACLs over SMB for directories and files.
+  4.) Mount an Azure file share from an AD domain joined VM.
+  5.) Rotate AD account password (Optional)
+#>
 
 ###---------------------------------- Variables -----------------------------------###
 
@@ -59,6 +60,17 @@ Check-Login
 #$ElevContribGroupId = "GUID - not the SID" 
 # AAD FSLogix SMB Contributor Group
 #$ContribGroupId = "GUID - not the SID"
+
+# If we aren't joined to a valid domain, exit because nothing will work.
+$Forest = Get-ADforest
+$Domain = Get-ADdomain
+
+# Can we reach an AD server?  If not exit.
+if ((!($Forest)) -or (!($Domain))) {
+    write-error ("Unable to contact AD. Exiting.")
+    exit
+}
+
 
 # Are they set correctly?
 Write-Host ""
@@ -80,7 +92,7 @@ $AZFileShare = "profiles"
 
 ###--- Set Variables for each of the icacls options and "net use"
 # Set to match your AD configuration - you need the SAM Account Name
-#  $ElevateContrib = "<domain>\<SAM Account Name of AD Group>"
+# $ElevateContrib = "<domain>\<SAM Account Name of AD Group>"
 $ElevateContrib = "gabbro\AZFFSLogixElevatedContributor"
 $Contrib = "gabbro\AZFFSLogixContributor"
 
@@ -88,7 +100,7 @@ $Contrib = "gabbro\AZFFSLogixContributor"
 $DriveLetter = "O:"
 
 ### NOTE: Don't change these - they are the best practices for FSLogix 
-#   Profile Shares - set permissions
+#   Profile Shares - set permissions by creating the icacls commands.
 $Grant = "/grant:r"
 $Remove = "/remove"
 $ReplaceInherit = "/inheritance:r"
@@ -255,7 +267,6 @@ $MapPath = "\\"+$AZStorageAcct+".file.core.windows.net\"+$AZFileShare
 net use $DriveLetter $MapPath /u:$AZStorageAcct /persistent:no $StorageAcctKey
 
 
-
 ###====================    Set NTFS Permissions    =====================###        
 ###                        Using icacls commands                        ###
 
@@ -273,4 +284,4 @@ icacls $DriveLetter
 #Invoke-Expression -Command ('icacls $DriveLetter $Remove "${BuiltinBuiltin}"')
 
 
-#net use $DriveLetter /delete
+net use $DriveLetter /delete
