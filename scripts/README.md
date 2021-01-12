@@ -37,7 +37,7 @@ $AIAPassword = "really should encrypt this"
 
 The script:
 ```
-Setup PowerShell Modules.ps1
+SetupPowerShellModules.ps1
 ```
 Will setup your laptop/workstation to run these scripts/snippets.
 

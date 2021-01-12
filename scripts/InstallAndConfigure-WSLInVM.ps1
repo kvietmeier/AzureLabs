@@ -24,10 +24,11 @@
 #>
 ###====================================================================================###
 ### Here for safety - comment/uncomment as desired
+# This is not a runable script
 return
 
-# Install Windows Terminal (need msix bundle)
-#Add-AppPackage -Path ".\Microsoft.WindowsTerminalPreview_1.5.3242.0_8wekyb3d8bbwe.msixbundle"
+# Install Windows Terminal (need msix bundle) - not working - 
+#DISM /Online /Add-ProvisionedAppxPackage /PackagePath:<path to msixbundle> /SkipLicense
 
 # Step 1: Enable the feature
 dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
@@ -35,18 +36,18 @@ dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux 
 # Step 2: For WSL 2 - need HyperV bits
 dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
 
-# Step 3: Update to WSL 2.0 - not required, we are on 1909+ aren't we....
+###---- Reboot at this point ----###
 
-### Reboot at this point
+# Step 3: Update to WSL 2.0 -
+wsl --set-default-version 2
 
-# Step 4: Download kernel update
-
+# Step 4: Download kernel update and install
 $TempDir        = "C:\temp"
 $KernelMSI      = "wsl_update_x64.msi"
 $KernelDownload = $TempDir + "\" + $KernelMSI
 $KernelURI      = "https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi"
 
- # Check to see if C:\temp exists - if not create it
+# Check to see if C:\temp exists - if not create it
 if (!(Test-Path $DownloadDir))
 {
   Write-Host "Creating C:\temp"
@@ -63,4 +64,11 @@ Set-Location $TempDir
 
 # Step 5: Set WSL to Version 2
 wsl --set-default-version 2
+
+
+###---- As a user download the Distro and install ----###
+
+wsl --set-default-version 2
+Invoke-WebRequest -Uri https://aka.ms/wslubuntu2004 -OutFile Ubuntu-20-04.appx -UseBasicParsing
+Add-AppxPackage .\Ubuntu-20-04.appx
 

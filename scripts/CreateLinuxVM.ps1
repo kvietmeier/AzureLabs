@@ -59,44 +59,24 @@ $Region = "westus2"
 $RandomID = $(Get-Random -Minimum 1000 -Maximum 2000)
 
 # Resource names 
-$StorageAccount ="kv82578TempSA-$RandomID"
-$ResourceGroup  = "TempRG-$RandomID"
-$VMName         = "Win10VM-$RandomID"
-$DNSName        = "win10vm$RandomID"
+$StorageAccount = "kv82578TempSA-$RandomID"
+#$ResourceGroup  = "TempRG-$RandomID"
+$ResourceGroup  = "LinuxVMs"
+$VMName         = "LinuxVM-$RandomID"
+$DNSName        = "linuxvm$RandomID"
 $PubIP          = "PubIP-$RandomID"
 $NICId          = "NIC-$RandomID"
 
-# Windows Image and VM Size to Use
-$VMSize         = "Standard_D2_v3"
-
 
 ###=================  Image Definitions  ==================###
-# Image: Windows 10 Enterprise 2004 H2
-$PublisherName  = "MicrosoftWindowsDesktop"
-$Offer          = "Windows-10"
-$SKU            = "20h2-entn"
+# Image: Centos
+$PublisherName  = "OpenLogic"
+$Offer          = "Centos"
+$SKU            = "8_3"
 $Version        = "latest"
 
-# Image: Windows 10 Enterprise 1909
-#$PublisherName  = "MicrosoftWindowsDesktop"
-#$Offer          = "Windows-10"
-#$SKU            = "19h2-ent"
-#$Version        = "latest"
-
-# Image: Windows 10 Multi Session 2020 2H w/O365
-#$PublisherName  = "MicrosoftWindowsDesktop"
-#$Offer          = "office-365"
-#$SKU            = "20h2-evd-o365pp"
-#$Version        = "latest"
-
-<# 
-  office-365 SKUs
-   1903-evd-o365pp
-   19h2-evd-o365pp
-   20h1-evd-o365pp
-   20h2-evd-o365pp
-  
-#>
+# VM Size to Use - need 4 vCPU for accelerated networking
+$VMSize         = "Standard_D4_v4"
 
 <# 
 ###--- Use an Image from a Shared Image Gallery
@@ -150,12 +130,13 @@ $PIP = New-AzPublicIPAddress `
 # Start building the NIC configuration - Subnet and Public IP
 $NewIPConfig = New-AzNetworkInterfaceIpConfig -Name "IPConfig-1" -Subnet $SubNetCfg -PublicIpAddress $PIP -Primary 
 
-# Create the NIC using the PS Objects
+# Create the NIC using the PS Objects - enable accelerated networking
 $VMNIC = New-AzNetworkInterface `
   -Name $NICId `
   -ResourceGroupName $ResourceGroup `
   -Location $Region `
   -NetworkSecurityGroupId $NSG.Id `
+  -EnableAcceleratedNetworking `
   -IpConfiguration $NewIPConfig
 
 # Add the NIC to the VM Configuration
@@ -179,11 +160,9 @@ Add-AzVMNetworkInterface -VM $NewVMConfig -Id $VMNIC.Id
 # in an external file.
 $NewVMConfig = Set-AzVMOperatingSystem `
   -VM $NewVMConfig `
-  -Windows `
+  -Linux `
   -ComputerName $VMName `
-  -Credential $VMCred `
-  -ProvisionVMAgent `
-  -EnableAutoUpdate
+  -Credential $VMCred 
 
 # Source Image
 $NewVMConfig = Set-AzVMSourceImage `

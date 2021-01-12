@@ -32,6 +32,7 @@ Check-Login
 $AZResourceGroup = "TempRG-01"
 $AppGroup = "TestLogin-DAG"
 
+
 # Use Update-AzWvdHostPool
 Update-AzWvdHostPool -ResourceGroupName ResourceGroupName `
     -Name HostPoolName `
@@ -59,6 +60,24 @@ Get-AzWvdApplicationGroup -ResourceGroupName $AZResourceGroup
 Get-AzWvdApplicationGroup -ResourceGroupName $AZResourceGroup -Name $AppGroup | format-list Name
 Remove-AzWvdApplicationGroup -ResourceGroupName $AZResourceGroup -Name $AppGroup
 Remove-AzWvdHostPool -ResourceGroupName TempRG-01 -Name Foobar02
+
+# Make sure you have the latest WVD PowerShell module installed
+Install-Module -Name Az.DesktopVirtualization -MinimumVersion 2.1.0
+
+$ResourceGroup  = "WVDLandscape02-WSL"
+$HostPool       = "PersonalDesktops"
+
+# For enabling Start VM on Connect use the following:
+Update-AzWvdHostPool `
+    -ResourceGroupName $ResourceGroup `
+    -Name $HostPool `
+    -StartVMOnConnect:$true
+
+# For disabling Start VM on Connect use the following:
+Update-AzWvdHostPool `
+    -ResourceGroupName $ResourceGroup `
+    -Name $HostPool `
+    -StartVMOnConnect:$false
 
 ###------------------
 

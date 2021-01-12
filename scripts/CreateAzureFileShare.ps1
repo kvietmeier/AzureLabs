@@ -1,11 +1,13 @@
+<# 
 ###====================================================================================###
-###  CreateAzureFileShare.ps1                                                          ###
-###    Created By: Karl Vietmeier                                                      ###
-###                                                                                    ###
-###  Create a FileShare - by generating a random name with a 4 digit random number     ###
-###  "Get-Random" creates a random number                                              ###
-###                                                                                    ###
+    CreateAzureFileShare.ps1                                                        
+    Created By: Karl Vietmeier                                                      
+                                                                                    
+    Create a FileShare - by generating a random name with a 4 digit random number   
+    "Get-Random" creates a random number                                            
+                                                                                    
 ###====================================================================================###
+#>
 
 ### Here for safety - comment/uncomment as desired
 return
@@ -13,8 +15,9 @@ return
 # Stop on first error
 $ErrorActionPreference = "stop"
 
-# Run from the location of the script
+# Run from the location of the script $PSscriptroot only works when run as a script
 Set-Location $PSscriptroot
+#Set-Location ../AzureLabs/scripts
 
 ### Get my functions and credentials
 # Credentials  (stored outside the repo)
@@ -44,20 +47,20 @@ Check-Login
 #$SubID = ""
 #$SubName = ""
 
+# Set as appropriate
+$SizeInGB = "100"
+$region = "westus2"
 $AZResourceGroup = "WVDLandscape01"
 
 # Create name with random 4 digit number.
-$StorageAcct= "kvstor$(Get-Random -Minimum 1000 -Maximum 2000)"
+$RandomID       = $(Get-Random -Minimum 1000 -Maximum 2000)
+$StorageAcct    = "kv82579-$RandomID"
 
 # For FSLogix - use the same sharename
 $AZFileshare = "profiles"
 
 # SKUs - Choose what you need
 $SKUname = "Standard_LRS"
-
-# Set as appropriate
-$SizeInGB = "50"
-$region = "westus2"
 
 # Create the Account
 $AZStorageAcct = New-AzStorageAccount `
