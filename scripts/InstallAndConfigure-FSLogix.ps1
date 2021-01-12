@@ -23,6 +23,7 @@ return
 function InstallFSLogix () {
 
   $DownloadDir        = "C:\temp"
+  $FSLogixExtractDir  = $DownloadDir + "\InstallFSLogix"
   $FSLogixZip         = $DownloadDir + '\InstallFSLogix.zip'
   $FSLogixInstallDir  = $DownloadDir + '\InstallFSLogix\x64\Release'
 
@@ -32,6 +33,11 @@ function InstallFSLogix () {
     Write-Host "Creating C:\temp"
     New-Item -ItemType Directory -Force -Path $DownloadDir
     $RemoveDir = "True" # We created it, so remove it afterward
+  }
+  elseif (Test-Path $FSLogixExtractDir)
+  {
+    Write-Host "Removing existing FSLogix download"
+    Remove-Item -Recurse $FSLogixExtractDir
   }
 
   # Download and extract
@@ -49,7 +55,7 @@ function InstallFSLogix () {
   Start-Process -Wait ".\$AgentInstaller" -ArgumentList $Switches
 
   # Cleanup install dir
-  if ($RemoveDir = "True")
+  if ($RemoveDir -eq "True")
   {
     Write-Host "Removing C:\temp"
     Set-Location "C:\"
