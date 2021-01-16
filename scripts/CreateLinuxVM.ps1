@@ -61,7 +61,7 @@ $RandomID = $(Get-Random -Minimum 1000 -Maximum 2000)
 # Resource names 
 $StorageAccount = "kv82578TempSA-$RandomID"
 #$ResourceGroup  = "TempRG-$RandomID"
-$ResourceGroup  = "LinuxVMs"
+$ResourceGroup  = "NetworkTests"
 $VMName         = "LinuxVM-$RandomID"
 $DNSName        = "linuxvm$RandomID"
 $PubIP          = "PubIP-$RandomID"
@@ -70,9 +70,14 @@ $NICId          = "NIC-$RandomID"
 
 ###=================  Image Definitions  ==================###
 # Image: Centos
-$PublisherName  = "OpenLogic"
-$Offer          = "Centos"
-$SKU            = "8_3"
+#$PublisherName  = "OpenLogic"
+#$Offer          = "Centos"
+#$SKU            = "8_3"
+#$Version        = "latest"
+
+$PublisherName  = "Canonical"
+$Offer          = "0001-com-ubuntu-server-focal"
+$SKU            = "20_04-lts"
 $Version        = "latest"
 
 # VM Size to Use - need 4 vCPU for accelerated networking

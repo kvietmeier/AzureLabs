@@ -6,6 +6,8 @@
   Description                      
     Install Teams for WVD - non-interactively
 
+    Make sure to check for the latest Teams client version.
+
   #>                                            
 ###====================================================================================###
 ### Here for safety - comment/uncomment as desired
