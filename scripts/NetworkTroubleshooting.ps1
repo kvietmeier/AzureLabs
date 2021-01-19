@@ -44,20 +44,27 @@ Login-NoPrompt
 # Enable ICMPv4-In without disabling Windows Firewall
 New-NetFirewallRule –DisplayName "Allow ICMPv4-In" –Protocol ICMPv4
 
+###--- What WVD Gateway will I hit from my current client?
+# Desktop Client
+Invoke-RestMethod -Uri "https://afd-rdgateway-r1.wvd.microsoft.com/api/health" | Select-Object -ExpandProperty RegionUrl 
+
+# Web Client
+Invoke-RestMethod -Uri "https://rdweb.wvd.microsoft.com/api/health" | Select-Object -ExpandProperty RegionUrl 
+
 
 ###--- Basic Networking
 <# 
   "Test-NetConnection"
   https://docs.microsoft.com/en-us/powershell/module/nettcpip/test-netconnection?view=win10-ps
-    - Note - The WVD Gateway blocks ICMP but you can still test name resolution even if the ping fails.
   
+  NOTE - The WVD Gateway and all other Azure services will not respond to an ICMP echo request
+    So 
+
   Common Question - 
   https://docs.microsoft.com/en-us/azure/virtual-network/what-is-ip-address-168-63-129-16
 #>
 
 # On the VM
-
-###--- Active Directory
 # Find a list of DCs in the domain:
 nltest /dclist:<domainname>
 
@@ -80,7 +87,7 @@ Get list of DCs in domain 'northamerica' from '\\CY1-NA-DC-08'.
                                  AzureADKerberos [RODC]
 The command completed successfully
 
-###--- ICMP Based Tools - ping etc
+### ICMP Based Tools - ping etc
 # Always the first place to start - they test the resolver too. 
 
 ###--- Built-in Windows commands
@@ -93,8 +100,8 @@ tracert.exe
 # https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/tracert 
 
 
-###--- PowerShell Commands
-# Replacement for ping - 
+###--- PowerShell - 
+# Replacement for ping
 Test-NetConnection
 
 # Test resolver against known host that responds to ICMP 
@@ -157,6 +164,11 @@ Find-NetRoute -RemoteIPAddress "10.79.197.200"
 
 ###----------------------------------------------------------------------------------------### 
 
+  To check the routing table from the Azure SDN perspective use: "Get-AzEffectiveRouteTable"
+  Requirement: Need Az Module and be connected to your Subscription (see above)
+  In some cases info in the host OS can be misleading/not useful especially in an "all Azure" infrastructure.
+  https://docs.microsoft.com/en-us/powershell/module/az.network/get-azeffectiveroutetable?view=azps-4.6.0
+
   ### Virtual Networks docs
   https://docs.microsoft.com/en-us/azure/virtual-machines/windows/ps-common-network-ref
   https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-udr-overview
@@ -201,18 +213,7 @@ Set-AzVMExtension `
   -Type "NetworkWatcherAgentWindows" `
   -TypeHandlerVersion "1.4"
 
-Doesn't work - 
-Set-AzVMExtension `
-  -ResourceGroupName $ResourceGroup `
-  -Location $Region `
-  -VMName $VMName `
-  -Name "networkWatcherAgent" `
-  -Publisher "Microsoft.Azure.NetworkWatcher" `
-  -Type "NetworkWatcherAgentWindows" `
-  -TypeHandlerVersion "1.4"
-
 #>
-
 
 <# 
   Test for Port 445 
@@ -227,30 +228,32 @@ Test-NetConnection -ComputerName ([System.Uri]::new($AZStorageAcct.Context.FileE
 Debug-AzStorageAccountAuth -StorageAccountName $AZStorageAcct -ResourceGroupName $AZResourceGroup -Verbose
 
 <# 
-  To check the routing table from the Azure SDN perspective use: "Get-AzEffectiveRouteTable"
-  Requirement: Need Az Module and be connected to your Subscription (see above)
-  In some cases info in the host OS can be misleading/not useful especially in an "all Azure" infrastructure.
-  https://docs.microsoft.com/en-us/powershell/module/az.network/get-azeffectiveroutetable?view=azps-4.6.0
+###----------------------------------------------------------------------------------------### 
+###----------------------------------------------------------------------------------------### 
+
+   VM Level Tests - Azure Context
+
+###----------------------------------------------------------------------------------------### 
 #>
 
 
 # You need these for Azure commands
-$NIC1 = "wvd-mgmtserver803"
-$NIC2 = "testvm-0-nic"
-$NIC3 = "testvm-1-nic"
-$RGroup1 = "WVDLandscape01" 
-$VMName1 = "testvm-1"
+$NIC1 = "ubuntu-01989"
+$NIC2 = "ubuntu01.nic2"
+$NIC3 = ""
+$RGgroup1 = "Networktests" 
+$VMName1 = "Ubuntu-01"
 
 # Get NICs if you know the VM name
-$VM = Get-AzVM -Name $VMName1 -ResourceGroupName $RGroup1 
+$VM = Get-AzVM -Name $VMName1 -ResourceGroupName $RGgroup1 
 $VM.NetworkProfile
 
 <# 
+  Routing Information - 
   Syntax -
   Get-AzEffectiveRouteTable `
     -NetworkInterfaceName "<Name of NIC resource>" `
-    -ResourceGroupName "<RG Name>" `
-    | Format-Table
+    -ResourceGroupName "<RG Name>" | Format-Table
 #>
 
  # Examples
@@ -278,8 +281,7 @@ Get-AzEffectiveRouteTable `
      [-ResourceGroupName <String>]
      [-DefaultProfile <IAzureContextContainer>]
      [<CommonParameters>]
-   
-   Get-AzEffectiveNetworkSecurityGroup -NetworkInterfaceName "MyNetworkInterface" -ResourceGroupName "myResourceGroup"
+
 #>
 
 Get-AzEffectiveNetworkSecurityGroup `
@@ -288,12 +290,45 @@ Get-AzEffectiveNetworkSecurityGroup `
 
 
 
-  ###--- What WVD Gateway will I hit from my current client?
-# Desktop Client
-Invoke-RestMethod -Uri "https://afd-rdgateway-r1.wvd.microsoft.com/api/health" | Select-Object -ExpandProperty RegionUrl 
+###---   Manipulate NICs - swap primaries 
+$NIC1 = "ubuntu-01989"
+$NIC2 = "ubuntu01.nic2"
+$NIC3 = "ubuntu-0240"
+$NIC4 = "ubuntu02-nic2"
+$RGgroup1 = "Networktests" 
+$VMName1 = "Ubuntu-01"
+$VMName2 = "Ubuntu-02"
 
-# Web Client
-Invoke-RestMethod -Uri "https://rdweb.wvd.microsoft.com/api/health" | Select-Object -ExpandProperty RegionUrl 
+$VM1 = Get-AzVM -Name $VMName1 -ResourceGroupName $RGroup1
+$VM2 = Get-AzVM -Name $VMName2 -ResourceGroupName $RGroup1
+$NICS = $VM1.NetworkProfile.NetworkInterfaces
+$NICS
+
+# List existing NICs on the VM and find which one is primary
+$VM1.NetworkProfile.NetworkInterfaces
+$VM2.NetworkProfile.NetworkInterfaces
+
+### These steps make a big mess - might be faster to start over.
+# Set NIC [1] to be primary
+$VM1.NetworkProfile.NetworkInterfaces[0].Primary = $false
+$VM1.NetworkProfile.NetworkInterfaces[1].Primary = $true
+
+# Set NIC [1] to be primary
+$VM2.NetworkProfile.NetworkInterfaces[0].Primary = $false
+$VM2.NetworkProfile.NetworkInterfaces[1].Primary = $true
+
+# Update the VM state in Azure
+Update-AzVM -VM $VM1 -ResourceGroupName $RGroup1
+Update-AzVM -VM $VM2 -ResourceGroupName $RGroup1
+
+# Accelerated Networking (VM needs to be deallocated)
+$NIC = "ubuntu02-dpdk"
+$RGgroup1 = "Networktests" 
+
+$NIC=Get-AzNetworkInterface -Name $NIC -ResourceGroupName $RGgroup1
+$NIC.EnableAcceleratedNetworking = $True
+$NIC | Set-AzNetworkInterface
+
 
 
 

@@ -23,9 +23,22 @@ cd ..\AzureLabs\scripts\
 # Are we connected to Azure with the corredt SubID?
 Check-Login
 
+###====================================================================================###
+
+#### - testing this 
+<# if ((Get-Item -Path ".").Property -contains 'Enabled')
+{
+    Set-ItemProperty -Path "." -Name  "Enabled" -PropertyType "DWORD" -Value "1"
+}
+else {
+    New-ItemProperty -Path "." -Name  "Enabled" -PropertyType "DWORD" -Value "1"
+} #>
 
 
+# Make sure you have the latest WVD PowerShell module installed
+Install-Module -Name Az.DesktopVirtualization -MinimumVersion 2.1.0
 
+###====================================================================================###
 ###----- RDP settings
 # https://docs.microsoft.com/en-us/windows-server/remote/remote-desktop-services/clients/rdp-files
 
@@ -51,9 +64,12 @@ Update-AzWvdHostPool -ResourceGroupName Test-rg -Name Testpool -CustomRdpPropert
 $properties="audiocapturemode:i:1;use multimon:i:0"
 Update-AzWvdHostPool -ResourceGroupName $AZResourceGroup -Name TestPool01 -CustomRdpProperty $properties
 
+# Clear everything
 Get-AzWvdHostPool -ResourceGroupName $AZResourceGroup -Name TestPool01 | format-list Name, CustomRdpProperty
 
+###====================================================================================###
 ###--- Misc HostPool Commands
+###====================================================================================###
 Get-AzWvdHostPool -ResourceGroupName $AZResourceGroup
 Get-AzWvdHostPool -ResourceGroupName $AZResourceGroup -Name TestPool01
 Get-AzWvdApplicationGroup -ResourceGroupName $AZResourceGroup
@@ -61,13 +77,10 @@ Get-AzWvdApplicationGroup -ResourceGroupName $AZResourceGroup -Name $AppGroup | 
 Remove-AzWvdApplicationGroup -ResourceGroupName $AZResourceGroup -Name $AppGroup
 Remove-AzWvdHostPool -ResourceGroupName TempRG-01 -Name Foobar02
 
-# Make sure you have the latest WVD PowerShell module installed
-Install-Module -Name Az.DesktopVirtualization -MinimumVersion 2.1.0
-
 $ResourceGroup  = "WVDLandscape02-WSL"
 $HostPool       = "PersonalDesktops"
 
-# For enabling Start VM on Connect use the following:
+###--- For enabling Start VM on Connect use the following:
 Update-AzWvdHostPool `
     -ResourceGroupName $ResourceGroup `
     -Name $HostPool `
@@ -82,7 +95,10 @@ Update-AzWvdHostPool `
 ###------------------
 
 
+
+###====================================================================================###
 ### Remove OneDrive Components
+###====================================================================================###
 Taskkill.exe /F /IM "OneDrive.exe"
 Taskkill.exe /F /IM "Explorer.exe"`
 
@@ -108,6 +124,7 @@ Start-Process C:\\Windows\\System32\\Reg.exe -ArgumentList "Unload HKLM\\Temp" -
 ###----------------
 
 
+###====================================================================================###
 ###---- Snapshots
 # https://docs.microsoft.com/en-us/azure/virtual-machines/windows/snapshot-copy-managed-disk
 
@@ -167,6 +184,7 @@ foreach ($snapshot in $snapshots)
 $incrementalSnapshots
 
 
+###====================================================================================###
 ###----  Find unattached disks
 # Set deleteUnattachedDisks=1 if you want to delete unattached Managed Disks
 # Set deleteUnattachedDisks=0 if you want to see the Id of the unattached Managed Disks
@@ -199,6 +217,7 @@ foreach ($md in $managedDisks) {
  }
 
  
+###====================================================================================###
 Function GetStorageAcctKeys   
 {  
     $ResourceGroup  = "WVDLandScape01"   

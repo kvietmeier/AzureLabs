@@ -5,6 +5,8 @@ echo "set -o vi " >> .bashrc
 . .bashrc
 cd .ssh; ssh-keygen
 
+EDITOR=vim; export $EDITOR
+
 # Devices - 
 lspci | grep Mell
 ethtool -S eth0 | grep vf_
@@ -17,39 +19,50 @@ apt install numactl -y
 apt-get install build-essential -y
 
 
-### DPDK
-add-apt-repository ppa:canonical-server/dpdk-azure -y
-apt-get update -y
-apt-get install -y librdmacm-dev librdmacm1 build-essential libnuma-dev libmnl-dev
+###==== DPDK
+# Don't need this - add-apt-repository ppa:canonical-server/dpdk-azure -y
 
-# Update Python
-apt install python3-pip
-apt install meson
+# Need some libs and utilities
+apt-get install -y librdmacm-dev librdmacm1 libnuma-dev libmnl-dev meson python3-pip autoconf lib32z1
+apt-get install -y python3-pyelftools python-pyelftools
 
-https://core.dpdk.org/download
+
+# Get the package here - https://core.dpdk.org/download
 mkdir temp
 cd temp
 wget https://fast.dpdk.org/rel/dpdk-20.11.tar.xz
-tar xf https://fast.dpdk.org/rel/dpdk-20.11.tar.xz
+tar xf dpdk-20.11.tar.xz
 cd dpdk-20.11
 
+# Build it
 meson /root/dpdk
+cd /root/dpdk 
+ninja
+ninja install
+ldconfig
 
-# Huge Pages
+# Copy over usertools to the build dir
+cp ~/temp/dpdk-20.11/usertools/* ~/dpdk/usertools/
+
+###--- Need to enable Huge Pages
 mkdir /mnt/huge
-mount -t hugetlbfs nodev /mnt/huge
+mount -t hugetlbfs pagesize=1GB /mnt/huge
 grep Huge /proc/meminfo
+echo 256 > /sys/devices/system/node/node0/hugepages/hugepages-2048kB/nr_hugepages
 
-### Grub 
+echo "" >> /etc/fstab
+echo "### DPDK Hugepages" >> /etc/fstab
+echo "nodev /mnt/huge hugetlbfs pagesize=1GB 0 0" >> /etc/fstab
+
+###--- Edit Grub 
 # edit: /etc/default/grub.d/50-cloudimg-settings.cfg
-GRUB_CMDLINE_LINUX_DEFAULT="quiet splash default_hugepagesz=1G hugepagesz=1G hugepages=8"
-
+GRUB_CMDLINE_LINUX_DEFAULT="console=tty1 console=ttyS0 earlyprintk=ttyS0 default_hugepagesz=1G hugepagesz=1G hugepages=8"
 
 # Optional
 isolcpus=2,3,4,5,6,7,8
 iommu=pt intel_iommu=on
 
-
+# Run - 
 modprobe -a ib_uverbs
 
 
@@ -60,46 +73,16 @@ sed -ri 's,(MLX._PMD=)n,\1y,' build/.config
 make 
 make install DESTDIR=
 
-[   11.287817] cloud-init[524]: ci-info: +--------+------+----------------------------+---------------+--------+-------------------+
-[   11.292140] cloud-init[524]: ci-info: | Device |  Up  |          Address           |      Mask     | Scope  |     Hw-Address    |
-[   11.296229] cloud-init[524]: ci-info: +--------+------+----------------------------+---------------+--------+-------------------+
-[   11.300441] cloud-init[524]: ci-info: | enp1s1 | True |             .              |       .       |   .    | 00:0d:3a:fb:0b:6e |
-[   11.304643] cloud-init[524]: ci-info: |  eth0  | True |         10.30.1.20         | 255.255.255.0 | global | 00:0d:3a:fb:0b:6e |
-[   11.308996] cloud-init[524]: ci-info: |  eth0  | True | fe80::20d:3aff:fefb:b6e/64 |       .       |  link  | 00:0d:3a:fb:0b:6e |
-[   11.313721] cloud-init[524]: ci-info: |   lo   | True |         127.0.0.1          |   255.0.0.0   |  host  |         .         |
-[   11.318148] cloud-init[524]: ci-info: |   lo   | True |          ::1/128           |       .       |  host  |         .         |
-[   11.322354] cloud-init[524]: ci-info: +--------+------+----------------------------+---------------+--------+-------------------+
-
-
-
-
-
-
-
-
-### Centos
-sudo -i
-yum install epel-release -y
-yum install git -y
-yum install numactl -y
-dnf group install "Development Tools" -y
-yum update -y
-
-echo "set -o vi " >> .bashrc
-. .bashrc
-cd .ssh; ssh-keygen
-
-lspci | grep Mell
-ethtool -S eth0 | grep vf_
-
+### pktgen - 
 https://people.kth.se/~danieltt/pktgen/patches/kernel-4.6/pktgen-rx4.6.tar
-wget https://people.kth.se/~danieltt/pktgen/patches/kernel-4.6/pktgen-rx4.6.tar
 
+cd temp
+wget https://people.kth.se/~danieltt/pktgen/patches/kernel-4.6/pktgen-rx4.6.tar
+tar xf pktgen-rx4.6.tar
 
 Throughput = Packet_Rate * (floor(1460/message_size) + 1) * message_size/2
 
 ###--- Sockperf
-apt-get install autoconf -y
 git clone https://github.com/mellanox/sockperf
 cd sockperf/
 ./autogen.sh
@@ -109,17 +92,18 @@ make install
 
 # Run it for quick test
 # Server
-sockperf sr --tcp -i 10.30.1.20 -m 64 -p 12345
+sockperf sr --tcp -i 10.30.1.16 -m 64 -p 12345
 # Client
-sockperf ping-pong -i 10.30.1.20 --tcp -m 64 -t 101 -p 12345 --full-rtt
+sockperf ping-pong -i 10.30.1.17 --tcp -m 64 -t 10 -p 12345 --full-rtt
 
 
 ###--- iperf3
 wget https://iperf.fr/download/source/iperf-3.1.3-source.tar.gz
+tar xzf iperf-3.1.3-source.tar.gz
 cd iperf-3.1.3/
 ./configure
 make install
-apt-get install lib32z1
+ldconfig
 /usr/local/bin/iperf3
 
 
@@ -129,3 +113,134 @@ apt-get install lib32z1
 * Enable Mellanox PMDs in the generated config with sed -ri 's,(MLX._PMD=)n,\1y,' build/.config.
 * Compile with make.
 * Install with make install DESTDIR=<output folder>.
+
+###===========================================================================================###
+### Ubuntu01
+root@Ubuntu01:~# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+    link/ether 00:0d:3a:f5:b1:8e brd ff:ff:ff:ff:ff:ff
+    inet 10.30.1.16/24 brd 10.30.1.255 scope global eth0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::20d:3aff:fef5:b18e/64 scope link
+       valid_lft forever preferred_lft forever
+3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+    link/ether 00:0d:3a:f6:03:40 brd ff:ff:ff:ff:ff:ff
+    inet 10.30.4.80/24 brd 10.30.4.255 scope global eth1
+       valid_lft forever preferred_lft forever
+    inet6 fe80::20d:3aff:fef6:340/64 scope link
+       valid_lft forever preferred_lft forever
+4: enP2s2: <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> mtu 1500 qdisc mq master eth1 state UP group default qlen 1000
+    link/ether 00:0d:3a:f6:03:40 brd ff:ff:ff:ff:ff:ff
+
+root@Ubuntu01:~# lspci
+0000:00:00.0 Host bridge: Intel Corporation 440BX/ZX/DX - 82443BX/ZX/DX Host bridge (AGP disabled) (rev 03)
+0000:00:07.0 ISA bridge: Intel Corporation 82371AB/EB/MB PIIX4 ISA (rev 01)
+0000:00:07.1 IDE interface: Intel Corporation 82371AB/EB/MB PIIX4 IDE (rev 01)
+0000:00:07.3 Bridge: Intel Corporation 82371AB/EB/MB PIIX4 ACPI (rev 02)
+0000:00:08.0 VGA compatible controller: Microsoft Corporation Hyper-V virtual VGA
+0002:00:02.0 Ethernet controller: Mellanox Technologies MT27710 Family [ConnectX-4 Lx Virtual Function] (rev 80)
+
+
+root@Ubuntu01:~# lshw -businfo -class network | grep 0002:00:02.0
+pci@0002:00:02.0              network        MT27710 Family [ConnectX-4 Lx Virtual Function]
+
+
+
+###===========================================================================================###
+### Ubuntu02
+root@ubuntu02:~# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+    link/ether 00:0d:3a:c3:cf:fd brd ff:ff:ff:ff:ff:ff
+    inet 10.30.1.17/24 brd 10.30.1.255 scope global eth0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::20d:3aff:fec3:cffd/64 scope link
+       valid_lft forever preferred_lft forever
+3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+    link/ether 00:0d:3a:c3:cc:32 brd ff:ff:ff:ff:ff:ff
+    inet 10.30.4.81/24 brd 10.30.4.255 scope global eth1
+       valid_lft forever preferred_lft forever
+    inet6 fe80::20d:3aff:fec3:cc32/64 scope link
+       valid_lft forever preferred_lft forever
+4: enP2s2: <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> mtu 1500 qdisc mq master eth1 state UP group default qlen 1000
+    link/ether 00:0d:3a:c3:cc:32 brd ff:ff:ff:ff:ff:ff
+
+root@ubuntu02:~# lspci
+0000:00:00.0 Host bridge: Intel Corporation 440BX/ZX/DX - 82443BX/ZX/DX Host bridge (AGP disabled) (rev 03)
+0000:00:07.0 ISA bridge: Intel Corporation 82371AB/EB/MB PIIX4 ISA (rev 01)
+0000:00:07.1 IDE interface: Intel Corporation 82371AB/EB/MB PIIX4 IDE (rev 01)
+0000:00:07.3 Bridge: Intel Corporation 82371AB/EB/MB PIIX4 ACPI (rev 02)
+0000:00:08.0 VGA compatible controller: Microsoft Corporation Hyper-V virtual VGA
+0002:00:02.0 Ethernet controller: Mellanox Technologies MT27710 Family [ConnectX-4 Lx Virtual Function] (rev 80)
+
+
+
+Binding - 
+
+root@Ubuntu01:~# ethtool -i enP2s2
+driver: mlx5_core
+version: 5.0-0
+firmware-version: 14.25.8362 (MSF0010110035)
+expansion-rom-version:
+bus-info: 0002:00:02.0
+supports-statistics: yes
+supports-test: yes
+supports-eeprom-access: no
+supports-register-dump: no
+supports-priv-flags: yes
+
+# Enable driver/s
+modprobe vfio-pci
+modprobe uio_pci_generic
+
+# Bind
+dpdk-devbind.py -b uio_pci_generic 0002:00:02.0
+dpdk-devbind.py -b mlx5_pci 0002:00:02.0
+dpdk-devbind.py -u 0002:00:02.0
+
+root@Ubuntu01:~# dpdk-devbind.py --status
+
+Network devices using DPDK-compatible driver
+============================================
+0002:00:02.0 'MT27710 Family [ConnectX-4 Lx Virtual Function] 1016' drv=uio_pci_generic unused=mlx5_core,vfio-pci
+
+testpmd -w 0002:00:02.0 \
+  --vdev="net_vdev_netvsc0,iface=eth1" \
+  -- -i \
+  --port-topology=chained
+
+
+export RTE_SDK=/root/dpdk
+export RTE_TARGET=x86_64-native-linux-gcc
+
+or
+export RTE_TARGET=x86_64-native-linuxapp-gcc
+
+# or use clang if you have it installed:
+export RTE_TARGET=x86_64-native-linux-clang
+or
+export RTE_TARGET=x86_64-native-linuxapp-clang
+
+### 
+git clone http://dpdk.org/git/apps/pktgen-dpdk
+cd pktgen-dpdk/
+export RTE_SDK=/root/dpdk
+export RTE_TARGET=x86_64-native-linux-gcc
+apt install pkg-config
+apt install cmake
+apt install libpcap-dev
+meson /root/pktgen
+cd ../../pktgen
+ninja
+ninja install
