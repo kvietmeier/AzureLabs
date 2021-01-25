@@ -66,9 +66,19 @@ Set-Location $TempDir
 wsl --set-default-version 2
 
 
-###---- As a user download the Distro and install ----###
+###---- On/In Session Host As a user download the Distro and install ----###
 
+Set-Location .\Downloads
 wsl --set-default-version 2
 Invoke-WebRequest -Uri https://aka.ms/wslubuntu2004 -OutFile Ubuntu-20-04.appx -UseBasicParsing
 Add-AppxPackage .\Ubuntu-20-04.appx
+Get-AppxPackage | Where-Object -Property Name -Like '*Ubuntu*'
+
+# Windows Terminal
+Invoke-WebRequest https://github.com/microsoft/terminal/releases/download/v1.5.3242.0/Microsoft.WindowsTerminalPreview_1.5.3242.0_8wekyb3d8bbwe.msixbundle -OutFile Microsoft.WindowsTerminalPreview_1.5.3242.0_8wekyb3d8bbwe.msixbundle
+Add-AppPackage -Path .\Microsoft.WindowsTerminalPreview_1.5.3242.0_8wekyb3d8bbwe.msixbundle
+
+# GWSL
+Invoke-WebRequest https://github.com/Opticos/GWSL-Source/releases/download/v1.3.7/GWSL.Traditional.137.release.x64.exe -OutFile GWSL.Traditional.137.release.x64.exe
+
 

@@ -140,6 +140,8 @@ Resolve-dnsname -name filescorecloud.file.core.windows.net -type a
 # This command is the A record that will show, if on network/domain, the internal 
 # IP address of a private endpoint
 Resolve-DnsName -name filescorecloud.privatelink.file.core.windows.net
+Resolve-DnsName -name kv82579fslogix02.privatelink.file.core.windows.net
+Resolve-DnsName -name kv82579fslogix02.file.core.windows.net
 
 # This command will show the storage account still has a public IP, but how access 
 # to the contents is internal

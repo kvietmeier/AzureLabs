@@ -65,7 +65,7 @@ iommu=pt intel_iommu=on
 # Run - 
 modprobe -a ib_uverbs
 
-
+dpdk-testpmd -w 0002:00:02.0 --vdev="net_vdev_netvsc0,iface=eth1"  -- -i --port-topology=chained --tx-ip=10.30.4.80,10.30.4.81
 
 # Compile - didn't work
 make config T=x86_64-native-linuxapp-gcc
@@ -93,8 +93,10 @@ make install
 # Run it for quick test
 # Server
 sockperf sr --tcp -i 10.30.1.16 -m 64 -p 12345
+sockperf sr --tcp -i 10.30.4.80 -m 64 -p 12345
 # Client
-sockperf ping-pong -i 10.30.1.17 --tcp -m 64 -t 10 -p 12345 --full-rtt
+sockperf ping-pong -i 10.30.1.16 --tcp -m 64 -t 10 -p 12345 --full-rtt
+sockperf ping-pong -i 10.30.4.80 --tcp -m 64 -t 10 -p 12345 --full-rtt
 
 
 ###--- iperf3
@@ -205,15 +207,20 @@ modprobe vfio-pci
 modprobe uio_pci_generic
 
 # Bind
+modprobe uio_pci_generic mlx5_core
 dpdk-devbind.py -b uio_pci_generic 0002:00:02.0
-dpdk-devbind.py -b mlx5_pci 0002:00:02.0
-dpdk-devbind.py -u 0002:00:02.0
-
-root@Ubuntu01:~# dpdk-devbind.py --status
+root@Ubuntu01:~# dpdk-devbind.py -s
 
 Network devices using DPDK-compatible driver
 ============================================
 0002:00:02.0 'MT27710 Family [ConnectX-4 Lx Virtual Function] 1016' drv=uio_pci_generic unused=mlx5_core,vfio-pci
+
+
+# Unbind
+dpdk-devbind.py -u 0002:00:02.0
+
+dpdk-devbind.py -b mlx5_pci 0002:00:02.0
+
 
 testpmd -w 0002:00:02.0 \
   --vdev="net_vdev_netvsc0,iface=eth1" \
@@ -221,18 +228,8 @@ testpmd -w 0002:00:02.0 \
   --port-topology=chained
 
 
-export RTE_SDK=/root/dpdk
-export RTE_TARGET=x86_64-native-linux-gcc
 
-or
-export RTE_TARGET=x86_64-native-linuxapp-gcc
-
-# or use clang if you have it installed:
-export RTE_TARGET=x86_64-native-linux-clang
-or
-export RTE_TARGET=x86_64-native-linuxapp-clang
-
-### 
+###----  Install the correct pktgen source  
 git clone http://dpdk.org/git/apps/pktgen-dpdk
 cd pktgen-dpdk/
 export RTE_SDK=/root/dpdk
@@ -244,3 +241,27 @@ meson /root/pktgen
 cd ../../pktgen
 ninja
 ninja install
+
+
+### ????
+export RTE_SDK=/root/dpdk
+export RTE_TARGET=x86_64-native-linux-gcc
+
+or
+export RTE_TARGET=x86_64-native-linuxapp-gcc
+
+# or use clang if you have it installed:
+export RTE_TARGET=x86_64-native-linux-clang
+or
+export RTE_TARGET=x86_64-native-linuxapp-clang
+
+
+pktgen -l 1-3 -n 4 --proc-type auto --log-level 7 --file-prefix pg -a 0002:00:02.0 -d librte_net_mlx5.so -- -v -T -P -j -m [2:3].0 -f themes/black-yellow.theme
+pktgen --proc-type auto -a 0002:00:02.0 -d librte_net_mlx5.so -- -N -T -P -f pktgen2.pkt
+
+dpdk-testpmd -w 0002:00:02.0 --vdev="net_vdev_netvsc0,iface=eth1" -- -i --port-topology=chained
+dpdk-testpmd -l 0-3 -n 1 -w 0002:00:02.0 --vdev=net_vdev_netvsc0,iface=eth1 -- --port-topology=chained --nb-cores 1 --forward-mode=txonly --eth-peer=0,00:0d:3a:c3:cc:32 --stats-period 1
+dpdk-testpmd -l 0-3 -n 1 -w 0002:00:02.0 --vdev=net_vdev_netvsc0,iface=eth1 -- --port-topology=chained --nb-cores 1 --forward-mode=rxonly --eth-peer=0,00:0d:3a:f6:03:40 --stats-period 1
+
+
+https://manpages.debian.org/experimental/dpdk/testpmd.1.en.html
