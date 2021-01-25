@@ -1,27 +1,53 @@
-Linux Commands
+#########################################################################
+####====     High Performance Network Testing On Azure VMs       ====####
+#########################################################################
 
+Throughput = Packet_Rate * (floor(1460/message_size) + 1) * message_size/2
+
+VM Notes:
+* Ubuntu 20.04 - D4s_v3 (could and should be larger for true test)
+* Use Proximity Placement group
+* Give the VMs static Public IPs.
+* Create 2 NICs - "mgmt" and "Production"
+   - "Primary" NIC is the default NIC, no Accelerated Networking that gets created, assign PubIP to this NIC.
+   - Create additional NIC and attach - enable Accelerated Networking
+
+
+* Create some alises in .ssh/config on your Laptop/Workstation:
+### Azure VMs
+Host ubuntu01
+  HostName nfvtest01.westus2.cloudapp.azure.com
+  User azureadmin
+  PasswordAuthentication no
+
+Host ubuntu02
+  HostName nfvtest-02.westus2.cloudapp.azure.com
+  User azureadmin
+  PasswordAuthentication no
+
+
+###==== Linux OS Setup/DPDK Install
 # Environment
 echo "set -o vi " >> .bashrc
 . .bashrc
 cd .ssh; ssh-keygen
+## Add the other host/s keys.
+vi ./authorizedkeys
 
 EDITOR=vim; export $EDITOR
 
-# Devices - 
+# Check Devices - 
 lspci | grep Mell
 ethtool -S eth0 | grep vf_
 
-# Install Basic tools
+# Install some Basic tools
 sudo -i
 apt update
-apt upgrade -y
 apt install numactl -y
 apt-get install build-essential -y
-
+apt upgrade -y
 
 ###==== DPDK
-# Don't need this - add-apt-repository ppa:canonical-server/dpdk-azure -y
-
 # Need some libs and utilities
 apt-get install -y librdmacm-dev librdmacm1 libnuma-dev libmnl-dev meson python3-pip autoconf lib32z1
 apt-get install -y python3-pyelftools python-pyelftools
@@ -34,14 +60,14 @@ wget https://fast.dpdk.org/rel/dpdk-20.11.tar.xz
 tar xf dpdk-20.11.tar.xz
 cd dpdk-20.11
 
-# Build it
+# Build DPDK - uses meson/ninja - not gcc make
 meson /root/dpdk
 cd /root/dpdk 
 ninja
 ninja install
 ldconfig
 
-# Copy over usertools to the build dir
+# Might need to copy over usertools to the build dir
 cp ~/temp/dpdk-20.11/usertools/* ~/dpdk/usertools/
 
 ###--- Need to enable Huge Pages
@@ -50,37 +76,59 @@ mount -t hugetlbfs pagesize=1GB /mnt/huge
 grep Huge /proc/meminfo
 echo 256 > /sys/devices/system/node/node0/hugepages/hugepages-2048kB/nr_hugepages
 
+### Update /etc/fstab
 echo "" >> /etc/fstab
 echo "### DPDK Hugepages" >> /etc/fstab
 echo "nodev /mnt/huge hugetlbfs pagesize=1GB 0 0" >> /etc/fstab
 
 ###--- Edit Grub 
 # edit: /etc/default/grub.d/50-cloudimg-settings.cfg
+# Replace "GRUB_CMDLINE_LINUX_DEFAULT=" line with - 
 GRUB_CMDLINE_LINUX_DEFAULT="console=tty1 console=ttyS0 earlyprintk=ttyS0 default_hugepagesz=1G hugepagesz=1G hugepages=8"
 
-# Optional
+# Optional (didn't need with the small single NUMA node VM size)
 isolcpus=2,3,4,5,6,7,8
 iommu=pt intel_iommu=on
 
 # Run - 
 modprobe -a ib_uverbs
 
-dpdk-testpmd -w 0002:00:02.0 --vdev="net_vdev_netvsc0,iface=eth1"  -- -i --port-topology=chained --tx-ip=10.30.4.80,10.30.4.81
+###==== Binding the interface to DPDK - 
 
-# Compile - didn't work
-make config T=x86_64-native-linuxapp-gcc
-sed -ri 's,(MLX._PMD=)n,\1y,' build/.config
-make 
-make install DESTDIR=
+# Use eth1/enP2s2
+root@Ubuntu01:~# ethtool -i enP2s2
+driver: mlx5_core
+version: 5.0-0
+firmware-version: 14.25.8362 (MSF0010110035)
+expansion-rom-version:
+bus-info: 0002:00:02.0
+supports-statistics: yes
+supports-test: yes
+supports-eeprom-access: no
+supports-register-dump: no
+supports-priv-flags: yes
 
-### pktgen - 
-https://people.kth.se/~danieltt/pktgen/patches/kernel-4.6/pktgen-rx4.6.tar
+# Enable driver/s
+modprobe vfio-pci
+modprobe uio_pci_generic
 
-cd temp
-wget https://people.kth.se/~danieltt/pktgen/patches/kernel-4.6/pktgen-rx4.6.tar
-tar xf pktgen-rx4.6.tar
+# Bind
+modprobe uio_pci_generic mlx5_core
+dpdk-devbind.py -b uio_pci_generic 0002:00:02.0
+root@Ubuntu01:~# dpdk-devbind.py -s
 
-Throughput = Packet_Rate * (floor(1460/message_size) + 1) * message_size/2
+Network devices using DPDK-compatible driver
+============================================
+0002:00:02.0 'MT27710 Family [ConnectX-4 Lx Virtual Function] 1016' drv=uio_pci_generic unused=mlx5_core,vfio-pci
+
+
+# Bind/Unbind
+dpdk-devbind.py -b mlx5_pci 0002:00:02.0
+dpdk-devbind.py -u 0002:00:02.0
+
+###--- Perf tools to show TCP based baseline diff bewteen SRIOV and no SRIOV
+### latency: "Sockperf"
+### throughput: "iperf3"
 
 ###--- Sockperf
 git clone https://github.com/mellanox/sockperf
@@ -109,127 +157,101 @@ ldconfig
 /usr/local/bin/iperf3
 
 
-* Download the latest DPDK. Version 18.11 LTS or 19.11 LTS is required for Azure.
-* Build the default config with:
-  make config T=x86_64-native-linuxapp-gcc.
-* Enable Mellanox PMDs in the generated config with sed -ri 's,(MLX._PMD=)n,\1y,' build/.config.
-* Compile with make.
-* Install with make install DESTDIR=<output folder>.
 
-###===========================================================================================###
-### Ubuntu01
-root@Ubuntu01:~# ip a
-1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
-    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-    inet 127.0.0.1/8 scope host lo
-       valid_lft forever preferred_lft forever
-    inet6 ::1/128 scope host
-       valid_lft forever preferred_lft forever
-2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
-    link/ether 00:0d:3a:f5:b1:8e brd ff:ff:ff:ff:ff:ff
-    inet 10.30.1.16/24 brd 10.30.1.255 scope global eth0
-       valid_lft forever preferred_lft forever
-    inet6 fe80::20d:3aff:fef5:b18e/64 scope link
-       valid_lft forever preferred_lft forever
-3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
-    link/ether 00:0d:3a:f6:03:40 brd ff:ff:ff:ff:ff:ff
-    inet 10.30.4.80/24 brd 10.30.4.255 scope global eth1
-       valid_lft forever preferred_lft forever
-    inet6 fe80::20d:3aff:fef6:340/64 scope link
-       valid_lft forever preferred_lft forever
-4: enP2s2: <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> mtu 1500 qdisc mq master eth1 state UP group default qlen 1000
-    link/ether 00:0d:3a:f6:03:40 brd ff:ff:ff:ff:ff:ff
+###======= Use dpdk-testpmd
+# dpdk-testpmd to generate pps -
+* On target - start RX first, note 0 pps
+* On source host run TX to generate pps, note it kick up on target
+###--- ubuntu01
+# TX
+#!/bin/bash
+# Run testpmd in TX mode
+dpdk-testpmd -l 1-3 -n 1 -w 0002:00:02.0 --vdev=net_vdev_netvsc0,iface=enP2s2 -- --port-topology=chained --nb-cores 2 --forward-mode=txonly --eth-peer=1,00:0d:3a:c3:cc:32 --tx-ip=10.30.4.80,10.30.4.81 --max-pkt-len=64 --txq=16 --stats-period 1
 
-root@Ubuntu01:~# lspci
-0000:00:00.0 Host bridge: Intel Corporation 440BX/ZX/DX - 82443BX/ZX/DX Host bridge (AGP disabled) (rev 03)
-0000:00:07.0 ISA bridge: Intel Corporation 82371AB/EB/MB PIIX4 ISA (rev 01)
-0000:00:07.1 IDE interface: Intel Corporation 82371AB/EB/MB PIIX4 IDE (rev 01)
-0000:00:07.3 Bridge: Intel Corporation 82371AB/EB/MB PIIX4 ACPI (rev 02)
-0000:00:08.0 VGA compatible controller: Microsoft Corporation Hyper-V virtual VGA
-0002:00:02.0 Ethernet controller: Mellanox Technologies MT27710 Family [ConnectX-4 Lx Virtual Function] (rev 80)
+# RX
+#!/bin/bash
+# Run testpmd in RX mode
+dpdk-testpmd -l 0-3 -n 1 -w 0002:00:02.0 --vdev=net_vdev_netvsc0,iface=eth1 -- --port-topology=chained --nb-cores 3 --forward-mode=rxonly --eth-peer=1,00:0d:3a:c3:cc:32 --stats-period 1
 
+###--- ubuntu02
+# TX
+#!/bin/bash
+# Run testpmd in TX mode
+dpdk-testpmd -l 0-3 -n 1 -w 0002:00:02.0 --vdev=net_vdev_netvsc0,iface=eth1 -- --port-topology=chained --nb-cores 1 --forward-mode=txonly --eth-peer=1,00:0d:3a:f6:03:40 --tx-ip=10.30.4.81,10.30.4.80 --stats-period 1
 
-root@Ubuntu01:~# lshw -businfo -class network | grep 0002:00:02.0
-pci@0002:00:02.0              network        MT27710 Family [ConnectX-4 Lx Virtual Function]
+# RX
+#!/bin/bash
+# Run testpmd in RX mode
+dpdk-testpmd -l 0-3 -n 1 -w 0002:00:02.0 --vdev=net_vdev_netvsc0,iface=enP2s2 -- --port-topology=chained --nb-cores 3 --forward-mode=rxonly --eth-peer=1,00:0d:3a:f6:03:40 --stats-period 1
 
+###==== Other scripts (really one-liners)
 
+* dstat -
+dstat --time --load --proc --cpu --sys --vm --disk
 
-###===========================================================================================###
-### Ubuntu02
-root@ubuntu02:~# ip a
-1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
-    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-    inet 127.0.0.1/8 scope host lo
-       valid_lft forever preferred_lft forever
-    inet6 ::1/128 scope host
-       valid_lft forever preferred_lft forever
-2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
-    link/ether 00:0d:3a:c3:cf:fd brd ff:ff:ff:ff:ff:ff
-    inet 10.30.1.17/24 brd 10.30.1.255 scope global eth0
-       valid_lft forever preferred_lft forever
-    inet6 fe80::20d:3aff:fec3:cffd/64 scope link
-       valid_lft forever preferred_lft forever
-3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
-    link/ether 00:0d:3a:c3:cc:32 brd ff:ff:ff:ff:ff:ff
-    inet 10.30.4.81/24 brd 10.30.4.255 scope global eth1
-       valid_lft forever preferred_lft forever
-    inet6 fe80::20d:3aff:fec3:cc32/64 scope link
-       valid_lft forever preferred_lft forever
-4: enP2s2: <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> mtu 1500 qdisc mq master eth1 state UP group default qlen 1000
-    link/ether 00:0d:3a:c3:cc:32 brd ff:ff:ff:ff:ff:ff
+###--- ubuntu01 - in this testing ubuntu01 is the server
+*** iperf3
+* eth0
+iperf3 -s 10.30.1.16 -f G
+* eth1 (SRIOV)
+iperf3 -s 10.30.1.80 -f G
 
-root@ubuntu02:~# lspci
-0000:00:00.0 Host bridge: Intel Corporation 440BX/ZX/DX - 82443BX/ZX/DX Host bridge (AGP disabled) (rev 03)
-0000:00:07.0 ISA bridge: Intel Corporation 82371AB/EB/MB PIIX4 ISA (rev 01)
-0000:00:07.1 IDE interface: Intel Corporation 82371AB/EB/MB PIIX4 IDE (rev 01)
-0000:00:07.3 Bridge: Intel Corporation 82371AB/EB/MB PIIX4 ACPI (rev 02)
-0000:00:08.0 VGA compatible controller: Microsoft Corporation Hyper-V virtual VGA
-0002:00:02.0 Ethernet controller: Mellanox Technologies MT27710 Family [ConnectX-4 Lx Virtual Function] (rev 80)
+*** Sockperf
+* eth0
+sockperf sr --tcp -i 10.30.1.16 -m 64 -p 12345
+
+* eth1 (SRIOV)
+sockperf sr --tcp -i 10.30.4.80 -m 64 -p 12345
 
 
+###--- ubuntu02 - in this testing ubuntu02 is the Client
+*** iperf3
+* eth0
+iperf -c 10.30.1.16 -P 32 -w 500K
 
-Binding - 
+* eth1 (SRIOV)
+iperf -c 10.30.4.80 -P 32 -w 500K -p 9090
 
-root@Ubuntu01:~# ethtool -i enP2s2
-driver: mlx5_core
-version: 5.0-0
-firmware-version: 14.25.8362 (MSF0010110035)
-expansion-rom-version:
-bus-info: 0002:00:02.0
-supports-statistics: yes
-supports-test: yes
-supports-eeprom-access: no
-supports-register-dump: no
-supports-priv-flags: yes
+*** Sockperf
+* eth0
+sockperf ping-pong -i 10.30.1.16 --tcp -m 64 -t 10 -p 12345 --full-rtt
 
-# Enable driver/s
-modprobe vfio-pci
-modprobe uio_pci_generic
+* eth1 (SRIOV)
+sockperf ping-pong -i 10.30.4.80 --tcp -m 64 -t 10 -p 12345 --full-rtt
 
-# Bind
-modprobe uio_pci_generic mlx5_core
-dpdk-devbind.py -b uio_pci_generic 0002:00:02.0
-root@Ubuntu01:~# dpdk-devbind.py -s
+### Packet Monitor
+###<BEGIN>
+#!/bin/bash
 
-Network devices using DPDK-compatible driver
-============================================
-0002:00:02.0 'MT27710 Family [ConnectX-4 Lx Virtual Function] 1016' drv=uio_pci_generic unused=mlx5_core,vfio-pci
+if [ "$1" != "" ]; then
+        NIC=$1
+else
+    echo "Please provide the network interface you'd like to monitor."
+    echo "example: $0 eth0"
+    exit 1
+fi
+p=0
+d=0
+while sleep 1; do
+r=$(netstat -i | grep $NIC | awk '{print $3,$5}' | grep -v statistics)
+        p_now=$(echo $r | awk '{print $1}')
+        d_now=$(echo $r |awk '{print $2}')
 
-
-# Unbind
-dpdk-devbind.py -u 0002:00:02.0
-
-dpdk-devbind.py -b mlx5_pci 0002:00:02.0
-
-
-testpmd -w 0002:00:02.0 \
-  --vdev="net_vdev_netvsc0,iface=eth1" \
-  -- -i \
-  --port-topology=chained
-
+        if [ "$p" -gt "0" ]; then
+                dropped=$((d_now - d))
+                rx=$((p_now - p))
+                perc_d=$(echo "scale=5;($dropped/$rx)*100" | bc -l)
+                echo "pps: received: $rx    dropped: $dropped  $perc_d %"
+        fi
+        p=$p_now
+        d=$d_now
+done
+###<END>
 
 
-###----  Install the correct pktgen source  
+###======= Pktgen: 
+### ----  Install the correct pktgen source  
+cd temp
 git clone http://dpdk.org/git/apps/pktgen-dpdk
 cd pktgen-dpdk/
 export RTE_SDK=/root/dpdk
@@ -242,26 +264,6 @@ cd ../../pktgen
 ninja
 ninja install
 
-
-### ????
-export RTE_SDK=/root/dpdk
-export RTE_TARGET=x86_64-native-linux-gcc
-
-or
-export RTE_TARGET=x86_64-native-linuxapp-gcc
-
-# or use clang if you have it installed:
-export RTE_TARGET=x86_64-native-linux-clang
-or
-export RTE_TARGET=x86_64-native-linuxapp-clang
-
-
 pktgen -l 1-3 -n 4 --proc-type auto --log-level 7 --file-prefix pg -a 0002:00:02.0 -d librte_net_mlx5.so -- -v -T -P -j -m [2:3].0 -f themes/black-yellow.theme
 pktgen --proc-type auto -a 0002:00:02.0 -d librte_net_mlx5.so -- -N -T -P -f pktgen2.pkt
 
-dpdk-testpmd -w 0002:00:02.0 --vdev="net_vdev_netvsc0,iface=eth1" -- -i --port-topology=chained
-dpdk-testpmd -l 0-3 -n 1 -w 0002:00:02.0 --vdev=net_vdev_netvsc0,iface=eth1 -- --port-topology=chained --nb-cores 1 --forward-mode=txonly --eth-peer=0,00:0d:3a:c3:cc:32 --stats-period 1
-dpdk-testpmd -l 0-3 -n 1 -w 0002:00:02.0 --vdev=net_vdev_netvsc0,iface=eth1 -- --port-topology=chained --nb-cores 1 --forward-mode=rxonly --eth-peer=0,00:0d:3a:f6:03:40 --stats-period 1
-
-
-https://manpages.debian.org/experimental/dpdk/testpmd.1.en.html
