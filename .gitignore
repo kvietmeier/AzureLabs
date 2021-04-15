@@ -8,8 +8,10 @@ HISTORY.txt
 README.txt
 
 # Ignore "Private" files
-Private/
+/Private/
 
+# exclude the ignore file
+.gitignore
 
 # Ignore temporary or scratch files
 **/foo*
@@ -26,3 +28,10 @@ Private/
 *.vhdx
 *.vhd
 *.zip
+
+
+# Exclude vim swap files and backups
+*.swap
+*.sw
+*~
+ 
