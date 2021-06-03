@@ -1,6 +1,6 @@
 ###=================================================================================###
 <# 
-  Filename: Setup PowerShell Modules.ps1
+  Filename: SetupPowerShellModules.ps1
   
   Description:
   PowerShell commands to install the modules you need for working in Azure and
