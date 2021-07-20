@@ -5,39 +5,25 @@
   . "path_to_library.ps1"
 
   Functions:
-   InstallPSModules - Install modules you may need
+   InstallPSModules: Install modules you may need
    Check-Login: Check to see if you are already connected to Azure, if not, 
                 prompt for Credentials and connect
 
+
+
+  IDs, passwords, etc, are stored in a file excluded from the 
+  GitHub repo with .gitignore or in the root folders
+
 #>
+
+Set-Location $PSscriptroot
+
+# Source my account info
+. 'C:\.info\miscinfo.ps1'
+
 
 ###=====================  Are you logged in?  ===================###        
 function Check-Login ()
-{
-
-    $context = Get-AzContext
-    Write-Host "Is my AZ Account Connected?" 
-
-    if (!$context -or ($context.Subscription.Id -ne $SubID)) 
-    {
-        # Save your creds
-        $creds = get-credential
-        Connect-AzAccount -Credential $creds -Subscription $SubID
-        
-        # Change subscription context (May not need this)
-        Select-AzSubscription -SubscriptionId $SubName
-    } 
-    else 
-    {
-        Write-Host "SubscriptionId '$SubID' already connected"
-    }
-}
-
-### Login Creds - an insecure hack
-# - In an external file - edit for your use here
-#$AIAuser
-#$AIApassword
-function Login-NoPrompt ($AIAPassword, $AIAuser)
 {
     $context = Get-AzContext
     Write-Host "" 
@@ -45,20 +31,62 @@ function Login-NoPrompt ($AIAPassword, $AIAuser)
 
     if (!$context -or ($context.Subscription.Id -ne $SubID)) 
     {
-        # Use credentials stored in a secure variable sourced from another file
-        $securepasswd = ConvertTo-SecureString $AIAPassword -AsPlainText -Force
-        $cred = New-Object System.Management.Automation.PSCredential ($AIAuser, $securepasswd)
-        Connect-AzAccount -Credential $cred -Subscription $SubID
-        
-        # Change subscription context (May not need this)
-        Select-AzSubscription -SubscriptionId $SubName
+        #Write-Host "SubscriptionId '$SubID' already connected"
+        Write-Host "No Azure Connection"
     } 
     else 
     {
-        Write-Host "SubscriptionId '$SubID' already connected"
-        Write-Host "" 
+        #$SubID = $context.Subscription.Id
+        Write-Host ""
+        Write-Host "Yes - SubscriptionId $SubID is connected"
+        Write-Host ""
     }
 }
+
+#Check-Login 
+
+### Login Creds - a somewhat insecure hack - hide the credentials
+# - In an external file listed in .gitignore - edit for your use here
+#$AZUser        = ""
+#$AZPassword    = ""
+#$SPAppID       = ""
+#$SPPassWd      = ""
+
+
+# Connect to your AZ Sub using a Service Principle - 
+# after checking if you are already connected
+function AZConnectSP ()
+{
+    <# This function requires the following variables to be defined 
+      $SPAppID
+      $SPSecret
+      $SubID
+      $TenantID 
+    #>
+
+    $context = Get-AzContext
+
+    # If I'm not connected/authorized, connect with Service Principle
+    if (!$context -or ($context.Subscription.Id -ne $SubID)) 
+    {
+        Write-Host "" 
+        Write-Host "No - Authenticating to $SubID with Service Principle" 
+        
+        # Script Automation w/Service Principle - no prompts
+        $SPPassWd = $SPSecret | ConvertTo-SecureString -AsPlainText -Force 
+        $SPCred   = New-Object -TypeName System.Management.Automation.PSCredential($SPAppID, $SPPassWd)
+        Connect-AzAccount -ServicePrincipal -Credential $SPCred -Tenant $TenantID
+    } 
+    else 
+    {
+        Write-Host ""
+        Write-Host "SubscriptionId $SubID is connected - no action required"
+        Write-Host ""
+    }
+}
+
+# Call it to test
+#AZConnectSP 
 
 function Install-PSModules ()
 {
