@@ -270,3 +270,36 @@ $StorageAcctKey = (Get-AzStorageAccountKey -ResourceGroupName $AZResourceGroup -
 
 # Create the computer account password using the storage account key
 $CompPassword = $StorageAcctKey | ConvertTo-Securestring -asplaintext -force
+
+<#
+# Use User/Pass credentials stored in a secure variable sourced from another file
+$securepasswd = ConvertTo-SecureString $AZPassword -AsPlainText -Force
+$cred = New-Object System.Management.Automation.PSCredential ($AZUser, $securepasswd)
+Connect-AzAccount -Credential $cred -Subscription $SubID
+#>
+        
+# Change subscription context (May not need this)
+
+## OLD Version
+function Check-Login ()
+{
+
+    $context = Get-AzContext
+    Write-Host "Is my AZ Account Connected?" 
+
+    if (!$context -or ($context.Subscription.Id -ne $SubID)) 
+    {
+        # Save your creds
+        $creds = get-credential
+        Connect-AzAccount -Credential $creds -Subscription $SubID
+        
+        # Change subscription context (May not need this)
+        Select-AzSubscription -SubscriptionId $SubName
+    } 
+    else 
+    {
+        Write-Host "SubscriptionId '$SubID' already connected"
+    }
+}
+
+Select-AzSubscription -SubscriptionId $SubName

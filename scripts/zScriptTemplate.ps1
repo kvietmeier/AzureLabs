@@ -9,6 +9,20 @@
 #>
 ###====================================================================================###
 
+<#
+.SYNOPSIS
+Short description
+
+.DESCRIPTION
+Long description
+
+.EXAMPLE
+An example
+
+.NOTES
+General notes
+#>
+
 ### Here for safety - comment/uncomment as desired
 return
 
@@ -20,7 +34,7 @@ Set-Location $PSscriptroot
 
 ### Get my functions and credentials
 # Credentials  (stored outside the repo)
-. '..\..\Certs\resources.ps1'
+. 'C:\.info\miscinfo.ps1'
 
 # Functions (In this repo)
 . '.\FunctionLibrary.ps1'

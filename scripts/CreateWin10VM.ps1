@@ -33,14 +33,16 @@ Set-Location $PSscriptroot
 
 ###---- Get my functions and credentials ----###
 # Credentials  (stored outside the repo)
-. '..\..\Certs\resources.ps1'
+. 'C:\.info\miscinfo.ps1'
 
 # Functions (In this repo)
 . '.\FunctionLibrary.ps1'
 
 # Imported from "FunctionLibrary.ps1"
 # Are we connected to Azure with the corredt SubID?
-Check-Login
+
+AZConnectSP $SPAppID $SPSecret
+
 ###---- End my functions and credentials ----###
 
 ###----   Define parameters for the VM   ----###
