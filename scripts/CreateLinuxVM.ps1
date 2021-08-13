@@ -2,10 +2,10 @@
 <# 
   CreateWin10VM.ps1                                                    
     Created By: Karl Vietmeier
-                kavietme@microsoft.com                                       
+                karl.vietmeier@intel.com                                       
                                                                     
   Description                                                      
-    Create a Win10 VM for testing                                 
+    Create a Linux VM for testing                                 
     Sometimes you just need a VM for testing with some standard defaults and using 
     existing network infrastructure   
 
@@ -24,23 +24,43 @@
 ### Here for safety - comment/uncomment as desired
 #return
 
+<#
+.SYNOPSIS
+Create a Linux VM
+
+.DESCRIPTION
+Will create a Linux VM using the configured parameters that you need to 
+modify in this script. Also assumes you are authenticated to your 
+subscription.
+
+Generates a random 4 digit ID for resources. 
+
+.EXAMPLE
+./CreateLinuxVM.ps1
+
+.NOTES
+General notes
+#>
+
+### Here for safety - comment/uncomment as desired
+#return
+
 # Stop on first error
 $ErrorActionPreference = "stop"
 
 # Run from the location of the script
 Set-Location $PSscriptroot
-#Set-Location ../AzureLabs/scripts
 
-###---- Get my functions and credentials ----###
+### Get my functions and credentials
 # Credentials  (stored outside the repo)
-. '..\..\Certs\resources.ps1'
+. 'C:\.info\miscinfo.ps1'
 
 # Functions (In this repo)
 . '.\FunctionLibrary.ps1'
 
 # Imported from "FunctionLibrary.ps1"
 # Are we connected to Azure with the corredt SubID?
-Check-Login
+#Check-Login
 ###---- End my functions and credentials ----###
 
 ###----   Define parameters for the VM   ----###
@@ -53,7 +73,7 @@ $VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUse
 #>
 
 # Region
-$Region = "westus2"
+$Region = "eastus2"
 
 # Create a 4 digit random ID for naming
 $RandomID = $(Get-Random -Minimum 1000 -Maximum 2000)
@@ -61,7 +81,7 @@ $RandomID = $(Get-Random -Minimum 1000 -Maximum 2000)
 # Resource names 
 $StorageAccount = "kv82578TempSA-$RandomID"
 #$ResourceGroup  = "TempRG-$RandomID"
-$ResourceGroup  = "NetworkTests"
+$ResourceGroup  = "k8s-eastus2"
 $VMName         = "LinuxVM-$RandomID"
 $DNSName        = "linuxvm$RandomID"
 $PubIP          = "PubIP-$RandomID"
@@ -117,9 +137,9 @@ vNet, Subnet, and NSG.
 #>
 
 # Use existing network resources: vNet, Subnet, NSG
-$vNetName  = "VnetCore"
-$vNetRG    = "CoreInfrastructure-rg"
-$NsgName   = "AllowRemoteByIP"
+$vNetName  = "k8s-vnet"
+$vNetRG    = "k8s-eastus2"
+$NsgName   = "FilterByIP"
 $vNet      = Get-AzVirtualNetwork -Name $vNetName -ResourceGroupName $vNetRG
 $SubNetCfg = Get-AzVirtualNetworkSubnetConfig -ResourceId $vNet.Subnets[0].Id
 $NSG       = Get-AzNetworkSecurityGroup -ResourceGroupName $vNetRG -Name $NsgName
@@ -128,7 +148,8 @@ $NSG       = Get-AzNetworkSecurityGroup -ResourceGroupName $vNetRG -Name $NsgNam
 $PIP = New-AzPublicIPAddress `
   -Name $PubIP `
   -ResourceGroupName $ResourceGroup `
-  -AllocationMethod Static `
+  -Sku Basic `
+  -AllocationMethod Dynamic `
   -DomainNameLabel $DNSName `
   -Location $Region
 
@@ -167,7 +188,7 @@ $NewVMConfig = Set-AzVMOperatingSystem `
   -VM $NewVMConfig `
   -Linux `
   -ComputerName $VMName `
-  -Credential $VMCred 
+  -Credential $VMCred
 
 # Source Image
 $NewVMConfig = Set-AzVMSourceImage `

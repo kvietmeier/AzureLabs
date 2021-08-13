@@ -22,8 +22,9 @@ Set-Location $PSscriptroot
 . 'C:\.info\miscinfo.ps1'
 
 
+
 ###=====================  Are you logged in?  ===================###        
-function Check-Login ()
+function CheckLogin ()
 {
     $context = Get-AzContext
     Write-Host "" 
@@ -43,7 +44,7 @@ function Check-Login ()
     }
 }
 
-#Check-Login 
+#CheckLogin 
 
 ### Login Creds - a somewhat insecure hack - hide the credentials
 # - In an external file listed in .gitignore - edit for your use here
@@ -88,7 +89,7 @@ function AZConnectSP ()
 # Call it to test
 #AZConnectSP 
 
-function Install-PSModules ()
+function InstallPSModules ()
 {
 
     Write-Host ""
