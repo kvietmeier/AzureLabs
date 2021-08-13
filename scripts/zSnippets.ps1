@@ -1,6 +1,6 @@
 ###====================================================================================###
 <# 
-  zSnippets.ps1                   
+  Snippets.ps1                   
     Created By: Karl Vietmeier    
                                  
   Description                   
@@ -12,16 +12,16 @@
 return
 
 ### Get my functions and credentials
-cd ..\AzureLabs\scripts\
+Set-Location  $AzScriptDir
 # Credentials  (stored outside the repo)
-. '..\..\Certs\resources.ps1'
+. 'C:\.info\miscinfo.ps1'
 
 # Functions (In this repo)
 . '.\FunctionLibrary.ps1'
 
-# Imported from "FunctionLibrary.ps1"
+# In my profile scripts - 
 # Are we connected to Azure with the corredt SubID?
-Check-Login
+AZConnectSP
 
 ###====================================================================================###
 
@@ -33,6 +33,24 @@ Check-Login
 else {
     New-ItemProperty -Path "." -Name  "Enabled" -PropertyType "DWORD" -Value "1"
 } #>
+
+# Use a range 
+$range = 1..100
+ForEach ($number in $range) {
+    $samaccountname = "user{0:00}" -f $number
+    $samaccountname
+}
+
+# Checking env variables using "Test-Path"
+if (-not (Test-Path env:FOO)) { $env:FOO = 'bar' }
+if (-not (Test-Path env:FOO)) {
+   continue
+}
+else { 
+    Remove-Item Env:FOO
+    Write-Host "Unsetting FOO"
+}
+
 
 
 # Make sure you have the latest WVD PowerShell module installed
@@ -303,3 +321,4 @@ function Check-Login ()
 }
 
 Select-AzSubscription -SubscriptionId $SubName
+
