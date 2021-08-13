@@ -1,6 +1,6 @@
 ###====================================================================================###
 <# 
-  CreateWin10VM.ps1                                                    
+  CreateLinuxVM.ps1                                                    
     Created By: Karl Vietmeier
                 karl.vietmeier@intel.com                                       
                                                                     
@@ -79,7 +79,7 @@ $Region = "eastus2"
 $RandomID = $(Get-Random -Minimum 1000 -Maximum 2000)
 
 # Resource names 
-$StorageAccount = "kv82578TempSA-$RandomID"
+$StorageAccount = "kv82579TempSA-$RandomID"
 #$ResourceGroup  = "TempRG-$RandomID"
 $ResourceGroup  = "k8s-eastus2"
 $VMName         = "LinuxVM-$RandomID"
