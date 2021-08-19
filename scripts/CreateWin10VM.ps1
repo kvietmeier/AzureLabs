@@ -41,7 +41,7 @@ Set-Location $PSscriptroot
 # Imported from "FunctionLibrary.ps1"
 # Are we connected to Azure with the corredt SubID?
 
-AZConnectSP $SPAppID $SPSecret
+#AZConnectSP $SPAppID $SPSecret
 
 ###---- End my functions and credentials ----###
 
@@ -54,30 +54,39 @@ $VMLocalAdminSecurePassword = ConvertTo-SecureString "############" -AsPlainText
 $VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
 #>
 
-# Region
-$Region = "westus2"
-
 # Create a 4 digit random ID for naming
 $RandomID = $(Get-Random -Minimum 1000 -Maximum 2000)
 
-# Resource names 
-$StorageAccount ="kv82578TempSA-$RandomID"
-$ResourceGroup  = "TempRG-$RandomID"
-$VMName         = "Win10VM-$RandomID"
-$DNSName        = "win10vm$RandomID"
-$PubIP          = "PubIP-$RandomID"
-$NICId          = "NIC-$RandomID"
+# Use existing network resources: vNet, Subnet, NSG
+$Region    = "eastus2"
+#$vNetName  = "avdvnet01"
+$vNetName  = "k8s-vnet"
+$vNetRG    = "k8s-eastus2"
+#$NsgName   = "AllowByIP"
+$NsgName   = "FilterByIP"
 
-# Windows Image and VM Size to Use
-$VMSize         = "Standard_D2_v3"
+# Resource names  uses RandomID so VMs are unique
+$VMPrefix       = "imageprep"
+#$StorageAccount = "kv82579TempSA-$RandomID"
+$ResourceGroup  = "TempRG-$RandomID"
+$ResourceGroup  = "$VMPrefix-eastus2"
+$VMName         = "$VMPrefix-$RandomID"
+$DNSName        = "$VMPrefix$RandomID"
+$PubIP          = "$VMPrefix-PubIP-$RandomID"
+$NICId          = "$VMPrefix-NIC-$RandomID"
 
 
 ###=================  Image Definitions  ==================###
+# Windows Image and VM Size to Use
+#$VMSize         = "Standard_D2_v3"
+#$VMSize         = "Standard_D2_v4"
+$VMSize         = "Standard_D2s_v5"
+
 # Image: Windows 10 Enterprise 2004 H2
-$PublisherName  = "MicrosoftWindowsDesktop"
-$Offer          = "Windows-10"
-$SKU            = "20h2-entn"
-$Version        = "latest"
+#$PublisherName  = "MicrosoftWindowsDesktop"
+#$Offer          = "Windows-10"
+#$SKU            = "20h2-entn"
+#$Version        = "latest"
 
 # Image: Windows 10 Enterprise 1909
 #$PublisherName  = "MicrosoftWindowsDesktop"
@@ -86,10 +95,12 @@ $Version        = "latest"
 #$Version        = "latest"
 
 # Image: Windows 10 Multi Session 2020 2H w/O365
-#$PublisherName  = "MicrosoftWindowsDesktop"
-#$Offer          = "office-365"
+$PublisherName  = "MicrosoftWindowsDesktop"
+$Offer          = "office-365"
 #$SKU            = "20h2-evd-o365pp"
-#$Version        = "latest"
+# To enable Gen2 - 
+$SKU            = "20h2-evd-o365pp-g2"
+$Version        = "latest"
 
 <# 
   office-365 SKUs
@@ -97,6 +108,7 @@ $Version        = "latest"
    19h2-evd-o365pp
    20h1-evd-o365pp
    20h2-evd-o365pp
+   20h2-evd-o365pp-g2
   
 #>
 
@@ -122,8 +134,14 @@ Creating a Virtual Machine is a multi-step process where you build up configurat
 PSObjects and apply them all with the "New-AzVM" command
 #>
 
-# Create the resource group for the VM and resources
-New-AzResourceGroup -Name $ResourceGroup -Location $Region
+###========= Do Not Edit Below this line - except to modify script logic/flow/bugs ==========###
+
+# If it doesn't exist - Create the resource group for the VM and resources
+Get-AzResourceGroup -Name $ResourceGroup -ErrorVariable NotExist -ErrorAction SilentlyContinue
+if ($NotExist) {
+  New-AzResourceGroup -Name $ResourceGroup -Location $Region
+} else { Write-Host "Using Resourcegroup:" $ResourceGroup }
+
 
 # VM Name and Size
 $NewVMConfig = New-AzVMConfig -VMName $VMName -VMSize $VMSize
@@ -134,11 +152,8 @@ vNet, Subnet, and NSG.
 #>
 
 # Use existing network resources: vNet, Subnet, NSG
-$vNetName  = "VnetCore"
-$vNetRG    = "CoreInfrastructure-rg"
-$NsgName   = "AllowRemoteByIP"
 $vNet      = Get-AzVirtualNetwork -Name $vNetName -ResourceGroupName $vNetRG
-$SubNetCfg = Get-AzVirtualNetworkSubnetConfig -ResourceId $vNet.Subnets[0].Id
+$SubNetCfg = Get-AzVirtualNetworkSubnetConfig -ResourceId $vNet.Subnets[1].Id
 $NSG       = Get-AzNetworkSecurityGroup -ResourceGroupName $vNetRG -Name $NsgName
 
 # Create a new static Public IP and assign a DNS record

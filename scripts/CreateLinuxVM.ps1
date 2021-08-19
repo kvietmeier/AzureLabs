@@ -7,11 +7,14 @@
   Description                                                      
     Create a Linux VM for testing                                 
     Sometimes you just need a VM for testing with some standard defaults and using 
-    existing network infrastructure   
+    existing vnets and NSG.   
 
   Status:  Working, tested
 
-  To Do:  Setup storage - OS disk, rather than take the defaults.
+  To Do:  
+    Setup storage - OS disk, rather than take the defaults.
+    Make interactive - prompt for region, prefix, image, etc.
+    Merge with Windows VM script?
                                                                 
   Resources:
    https://docs.microsoft.com/en-us/powershell/module/az.compute/new-azvm?view=azps-4.6.1
@@ -63,29 +66,33 @@ Set-Location $PSscriptroot
 #Check-Login
 ###---- End my functions and credentials ----###
 
-###----   Define parameters for the VM   ----###
-<# 
-# VM Information - sourced from resources.ps1 - uncomment here to use locally
-# in the script
-$VMLocalAdminUser = "##########"
-$VMLocalAdminSecurePassword = ConvertTo-SecureString "############" -AsPlainText -Force
-$VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
-#>
-
-# Region
-$Region = "eastus2"
-
 # Create a 4 digit random ID for naming
 $RandomID = $(Get-Random -Minimum 1000 -Maximum 2000)
 
-# Resource names 
+<###----   Define parameters for the VM   ----### 
+  VM credential information is sourced from miscinfo.ps1
+  --- uncomment here to use locally in the script
+#>
+#$VMLocalAdminUser = "<adminusername>"
+#$VMLocalAdminSecurePassword = ConvertTo-SecureString "<passwordstring>" -AsPlainText -Force
+#$VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
+
+
+# Resource names  uses RandomID so VMs are unique
+$VMPrefix       = "k8smaster"
 $StorageAccount = "kv82579TempSA-$RandomID"
 #$ResourceGroup  = "TempRG-$RandomID"
 $ResourceGroup  = "k8s-eastus2"
-$VMName         = "LinuxVM-$RandomID"
-$DNSName        = "linuxvm$RandomID"
-$PubIP          = "PubIP-$RandomID"
-$NICId          = "NIC-$RandomID"
+$VMName         = "$VMPrefix-$RandomID"
+$DNSName        = "$VMPrefix$RandomID"
+$PubIP          = "$VMPrefix-PubIP-$RandomID"
+$NICId          = "$VMPrefix-NIC-$RandomID"
+
+# Use existing network resources: vNet, Subnet, NSG
+$Region    = "eastus2"
+$vNetName  = "k8s-vnet"
+$vNetRG    = "k8s-eastus2"
+$NsgName   = "FilterByIP"
 
 
 ###=================  Image Definitions  ==================###
@@ -95,13 +102,14 @@ $NICId          = "NIC-$RandomID"
 #$SKU            = "8_3"
 #$Version        = "latest"
 
+# Ubuntu - add "-gen2" to create a Gen2 VM
 $PublisherName  = "Canonical"
 $Offer          = "0001-com-ubuntu-server-focal"
-$SKU            = "20_04-lts"
+$SKU            = "20_04-lts-gen2"
 $Version        = "latest"
 
 # VM Size to Use - need 4 vCPU for accelerated networking
-$VMSize         = "Standard_D4_v4"
+$VMSize         = "Standard_D4ds_v5"
 
 <# 
 ###--- Use an Image from a Shared Image Gallery
@@ -121,12 +129,17 @@ $ImageDefinition = Get-AzGalleryImageDefinition `
 ###=================   END: Images   ==================###
 
 <###=================  Start Setting up the VM  ==================###
-Creating a Virtual Machine is a multi-step process where you build up configuration
-PSObjects and apply them all with the "New-AzVM" command
+  Creating a Virtual Machine is a multi-step process where you build up configuration
+  PSObjects and apply them all with the "New-AzVM" command
+  --- You shouldn't need to modify the script below this line.
 #>
 
-# Create the resource group for the VM and resources
-New-AzResourceGroup -Name $ResourceGroup -Location $Region
+# If it doesn't exist - Create the resource group for the VM and resources
+Get-AzResourceGroup -Name $ResourceGroup -ErrorVariable NotExist -ErrorAction SilentlyContinue
+if ($NotExist) {
+  New-AzResourceGroup -Name $ResourceGroup -Location $Region
+} else { Write-Host "Using Resourcegroup:" $ResourceGroup }
+
 
 # VM Name and Size
 $NewVMConfig = New-AzVMConfig -VMName $VMName -VMSize $VMSize
@@ -136,10 +149,6 @@ For this use case we want to spin up a quick test VM leveraging an existing
 vNet, Subnet, and NSG. 
 #>
 
-# Use existing network resources: vNet, Subnet, NSG
-$vNetName  = "k8s-vnet"
-$vNetRG    = "k8s-eastus2"
-$NsgName   = "FilterByIP"
 $vNet      = Get-AzVirtualNetwork -Name $vNetName -ResourceGroupName $vNetRG
 $SubNetCfg = Get-AzVirtualNetworkSubnetConfig -ResourceId $vNet.Subnets[0].Id
 $NSG       = Get-AzNetworkSecurityGroup -ResourceGroupName $vNetRG -Name $NsgName
@@ -171,13 +180,16 @@ Add-AzVMNetworkInterface -VM $NewVMConfig -Id $VMNIC.Id
 ###=================== End - NIC Configuration ===================###
 
 ###===================    Disk/Storage SetUp   ===================###
-# For boot diagnostics - keep it with VM
+# Use this section to setup boot diagnostics and keep it with VM
+# Otherwise it will use an existing storage account in the Region
+# which may be what you want.
 #$NewVMConfig = Set-AzVMBootDiagnostic `
 #  -VM $NewVMConfig `
 #  -Enable `
 #  -ResourceGroupName $ResourceGroup `
 #  -StorageAccountName $StorageAccount
 
+# This section needs some work.
 
 
 ###===================   End - Storage Setup   ===================###

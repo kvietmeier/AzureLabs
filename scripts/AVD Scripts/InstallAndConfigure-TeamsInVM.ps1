@@ -16,7 +16,7 @@
 # These might need updating
 $DownloadDir  = "C:\temp"
 $TeamsVer     = "1.3.00.21759"
-$WebRTCVer    = "RE4AQBt"
+$WebRTCVer    = "RWFYsj"
 
 # These are fixed or derived from the previous 2
 # Overkill?  Edit in one place in case things change.
@@ -57,6 +57,9 @@ New-ItemProperty -Path "HKLM:\Software\Microsoft\Teams" `
 
 # Install the app in "Per Machine Mode"
 msiexec /i installteams.msi /l*v teamslog.txt ALLUSER=1 /quiet
+
+# OPTIONS="noAutoStart=true"  - Should install it so it won't autostart
+
 
 # Remove C:\temp if we created it
 if ($removeDir = "True")

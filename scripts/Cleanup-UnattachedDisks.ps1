@@ -67,9 +67,10 @@ function CheckManagedDisks () {
         # ManagedBy property stores the Id of the VM to which Managed Disk is attached to
         # If ManagedBy property is $null then it means that the Managed Disk is not attached to a VM
         if($null = $Disk.ManagedBy) {
+            #Write-Host "Unattached: $($Disk.Name)"
             if($DeleteUnattachedDisks -eq 1) {
                 Write-Host "Deleting unattached Managed Disk with Id: $($Disk.Id)"
-                $md | Remove-AzDisk -Force
+                $Disk | Remove-AzDisk -Force
                 Write-Host "Deleted unattached Managed Disk with Id: $($Disk.Id) "
             }else{
                 $Disk.Id
