@@ -7,12 +7,16 @@ and Windows Virtual Desktop.
 ## Project Directories
 ```
 ├───ArmTemplates
+│   └───Configuration
 ├───Diagrams
 ├───MiscNotes
+├───Private
 ├───scripts
+│   ├───AVD Scripts
+│   ├───examples
 │   └───users
-│   └───examples
 └───WVD
+
 ```
 
 
@@ -32,11 +36,12 @@ Karl Vietmeier
 [@KarlVietmeier](https://twitter.com/karlvietmeier)
 
 ## Acknowledgments
-My colleagues on the Windows Virtual Desktop GBB Team -<br>
+My colleagues on the Windows Virtual Desktop GBB Team and a few POwerShell Guris at MSFT-<br>
  Adam Whitlach<br>
  John Kelbly<br>
  Marc Wolfson<br>
  John Jenner<br>
+ Tim Dunn<br>
 
 
 ## References
