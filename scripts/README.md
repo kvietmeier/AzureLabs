@@ -39,9 +39,9 @@ $AIAPassword = "really should encrypt this"
 
 The script:
 ```
-SetupPowerShellModules.ps1
+scripts/SetupPowerShellModules.ps1
 ```
-Will setup your laptop/workstation to run these scripts/snippets.
+Will setup your laptop/workstation to run PowerShell scripts/snippets and access Azure/AAD resources.
 
 <br>
 Some of these "scripts" aren't meant to be run as a single script but are collections of useful 
