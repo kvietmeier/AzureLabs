@@ -10,9 +10,9 @@ Collection of scripts for working within Azure and with Azure Virtual Desktop.
 │   ├───examples
 │   └───users
 ```
-AVD Scripts: Scripts related to AVD
+AVD Scripts: Scripts related to AVD<br>
 users: Has a script I grabbed off GitHub to add users to AD.<br>
-examples: Code snippets and scripts I have downloaded - most are not mine. 
+examples: Code snippets and scripts I have downloaded - most are not mine.<br> 
 
 
 ### Usage
