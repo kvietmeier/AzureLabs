@@ -35,7 +35,7 @@ Karl Vietmeier
 [@KarlVietmeier](https://twitter.com/karlvietmeier)
 
 ## Acknowledgments
-My colleagues on the Windows Virtual Desktop GBB Team and a few POwerShell Guris at MSFT-<br>
+My colleagues on the Windows Virtual Desktop GBB Team and a few PowerShell Gurus at MSFT-<br>
  Adam Whitlach<br>
  John Kelbly<br>
  Marc Wolfson<br>
