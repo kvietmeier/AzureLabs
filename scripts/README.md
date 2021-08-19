@@ -1,17 +1,18 @@
 ## Scripts for working with Azure objects
 
-Collection of scripts for working within Azure and with Windows Virtual Desktop. 
+Collection of scripts for working within Azure and with Azure Virtual Desktop. 
 
 
 ## Project Directories
 ```
 ├───scripts
+│   ├───AVD Scripts
+│   ├───examples
 │   └───users
-│   └───examples
 ```
-
-The "users" folder is a script I grabbed off GitHub to add users to AD.<br>
-The "examples" folder has code snippets and scripts I have downloaded - most are not mine. 
+AVD Scripts: Scripts related to AVD
+users: Has a script I grabbed off GitHub to add users to AD.<br>
+examples: Code snippets and scripts I have downloaded - most are not mine. 
 
 
 ### Usage
@@ -21,14 +22,14 @@ functions.
 
 They are accesed like this:
 ```
-. '..\..\Certs\resources.ps1'
+. 'C:\.miscinfo.ps1'
 . '.\FunctionLibrary.ps1'
 ```
 
 
 An example of the variables stored in the "resources.ps1" file:
 ```
-# AIA Subscription Information
+# Subscription Information
 $SubID = "xxxxxxxx-xxxx-xxxx-xxxxxxxxxxxxxxxxx"
 $SubName = "ASubscriptionName"
 $AIAuser = "user@contoso.com"
@@ -58,11 +59,12 @@ Karl Vietmeier
 [@KarlVietmeier](https://twitter.com/karlvietmeier)
 
 ## Acknowledgments
-My colleagues on the Windows Virtual Desktop GBB Team -<br>
+My colleagues on the Windows Virtual Desktop GBB Team and PowerShell Guris at MSFT-<br>
   Adam Whitlach<br>
   John Kelbly<br>
   Marc Wolfson<br>
   John Jenner<br>
+  Tim Dunn<br>
 
 
 ## References
