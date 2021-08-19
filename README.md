@@ -12,10 +12,9 @@ and Windows Virtual Desktop.
 ├───MiscNotes
 ├───Private
 ├───scripts
-│   ├───AVD Scripts
-│   ├───examples
-│   └───users
-└───WVD
+    ├───AVD Scripts
+    ├───examples
+    └───users
 
 ```
 
