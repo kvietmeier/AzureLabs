@@ -20,7 +20,8 @@ My scripts are "." sourcing 2 files, one is outside the repo and has variables w
 like GUIDs, SubscriptionIDs/Names, and certificates. The other is in this repo and is a library of common 
 functions.
 
-They are accesed like this:
+They are accessed like this:
+https://devblogs.microsoft.com/scripting/how-to-reuse-windows-powershell-functions-in-scripts/
 ```
 . 'C:\.miscinfo.ps1'
 . '.\FunctionLibrary.ps1'
