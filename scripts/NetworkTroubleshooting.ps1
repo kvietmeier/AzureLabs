@@ -13,23 +13,30 @@
 
 ###========================================================================###
 
-### For safety - comment/uncomment as desired
+###  This is NOT a script so make sure we don't accidently try to run it!
 return
+
 ###
+# Stop on first error in case for some reason it gets past line 17
+$ErrorActionPreference = "stop"
+
 
 ###---- Get my functions and credentials ----###
 
-Set-Location ../AzureLabs/scripts
+# Run from the location of the script
+Set-Location $PSscriptroot
+#Set-Location ../AzureLabs/scripts
 
+### Get my functions and credentials
 # Credentials  (stored outside the repo)
-. '..\..\Certs\resources.ps1'
+. 'C:\.info\miscinfo.ps1'
 
 # Functions (In this repo)
 . '.\FunctionLibrary.ps1'
 
 # Imported from "FunctionLibrary.ps1"
 # Are we connected to Azure with the corredt SubID?
-Login-NoPrompt
+Check-Login
 
 ###---- End my functions and credentials ----###
 
@@ -62,9 +69,13 @@ Invoke-RestMethod -Uri "https://rdweb.wvd.microsoft.com/api/health" | Select-Obj
 
   Common Question - 
   https://docs.microsoft.com/en-us/azure/virtual-network/what-is-ip-address-168-63-129-16
+
+  Powershell equivalents fotr common commands
+  https://www.msnoob.com/windows-powershell-equivalents-for-common-networking-commands.html
+
 #>
 
-# On the VM
+### Active Directory
 # Find a list of DCs in the domain:
 nltest /dclist:<domainname>
 
@@ -101,7 +112,7 @@ tracert.exe
 
 
 ###--- PowerShell - 
-# Replacement for ping
+# Replacement for ping and traceroute
 Test-NetConnection
 
 # Test resolver against known host that responds to ICMP 
@@ -156,7 +167,6 @@ Find-NetRoute -RemoteIPAddress "10.79.197.200"
 
 # To test pereformance - Grab and install TTttcp
 # <TBD>
-
 
 
 <#
@@ -231,15 +241,14 @@ Debug-AzStorageAccountAuth -StorageAccountName $AZStorageAcct -ResourceGroupName
 
 <# 
 ###----------------------------------------------------------------------------------------### 
-###----------------------------------------------------------------------------------------### 
 
-   VM Level Tests - Azure Context
+   VM Level Tests - Azure Context - Get route tables and manipulate NICs
 
 ###----------------------------------------------------------------------------------------### 
 #>
 
 
-# You need these for Azure commands
+# You need these for Azure commands so set them here
 $NIC1 = "ubuntu-01989"
 $NIC2 = "ubuntu01.nic2"
 $NIC3 = ""
@@ -330,6 +339,165 @@ $RGgroup1 = "Networktests"
 $NIC=Get-AzNetworkInterface -Name $NIC -ResourceGroupName $RGgroup1
 $NIC.EnableAcceleratedNetworking = $True
 $NIC | Set-AzNetworkInterface
+
+
+<# 
+###----------------------------------------------------------------------------------------### 
+
+   Network Interface Commands - Azure VM or your Laptop
+
+###----------------------------------------------------------------------------------------### 
+#>
+
+# List out all of the PowerShell Network Modules availble on your system. 
+Get-Command -Module Net* | Group Module
+<# Output
+Count Name                      Group
+----- ----                      -----
+   35 NetEventPacketCapture     {Add-NetEventNetworkAdapter, Add-NetEventPacketCaptureProvider, Add-NetEventProvider, Add-NetEventVFPProvider...}
+   34 NetworkTransition         {Add-NetIPHttpsCertBinding, Disable-NetDnsTransitionConfiguration, Disable-NetIPHttpsProfile, Disable-NetNatTransitionConfigur...
+   13 NetLbfo                   {Add-NetLbfoTeamMember, Add-NetLbfoTeamNic, Get-NetLbfoTeam, Get-NetLbfoTeamMember...}
+   13 NetNat                    {Add-NetNatExternalAddress, Add-NetNatStaticMapping, Get-NetNat, Get-NetNatExternalAddress...}
+    7 NetSwitchTeam             {Add-NetSwitchTeamMember, Get-NetSwitchTeam, Get-NetSwitchTeamMember, New-NetSwitchTeam...}
+   85 NetSecurity               {Copy-NetFirewallRule, Copy-NetIPsecMainModeCryptoSet, Copy-NetIPsecMainModeRule, Copy-NetIPsecPhase1AuthSet...}
+   72 NetAdapter                {Disable-NetAdapter, Disable-NetAdapterBinding, Disable-NetAdapterChecksumOffload, Disable-NetAdapterEncapsulatedPacketTaskOff...
+   19 NetworkSwitchManager      {Disable-NetworkSwitchEthernetPort, Disable-NetworkSwitchFeature, Disable-NetworkSwitchVlan, Enable-NetworkSwitchEthernetPort...}
+   34 NetTCPIP                  {Find-NetRoute, Get-NetCompartment, Get-NetIPAddress, Get-NetIPConfiguration...}
+    4 NetworkConnectivityStatus {Get-DAConnectionStatus, Get-NCSIPolicyConfiguration, Reset-NCSIPolicyConfiguration, Set-NCSIPolicyConfiguration}
+    2 NetConnection             {Get-NetConnectionProfile, Set-NetConnectionProfile}
+    4 NetQos                    {Get-NetQosPolicy, New-NetQosPolicy, Remove-NetQosPolicy, Set-NetQosPolicy}
+#>
+
+# Not PowerShell - go old school and list interfaces
+netsh int ipv4 show interfaces
+<# Output - 
+Idx     Met         MTU          State                Name
+---  ----------  ----------  ------------  ---------------------------
+ 17          35        1500  disconnected  Wi-Fi
+  1          75  4294967295  connected     Loopback Pseudo-Interface 1
+ 18          25        1500  disconnected  Local Area Connection* 1
+ 10          65        1500  disconnected  Bluetooth Network Connection
+  7          25        1500  disconnected  Local Area Connection* 2
+ 11          25        1500  connected     Pluggable Hub Link
+  6          25        1500  connected     VirtualBox Host-Only Network
+ 89          15        1500  connected     vEthernet (WSL)
+  4          25        1500  connected     VirtualBox Host-Only Network #2 
+#>
+
+# PowerShell - 
+Get-NetAdapter
+<# Output - 
+Name                      InterfaceDescription                    ifIndex Status       MacAddress             LinkSpeed
+----                      --------------------                    ------- ------       ----------             ---------
+Wi-Fi                     Intel(R) Wi-Fi 6 AX201 160MHz                17 Disconnected D8-F8-83-5F-F1-D6     866.7 Mbps
+Ethernet 2                Cisco AnyConnect Secure Mobility Cli...      16 Disabled     00-05-9A-3C-7A-00       995 Mbps
+Ethernet                  Intel(R) Ethernet Connection (10) I2...      12 Not Present  54-05-DB-F5-E3-D7          0 bps
+Pluggable Hub Link        Plugable Ethernet                            11 Up           8C-AE-4C-F6-9C-D7         1 Gbps
+Bluetooth Network Conn... Bluetooth Device (Personal Area Netw...      10 Disconnected D8-F8-83-5F-F1-DA         3 Mbps
+vEthernet (WSL)           Hyper-V Virtual Ethernet Adapter             89 Up           00-15-5D-31-A9-E6        10 Gbps
+VirtualBox Host-Only N... VirtualBox Host-Only Ethernet Adapter         6 Up           0A-00-27-00-00-06         1 Gbps
+VirtualBox Host-Only ...2 VirtualBox Host-Only Ethernet Adap...#2       4 Up           0A-00-27-00-00-04         1 Gbps
+#>
+
+# Get more detail on the objects
+Get-NetIPConfiguration
+Get-NetIPAddress
+Get-NetIPAddress | Sort InterfaceIndex | FT InterfaceIndex, InterfaceAlias, AddressFamily, IPAddress, PrefixLength -Autosize
+Get-NetIPAddress | ? AddressFamily -eq IPv4 | FT –AutoSize
+
+Get-NetAdapter Wi-Fi | Get-NetIPAddress | FT -AutoSize
+
+
+Get-NetIPAddress | ? AddressFamily -eq IPv4 | FT -AutoSize
+<# Output - 
+ifIndex IPAddress       PrefixLength PrefixOrigin SuffixOrigin AddressState PolicyStore
+------- ---------       ------------ ------------ ------------ ------------ -----------
+6       10.252.142.17             20 Manual       Manual       Preferred    ActiveStore
+7       169.254.57.152            16 WellKnown    Link         Tentative    ActiveStore
+5       169.254.214.153           16 WellKnown    Link         Tentative    ActiveStore
+8       169.254.99.243            16 WellKnown    Link         Tentative    ActiveStore
+9       192.168.1.192             24 Dhcp         Dhcp         Preferred    ActiveStore
+1       127.0.0.1                  8 WellKnown    WellKnown    Preferred    ActiveStore
+#>
+
+Get-NetAdapter
+<# Output - 
+Name                      InterfaceDescription                    ifIndex Status       MacAddress             LinkSpeed
+----                      --------------------                    ------- ------       ----------             ---------
+Ethernet                  Intel(R) Ethernet Connection (4) I21...       8 Disconnected 8C-16-45-AC-FD-1C          0 bps
+Bluetooth Network Conn... Bluetooth Device (Personal Area Netw...       7 Disconnected 30-24-32-47-E6-B2         3 Mbps
+Wi-Fi                     Intel(R) Dual Band Wireless-AC 8265           9 Up           30-24-32-47-E6-AE       780 Mbps
+Ethernet 3                Cisco AnyConnect Secure Mobility Cli...       6 Up           00-05-9A-3C-7A-00     862.4 Mbps
+#>
+
+Get-NetAdapter -Name *Ethernet*
+<# Output - 
+Name                      InterfaceDescription                    ifIndex Status       MacAddress             LinkSpeed
+----                      --------------------                    ------- ------       ----------             ---------
+Ethernet                  Intel(R) Ethernet Connection (4) I21...       8 Disconnected 8C-16-45-AC-FD-1C          0 bps
+Ethernet 3                Cisco AnyConnect Secure Mobility Cli...       6 Up           00-05-9A-3C-7A-00     862.4 Mbps
+#>
+
+# Test-Netconnection - ping/tracroute replacement
+Test-NetConnection www.microsoft.com
+
+# Not really different from previous
+Test-NetConnection -ComputerName www.microsoft.com -InformationLevel Detailed
+
+# Limit to just RTT result
+Test-NetConnection -ComputerName www.microsoft.com | Select -ExpandProperty PingReplyDetails | FT Address, Status, RoundTripTime
+
+# try 10 times
+$RemotePort = "80"
+1..10 | % { Test-NetConnection -ComputerName www.microsoft.com -RemotePort $RemotePort } | FT -AutoSize
+
+# Connection to Router?
+Test-Netconnection 192.168.1.1
+<# Output - 
+ComputerName           : 192.168.1.1
+RemoteAddress          : 192.168.1.1
+InterfaceAlias         : Wi-Fi
+SourceAddress          : 192.168.1.247
+PingSucceeded          : True
+PingReplyDetails (RTT) : 3 ms
+#>
+
+# With VPN up
+Test-Netconnection
+<# Output - note that the attempt fails - can't ping through firewall/proxies
+WARNING: Ping to 13.107.4.52 failed with status: TimedOut
+
+ComputerName           : internetbeacon.msedge.net
+RemoteAddress          : 13.107.4.52
+InterfaceAlias         : Ethernet 2
+SourceAddress          : 10.209.173.207
+PingSucceeded          : False
+PingReplyDetails (RTT) : 0 ms
+
+#>
+
+# DNS Resolution - 
+# https://docs.microsoft.com/en-us/powershell/module/dnsclient/resolve-dnsname
+Resolve-DnsName
+
+Resolve-DnsName www.microsoft.com
+Resolve-DnsName microsoft.com -type SOA
+Resolve-DnsName microsoft.com -Server 8.8.8.8 –Type A
+
+
+# What is my routing table -
+# https://docs.microsoft.com/en-us/powershell/module/nettcpip/get-netroute?view=windowsserver2019-ps
+Get-NetRoute
+
+Get-NetRoute | Format-List -Property *
+Get-NetRoute -AddressFamily IPv6
+Get-NetRoute -AddressFamily IPv4
+Get-NetRoute -InterfaceIndex 12
+Get-NetRoute -DestinationPrefix "0.0.0.0/0" | Select-Object -ExpandProperty "NextHop"
+Get-NetRoute | Where-Object -FilterScript { $_.NextHop -Ne "::" } | Where-Object -FilterScript { $_.NextHop -Ne "0.0.0.0" } | Where-Object -FilterScript { ($_.NextHop.SubString(0,6) -Ne "fe80::") }
+Get-NetRoute | Where-Object -FilterScript {$_.NextHop -Ne "::"} | Where-Object -FilterScript { $_.NextHop -Ne "0.0.0.0" } | Where-Object -FilterScript { ($_.NextHop.SubString(0,6) -Ne "fe80::") } | Get-NetAdapter
+Get-NetRoute | Where-Object -FilterScript { $_.ValidLifetime -Eq ([TimeSpan]::MaxValue) }
+
 
 
 

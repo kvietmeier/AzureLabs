@@ -49,19 +49,28 @@ Check-Login
 
 ###---------------------------------- Variables -----------------------------------###
 
-### - Sensitive - stored in external file
-#$DomainAdmin ="Domain Admin UPN sync'd to Azure Active Directory" 
-#$ADOUdistinguishedname = "OU where the Azure File Share computer account should live"
-#$SubName = "Subscription Name"
-#$SubID = "Subscription ID"
+### - Sensitive - stored in external file sourced above
+<# 
+$DomainAdmin            ="Domain Admin UPN sync'd to Azure Active Directory" 
+$ADOUdistinguishedname  = "OU where the Azure File Share computer account should live"
+$SubName                = "Subscription Name"
+$SubID                  = "Subscription ID"
+#>
+### - End Sensitve
 
-# AD GroupIDs (For WVD)
+# AD GroupIDs - from AD Server (For WVD)
 # AAD FSLogix SMB Elevated Contributor Group
 #$ElevContribGroupId = "GUID - not the SID" 
 # AAD FSLogix SMB Contributor Group
 #$ContribGroupId = "GUID - not the SID"
 
-# If we aren't joined to a valid domain, exit because nothing will work.
+# Not very sensitive, set here to over-ride or comment out to use externally stored values
+$AZResourceGroup = "AResourceGroup"
+$AZStorageAcct = "AStorageaccount"
+$AZFileShare = "userprofiles"
+
+
+###--- Check if we are joined to a valid domain, if not, exit because nothing will work.
 $Forest = Get-ADforest
 $Domain = Get-ADdomain
 
@@ -72,7 +81,7 @@ if ((!($Forest)) -or (!($Domain))) {
 }
 
 
-# Are they set correctly?
+# Is everything set correctly?
 Write-Host ""
 Write-Host "Account Information"
 Write-Host "Domain Admin Account:                     $DomainAdmin"
@@ -85,22 +94,24 @@ Write-Host ""
 
 Read-Host "Press ENTER to continue..."
 
-# Not very sensitive, set here to over-ride or comment out to use externally stored values
-$AZResourceGroup = "WVDLandscape01"
-$AZStorageAcct = "kv82579fslogix01"
-$AZFileShare = "profiles"
 
 ###--- Set Variables for each of the icacls options and "net use"
-# Set to match your AD configuration - you need the SAM Account Name
-# $ElevateContrib = "<domain>\<SAM Account Name of AD Group>"
+<#
+   Set to match your AD configuration - you need the SAM Account Name
+   $ElevateContrib = "<domain>\<SAM Account Name of AD Group>"
+#>
+
 $ElevateContrib = "gabbro\AZFFSLogixElevatedContributor"
 $Contrib = "gabbro\AZFFSLogixContributor"
 
 # Drive letter for share mapping "net use"
 $DriveLetter = "O:"
 
-### NOTE: Don't change these - they are the best practices for FSLogix 
-#   Profile Shares - set permissions by creating the icacls commands.
+<#---
+    NOTE: Don't change these settings - they are the best practices for FSLogix 
+    Profile Shares.
+    ---> Set permissions by creating the icacls commands.
+#>
 $Grant = "/grant:r"
 $Remove = "/remove"
 $ReplaceInherit = "/inheritance:r"
@@ -119,6 +130,8 @@ $BuiltinUsers = "Builtin\Users"
 # Are we already connected to our Azure Account?
 # If so, continue, otherwise, login
 
+
+### Verify this works - 
 $context = Get-AzContext
 
 if (!$context -or ($context.Subscription.Id -ne $SubID)) 

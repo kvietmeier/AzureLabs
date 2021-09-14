@@ -31,7 +31,7 @@ function PreReqs () {
     -AllowClobber -Force -Verbose
 }
 
-function InstallAZModules () {
+function AZModules () {
   # Install Azure Az modules - probably have these but this will upgrade them
   Install-Module -Name "Az" `
      -Repository 'PSGallery' `
@@ -39,6 +39,40 @@ function InstallAZModules () {
       -Confirm:$false `
       -AllowClobber -Force -Verbose
 
+  # WVD Module
+  Install-Module -Name "Az.DesktopVirtualization" `
+      -Repository 'PSGallery' `
+      -RequiredVersion 2.0.0 `
+      -SkipPublisherCheck `
+      -Confirm:$false `
+      -AllowClobber -Force -Verbose
+  
+  # AZ Network module - seem to need this for other modules
+  Install-Module -Name "Az.Network" `
+      -Repository 'PSGallery' `
+      -Confirm:$false `
+      -AllowClobber -Force -Verbose
+
+  # End Function
+}
+
+function OptionalModules () {
+  # Azure Stack Module
+  Install-Module -Name "Az.StackHCI" `
+      -Repository 'PSGallery' `
+      -Confirm:$false `
+      -AllowClobber -Force -Verbose
+
+  # I needed this to do some GPO work - optional
+  Install-Module -Name "GPRegistryPolicy" `
+      -Repository 'PSGallery' `
+      -Confirm:$false `
+      -AllowClobber -Force -Verbose
+      
+  # End Function
+}
+
+function ADModules () {
   # Azure AD Module    
   Install-Module -Name "AzureAD" `
       -Repository 'PSGallery' `
@@ -53,24 +87,17 @@ function InstallAZModules () {
       -Confirm:$false `
       -AllowClobber -Force -Verbose
 
-  # WVD Module
-  Install-Module -Name "Az.DesktopVirtualization" `
-      -Repository 'PSGallery' `
-      -RequiredVersion 2.0.0 `
-      -SkipPublisherCheck `
-      -Confirm:$false `
-      -AllowClobber -Force -Verbose
-
-  # I needed this to do some GPO work - optional
-  Install-Module -Name "GPRegistryPolicy" `
-      -Repository 'PSGallery' `
-      -Confirm:$false `
-      -AllowClobber -Force -Verbose
-
+  # End Function
 }
 
+# Required
 PreReqs
+
+# Pick the ones you need
 InstallAZModules
+OptionalModules
+ADModules
+
 
 <#
 ###################################################################################
