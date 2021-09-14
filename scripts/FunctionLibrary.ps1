@@ -6,7 +6,7 @@
 
   Functions:
    InstallPSModules: Install modules you may need
-   Check-Login: Check to see if you are already connected to Azure, if not, 
+   CheckLogin: Check to see if you are already connected to Azure, if not, 
                 prompt for Credentials and connect
 
 
@@ -28,20 +28,27 @@ function CheckLogin ()
 {
     $context = Get-AzContext
     Write-Host "" 
-    Write-Host "  Is my AZ Account Connected?" 
+    Write-Host "================================================================================="
+    Write-Host "                        Is my AZ Account Connected?" 
+    Write-Host "================================================================================="
     Write-Host "" 
 
     if (!$context -or ($context.Subscription.Id -ne $SubID)) 
     {
         #Write-Host "SubscriptionId '$SubID' already connected"
-        Write-Host "No Azure Connection"
+        Write-Host "================================================================================="
+        Write-Host "                           No Azure Connection"
+        Write-Host "================================================================================="
     } 
     else 
     {
         #$SubID = $context.Subscription.Id
-        Write-Host "================================================================================="
-        Write-Host " Yes - $SubName in $AADDomain is logged in"
-        Write-Host "================================================================================="
+        Write-Host "" 
+        Write-Host "" 
+        Write-Host "=========================================================================================="
+        Write-Host "          Yes - $SubName in $AADDomain is logged in"
+        Write-Host "=========================================================================================="
+        Write-Host "" 
     }
 }
 
