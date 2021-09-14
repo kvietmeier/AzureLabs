@@ -4,7 +4,8 @@
     Created By: Karl Vietmeier    
                                  
   Description                   
-    Misc bits and pieces       
+    Misc bits and pieces of scripts and complex commands that I have found useful.
+           
 #>           
 ###====================================================================================###
 

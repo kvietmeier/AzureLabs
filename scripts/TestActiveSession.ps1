@@ -1,22 +1,34 @@
-### Check for an active session - or prompt login
-# I'm using this to work out some kinks in a function to login 
-# to my Azure Account
+<#   
+###====================================================================================###
+  FileName: TestActiveSession.ps1
+  Created By: Karl Vietmeier
+    
+  Description:
+    Doesn't really do much right now - Check for an active session - or prompt login
+    I'm using this to work out some kinks in a function to login to my Azure Account
+
+###====================================================================================###
+#>
+
 
 ### Here for safety - comment/uncomment as desired
 #return
 
+# Stop on first error
+$ErrorActionPreference = "stop"
+
+# Run from the location of the script
+Set-Location $PSscriptroot
+
 ### Get my functions and credentials
 # Credentials  (stored outside the repo)
-. '..\..\Certs\resources.ps1'
+. 'C:\.info\miscinfo.ps1'
 
 # Functions (In this repo)
 . '.\FunctionLibrary.ps1'
 
 # Imported from "FunctionLibrary.ps1"
-# Are we connected to Azure with the correct SubID?
-Check-Login
+# Are we connected to Azure with the corredt SubID?
+CheckLogin
 
-Write-Host "==================================="
-Write-Host "Checking if $SubID is logged in"
-Write-Host "==================================="
 

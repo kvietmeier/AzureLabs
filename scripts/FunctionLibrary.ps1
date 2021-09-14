@@ -28,7 +28,8 @@ function CheckLogin ()
 {
     $context = Get-AzContext
     Write-Host "" 
-    Write-Host "Is my AZ Account Connected?" 
+    Write-Host "  Is my AZ Account Connected?" 
+    Write-Host "" 
 
     if (!$context -or ($context.Subscription.Id -ne $SubID)) 
     {
@@ -38,9 +39,9 @@ function CheckLogin ()
     else 
     {
         #$SubID = $context.Subscription.Id
-        Write-Host ""
-        Write-Host "Yes - SubscriptionId $SubID is connected"
-        Write-Host ""
+        Write-Host "================================================================================="
+        Write-Host " Yes - $SubName in $AADDomain is logged in"
+        Write-Host "================================================================================="
     }
 }
 
