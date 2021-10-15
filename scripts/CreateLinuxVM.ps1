@@ -63,7 +63,8 @@ Set-Location $PSscriptroot
 
 # Imported from "FunctionLibrary.ps1"
 # Are we connected to Azure with the corredt SubID?
-#Check-Login
+#CheckLogin
+
 ###---- End my functions and credentials ----###
 
 # Create a 4 digit random ID for naming
@@ -78,21 +79,26 @@ $RandomID = $(Get-Random -Minimum 1000 -Maximum 2000)
 #$VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
 
 
-# Resource names  uses RandomID so VMs are unique
-$VMPrefix       = "k8smaster"
-$StorageAccount = "kv82579TempSA-$RandomID"
+### Resource names  uses RandomID so VMs are unique
+# - might want to use existing resources
+#$StorageAccount = "kv82579TempSA-$RandomID"
 #$ResourceGroup  = "TempRG-$RandomID"
-$ResourceGroup  = "k8s-eastus2"
+
+# Name the VM and components
+$VMPrefix       = "k8sworker"
 $VMName         = "$VMPrefix-$RandomID"
 $DNSName        = "$VMPrefix$RandomID"
 $PubIP          = "$VMPrefix-PubIP-$RandomID"
 $NICId          = "$VMPrefix-NIC-$RandomID"
 
 # Use existing network resources: vNet, Subnet, NSG
-$Region    = "eastus2"
-$vNetName  = "k8s-vnet"
-$vNetRG    = "k8s-eastus2"
-$NsgName   = "FilterByIP"
+$StorageAccount = "kv82579bootdiags"
+$SAGroup        = "CoreInfra-rg"
+$ResourceGroup  = "rg-k8scluster01"
+$Region         = "westus2"
+$vNetName       = "k8s-vnet"
+$vNetRG         = "CoreInfra-rg"
+$NsgName        = "RestrictByIP"
 
 
 ###=================  Image Definitions  ==================###
@@ -109,7 +115,15 @@ $SKU            = "20_04-lts-gen2"
 $Version        = "latest"
 
 # VM Size to Use - need 4 vCPU for accelerated networking
-$VMSize         = "Standard_D4ds_v5"
+$VMSize         = "Standard_D2ds_v4"
+
+<# Common Sizes
+Standard_D2ds_v4
+Standard_D4ds_v4
+Standard_D8ds_v4
+Standard_B2s
+#>
+
 
 <# 
 ###--- Use an Image from a Shared Image Gallery
@@ -183,11 +197,11 @@ Add-AzVMNetworkInterface -VM $NewVMConfig -Id $VMNIC.Id
 # Use this section to setup boot diagnostics and keep it with VM
 # Otherwise it will use an existing storage account in the Region
 # which may be what you want.
-#$NewVMConfig = Set-AzVMBootDiagnostic `
-#  -VM $NewVMConfig `
-#  -Enable `
-#  -ResourceGroupName $ResourceGroup `
-#  -StorageAccountName $StorageAccount
+$NewVMConfig = Set-AzVMBootDiagnostic `
+  -VM $NewVMConfig `
+  -Enable `
+  -ResourceGroupName $SAGroup `
+  -StorageAccountName $StorageAccount
 
 # This section needs some work.
 

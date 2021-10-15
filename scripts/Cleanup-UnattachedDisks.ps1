@@ -61,7 +61,7 @@ function CheckManagedDisks () {
 
     # Set deleteUnattachedDisks=1 if you want to delete unattached Managed Disks
     # Set deleteUnattachedDisks=0 if you want to see the Id of the unattached Managed Disks
-    $DeleteUnattachedDisks=0
+    $DeleteUnattachedDisks=1
     $ManagedDisks = Get-AzDisk
     foreach ($Disk in $ManagedDisks) {
         # ManagedBy property stores the Id of the VM to which Managed Disk is attached to
