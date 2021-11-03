@@ -53,28 +53,18 @@ $AZCred = New-Object System.Management.Automation.PSCredential ($AIAuser, $Secur
 Connect-AzAccount -Credential $AZCred -Subscription $SubID
 #>
 
-#---  Find NICs
-function FindUnattachedNICs () {
-    # Set deleteUnattachedNics=1 if you want to delete unattached NICs
-    # Set deleteUnattachedNics=0 if you want to see the Id(s) of the unattached NICs
-    $DeleteUnattachedNics=1
 
-    $NICS = Get-AzNetworkInterface
-
-    foreach ($NIC in $NICS) {
-        if(!$NIC.VirtualMachine) {
-            if($deleteUnattachedNICS -eq 1){
-                Write-Host "Deleting unattached NIC with Id: $($NIC.Id)"
-                $NIC | Remove-AzNetworkInterface -ResourceGroupName $NIC.ResourceGroupName -Force
-                Write-Host "Deleted unattached NIC with Id: $($NIC.Id)"
-            }
-        # end if    
+# remove unattached Public IPs (PIP)
+$deleteUnattachedPIPs=0
+$AttachedIPs = Get-AzPublicIpAddress
+foreach ($PIP in $AttachedIPs) {
+        if(!$PIP.IpConfiguration) {
+          if($deleteUnattachedPIPs -eq 1) {
+            Write-Host "Deleting unattached IPs with Id: $($PIP.Id)"
+            $PIP | Remove-AzPublicIpAddress -Force
+            Write-Host "Deleted unattached IPs with Id: $($PIP.Id) "
+            $PIP.id
         }
-        else{ Write-Host "Attached To: $NIC.VirtualMachine" }
-    # end foreach    
+        else { $PIP.Id }
     }
-
-# End Function
 }
-
-FindUnattachedNICs
