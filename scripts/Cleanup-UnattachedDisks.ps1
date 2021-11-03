@@ -13,16 +13,23 @@
     Notes -     
     Added error checking for restricted blob stores
 
+    *** Reduce your consumption costs
+
     08/13/21: 
         Added code to check for/remove NICs
         Fixed incorrect $null references
 
+    11/03/21: 
+        Broke NIC code out in seperate script - may recombine later.
+
     ToDo:
-    Need to rename - no longer just disks
     Need to make this runnable interactively with a parameter to "show/remove".
+
 
 #>                                                                        
 ###====================================================================================###
+# Don't run - for debugging/testing
+#return
 
 # Stop on first error
 $ErrorActionPreference = "stop"
@@ -39,7 +46,7 @@ Set-Location $PSscriptroot
 
 # Imported from "FunctionLibrary.ps1"
 # Are we connected to Azure with the correct SubID?
-Check-Login
+CheckLogin
 
 
 ###----- End my template
@@ -53,7 +60,7 @@ Connect-AzAccount -Credential $AZCred -Subscription $SubID
 
 #>
 
-function CheckManagedDisks () {
+function LookForUnattachedDisk () {
 
     Write-Host ""
     Write-Host "Checking for unattached Managed Disks"
@@ -66,22 +73,19 @@ function CheckManagedDisks () {
     foreach ($Disk in $ManagedDisks) {
         # ManagedBy property stores the Id of the VM to which Managed Disk is attached to
         # If ManagedBy property is $null then it means that the Managed Disk is not attached to a VM
-        if($null = $Disk.ManagedBy) {
-            #Write-Host "Unattached: $($Disk.Name)"
+        if(!$Disk.ManagedBy) {
             if($DeleteUnattachedDisks -eq 1) {
                 Write-Host "Deleting unattached Managed Disk with Id: $($Disk.Id)"
                 $Disk | Remove-AzDisk -Force
-                Write-Host "Deleted unattached Managed Disk with Id: $($Disk.Id) "
-            }else{
-                $Disk.Id
             }
         }
-    }
+        else { Write-Host "Attached: $($Disk.Id)" }
+    } # end foreach
 
 # End Function
 }
 
-CheckManagedDisks
+LookForUnattachedDisk
 
 function CheckVHDInBlob () {
     Write-Host ""
@@ -124,29 +128,3 @@ function CheckVHDInBlob () {
 }
 
 CheckVHDInBlob
-
-#---  Find NICs
-function FindUnattachedNICs () {
-    # Set deleteUnattachedNics=1 if you want to delete unattached NICs
-    # Set deleteUnattachedNics=0 if you want to see the Id(s) of the unattached NICs
-    $DeleteUnattachedNics=1
-
-    $NICS = Get-AzNetworkInterface
-
-    foreach ($NIC in $NICS) {
-        if($null = $NIC.VirtualMachine) {
-            if($deleteUnattachedNICS -eq 1){
-                Write-Host "Deleting unattached NIC with Id: $($NIC.Id)"
-                $NIC | Remove-AzDisk -Force
-                Write-Host "Deleted unattached NIC with Id: $($NIC.Id)"
-            }
-            else{ $NIC.Id }
-        # end if    
-        }
-    # end foreach    
-    }
-
-# End Function
-}
-
-FindUnattachedNICs

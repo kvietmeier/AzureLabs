@@ -73,11 +73,10 @@ $RandomID = $(Get-Random -Minimum 1000 -Maximum 2000)
 <###----   Define parameters for the VM   ----### 
   VM credential information is sourced from miscinfo.ps1
   --- uncomment here to use locally in the script
+$VMLocalAdminUser = "<adminusername>"
+$VMLocalAdminSecurePassword = ConvertTo-SecureString "<passwordstring>" -AsPlainText -Force
+$VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
 #>
-#$VMLocalAdminUser = "<adminusername>"
-#$VMLocalAdminSecurePassword = ConvertTo-SecureString "<passwordstring>" -AsPlainText -Force
-#$VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
-
 
 ### Resource names  uses RandomID so VMs are unique
 # - might want to use existing resources
@@ -157,6 +156,13 @@ if ($NotExist) {
 
 # VM Name and Size
 $NewVMConfig = New-AzVMConfig -VMName $VMName -VMSize $VMSize
+
+<# Add SSH Key to VM (need to integrate)
+$VirtualMachine = Get-AzVM -ResourceGroupName "ResourceGroup11" -Name "VirtualMachine07"
+$VirtualMachine = Add-AzVMSshPublicKey -VM $VirtualMachine `
+  -KeyData "MIIDszCCApugAwIBAgIJALBV9YJCF/tAMA0GCSq12Ib3DQEB21QUAMEUxCzAJBgNV" `
+  -Path "/home/admin/.ssh/authorized_keys"
+#>
 
 <###================ Create the NIC Configuration ================###
 For this use case we want to spin up a quick test VM leveraging an existing 
