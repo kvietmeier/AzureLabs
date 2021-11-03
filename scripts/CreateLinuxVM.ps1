@@ -83,8 +83,9 @@ $VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUse
 #$StorageAccount = "kv82579TempSA-$RandomID"
 #$ResourceGroup  = "TempRG-$RandomID"
 
+
 # Name the VM and components
-$VMPrefix       = "k8sworker"
+$VMPrefix       = "ubuntu"
 $VMName         = "$VMPrefix-$RandomID"
 $DNSName        = "$VMPrefix$RandomID"
 $PubIP          = "$VMPrefix-PubIP-$RandomID"
