@@ -15,7 +15,6 @@
 #return
 
 # Need to be Admin to run.
-#Requires -RunAsAdministrator
 
 function PreReqs () {
   # Run these as an Admin:
