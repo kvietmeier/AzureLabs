@@ -14,6 +14,9 @@
 ###=================================================================================###
 #return
 
+# Need to be Admin to run.
+#Requires -RunAsAdministrator
+
 function PreReqs () {
   # Run these as an Admin:
   # Standard: You might need to set this - (set it back later if you need to)
@@ -94,7 +97,7 @@ function ADModules () {
 PreReqs
 
 # Pick the ones you need
-InstallAZModules
+AZModules
 OptionalModules
 ADModules
 
