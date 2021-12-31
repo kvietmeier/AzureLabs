@@ -36,11 +36,11 @@ Karl Vietmeier
 
 ## Acknowledgments
 My colleagues on the Windows Virtual Desktop GBB Team and a few PowerShell Gurus at MSFT-<br>
- Adam Whitlach<br>
- John Kelbly<br>
- Marc Wolfson<br>
- John Jenner<br>
- Tim Dunn<br>
+ * Adam Whitlach<br>
+ * John Kelbly<br>
+ * Marc Wolfson<br>
+ * John Jenner<br>
+ * Tim Dunn<br>
 
 
 ## References
