@@ -21,7 +21,7 @@ and Windows Virtual Desktop.
 
 ### Placeholder
 
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
+* TBD
 * ex. Windows 10
 
 ### Template - Needs Updating
