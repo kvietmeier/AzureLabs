@@ -1,0 +1,37 @@
+### .gitingore for AzureLabs repo
+###
+
+# Default entries
+.htaccess
+css.php
+HISTORY.txt
+README.txt
+
+# Ignore "Private" files
+/Private/
+
+# exclude the ignore file
+.gitignore
+
+# Ignore temporary or scratch files
+**/foo*
+**/*.log
+[Tt]emp/
+*.log
+*.bak
+*.[Tt]emp
+*.tmp
+*[Ss]cratch*
+
+# Ignore possibly very large files
+*.iso
+*.vhdx
+*.vhd
+*.zip
+
+
+# Exclude vim swap files and backups
+*.swap
+*.sw
+*~
+ 
