@@ -1,0 +1,83 @@
+###====================================================================================###
+<#   
+  FileName: VMsByRegion.ps1
+  Created By: Karl Vietmeier
+    
+  Description:
+  Parse list of VM sizes by region and generate a .csv file
+
+#>
+###====================================================================================###
+
+<#
+.SYNOPSIS
+Will use the az cli to find VM sizes by region
+
+.DESCRIPTION
+Long description
+
+.EXAMPLE
+An example
+
+.NOTES
+General notes
+#>
+
+### Here for safety - comment/uncomment as desired
+#return
+
+# Stop on first error
+$ErrorActionPreference = "stop"
+
+###====================================================================================###
+###     Auth Code - remove/modify as needed
+###====================================================================================###
+# Run from the location of the script
+Set-Location $PSscriptroot
+
+### Get my functions and credentials
+# Credentials  (stored outside the repo)
+. 'C:\.info\miscinfo.ps1'
+
+# Functions (In this repo)
+. '.\FunctionLibrary.ps1'
+
+# Imported from "FunctionLibrary.ps1"
+# Are we connected to Azure with the corredt SubID?
+#Check-Login
+
+
+###====================================================================================###
+###      Script
+###====================================================================================###
+
+<### Need to get the regions
+  Access the results using Object method calls
+  $Regions.DisplayName
+  $Regions.Name
+  $Regions.RegionalDisplayName
+#>
+#$Regions = az account list-locations -o table
+#$Regions = az account list-locations
+
+# We just need the reference name
+$Regions = az account list-locations --query '[].[name]' -o tsv
+
+# Do we have the right number?
+$NumRegions= $Regions.count
+$NumRegions.GetType()
+$Regions.GetType()
+
+
+# ForEach (item In collection) {code block}
+
+ForEach ($Item in $Regions) {
+    Write-Output "$($Item)"
+    # See  if we can lookup the Display Name - doesn't work
+    #az account list-locations --query "[?name=='$Item'].[DisplayName]" -o tsv
+}
+
+Write-Host "Found $NumRegions Regions"
+
+#az account list-locations --query "[?name=='$Item']}" -o tsv
+
