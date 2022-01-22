@@ -78,6 +78,3 @@ ForEach ($Item in $Regions) {
 }
 
 Write-Host "Found $NumRegions Regions"
-
-#az account list-locations --query "[?name=='$Item']}" -o tsv
-
