@@ -65,16 +65,26 @@ $Regions = az account list-locations --query '[].[name]' -o tsv
 
 # Do we have the right number?
 $NumRegions= $Regions.count
-$NumRegions.GetType()
-$Regions.GetType()
+#$NumRegions.GetType()
+#$Regions.GetType()
 
+Write-Host "Found $NumRegions Regions"
 
-# ForEach (item In collection) {code block}
+<# # ForEach (item In collection) {code block}
+ForEach ($Region in $Regions) {
 
-ForEach ($Item in $Regions) {
-    Write-Output "$($Item)"
+    if($Region -notmatch '.*stage') {
+      Write-Output "$($Region)"
+    }
     # See  if we can lookup the Display Name - doesn't work
     #az account list-locations --query "[?name=='$Item'].[DisplayName]" -o tsv
 }
+#>
 
-Write-Host "Found $NumRegions Regions"
+ForEach ($Region in $Regions) {
+  if($Region -notmatch '.*stage') {
+    Get-AzVMSize -Location $Region | Where-Object { $_.Name -Match 'Standard_D.*s.*v5' } 
+    Write-Host ""
+    Write-Host "####======= $Region ========####"
+  }
+}
