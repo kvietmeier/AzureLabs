@@ -83,7 +83,8 @@ ForEach ($Region in $Regions) {
 
 ForEach ($Region in $Regions) {
   if($Region -notmatch '.*stage') {
-    Get-AzVMSize -Location $Region -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.*s.*v5' } | ConvertTo-Csv -NoTypeInformation
+    Get-AzVMSize -Location $Region -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.*s.*v5' }
+    #Get-AzVMSize -Location $Region -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.*s.*v5' } | ConvertTo-Csv -NoTypeInformation
     Write-Host ""
     Write-Host "####======= $Region ========####"
   }
