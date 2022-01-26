@@ -64,11 +64,10 @@ Set-Location $PSscriptroot
 $Regions = az account list-locations --query '[].[name]' -o tsv
 
 # Do we have the right number?
-$NumRegions= $Regions.count
+#$NumRegions= $Regions.count
 #$NumRegions.GetType()
 #$Regions.GetType()
-
-Write-Host "Found $NumRegions Regions"
+#Write-Host "Found $NumRegions Regions"
 
 <# # ForEach (item In collection) {code block}
 ForEach ($Region in $Regions) {
@@ -80,14 +79,21 @@ ForEach ($Region in $Regions) {
     #az account list-locations --query "[?name=='$Item'].[DisplayName]" -o tsv
 }
 #>
+$num_regions = 0
 
+# Loop through the list of regions and check for v5s in each valid region
 ForEach ($Region in $Regions) {
   if($Region -notmatch '.*stage') {
     Get-AzVMSize -Location $Region -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.*s.*v5' }
     #Get-AzVMSize -Location $Region -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.*s.*v5' } | ConvertTo-Csv -NoTypeInformation
     if ($?) {
-    Write-Host ""
-    Write-Host "####======= $Region ========####"
+      $num_regions++
+      # Will remove these later - need to figure out how to label treguion output in CSV file
+      Write-Host ""
+      Write-Host "####======= $Region ========####"
     }
   }
 }
+
+# How many regions are there really? Does this match the complete list?
+Write-Host "Checked $num_regions Regions"
