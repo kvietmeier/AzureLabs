@@ -61,21 +61,20 @@ Set-Location $PSscriptroot
   $Regions.RegionalDisplayName
 #>
 
-$Regions = Get-AzLocation | Select-Object Location
+#$Regions = Get-AzLocation | Select-Object Location
 #$Regions = Get-AzLocation | Select-Object Location
 #$Regions.Location
 
 # Do we have the right number?
-$NumRegions= $Regions.Length
+#$NumRegions= $Regions.Length
 #$NumRegions.GetType()
 #$Regions.GetType()
 #Write-Host "Found $NumRegions Regions"
 
-#$foobar = ($Regions.PSObject.Properties).Value
 
 $num_regions = 0
 
-<# THIS WORKS
+<# THIS WORKS using the az CLI but is a bit messy
 # Loop through the list of regions and check for v5s in each valid region
 ForEach ($Region in $Regions) {
   if($Region -notmatch '.*stage') {
@@ -99,28 +98,39 @@ ForEach ($Region in $Regions) {
 } 
 #>
 
-#ForEach-Object ($Region in $Regions) {
-ForEach ($Region in Get-AzLocation | Select-Object Location)
+# Will just get the Location but we might want to use other properties
+#ForEach ($Region in Get-AzLocation | Select-Object Location)
+
+### Using the Get-AzLocation command - probably a more correct way to do it and a bit cleaner
+# Grab the whole PSObject - 
+ForEach ($Region in Get-AzLocation)
 {
 
-  Write-Host $Region
+  #Write-Host "Region checked is - $($Region.Location)"
   # Includes AMD instances
-  #Get-AzVMSize -Location $Region -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.*s.*v5' }
-  Get-AzVMSize -Location $Region 
+  #Get-AzVMSize -Location $Region.Location -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.*s.*v5' }
 
   # This will exclude AMD instances
-  #Get-AzVMSize -Location $Region.Location -ErrorAction SilentlyContinue | Where-Object { $Region.Location -Match 'Standard_D.[^a]*s.*v5'}
-    
+  Get-AzVMSize -Location $Region.Location -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.[^a]*s.*v5'}
 
   # Output in csv format
-  #Get-AzVMSize -Location $Region -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.*s.*v5' } | ConvertTo-Csv -NoTypeInformation
+  #Get-AzVMSize -Location $Region -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.[^a]*s.*v5' } | ConvertTo-Csv -NoTypeInformation
     
-  $num_regions++
-  # Will remove these later - need to figure out how to label region output in CSV file
-  Write-Host ""
-  Write-Host "####======= $Region ========####"
+  # Exclude non-legit regions
+  if ($?) {
+      $num_regions++
+      # Will remove these later - need to figure out how to label region output in CSV file
+      Write-Host ""
+      Write-Host "####======= $($Region.DisplayName) ========####"
+  } else {
+    # In here for info - pull out later
+    Write-Host ""
+    Write-Host "$($Region.DisplayName) Get-AzVMSize failed"
+    Write-Host ""
+  }
+  
 } 
 
 
 # How many regions are there really? Does this match the complete list?
-Write-Host "Checked $num_regions Regions"
+Write-Host "Command succeed on $num_regions Regions out of $($Regions.Count)"
