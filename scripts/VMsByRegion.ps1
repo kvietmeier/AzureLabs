@@ -115,10 +115,10 @@ ForEach ($Region in Get-AzLocation)
   #Get-AzVMSize -Location $Region.Location -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.*s.*v5' }
 
   # This will exclude AMD instances
-  Get-AzVMSize -Location $Region.Location -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.[^a]*s.*v5'}
+  #Get-AzVMSize -Location $Region.Location -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.[^a]*s.*v5'}
 
   # Output in csv format
-  #Get-AzVMSize -Location $Region -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.[^a]*s.*v5' } | ConvertTo-Csv -NoTypeInformation
+  $foobar = Get-AzVMSize -Location $Region.Location -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.[^a]*s.*v5' } | ConvertTo-Csv -NoTypeInformation
     
   # Exclude non-legit regions
   if ($?) {
