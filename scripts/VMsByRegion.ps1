@@ -33,7 +33,6 @@ $ErrorActionPreference = "stop"
 Set-Location $PSscriptroot
 
 ###====================================================================================###
-###     Auth Code - remove/modify as needed
 ###     These commands require you to be authenticated to Azure session
 ###     
 ###     Connect-AzAccount
@@ -41,36 +40,45 @@ Set-Location $PSscriptroot
 ###     The above won't work if MFA is enabled
 ###====================================================================================###
 
-### Get my functions and credentials
-# Login Credentials  (stored outside the repo)
-. 'C:\.info\miscinfo.ps1'
-
 
 ###====================================================================================###
 ###      Script
 ###====================================================================================###
 
-#$Regions = az account list-locations -o table
-#$Regions = az account list-locations
-# We just need the reference name
-#$Regions = az account list-locations --query '[].[name]' -o tsv
-<### Need to get the regions
-  Access the results using Object method calls
-  $Regions.DisplayName
-  $Regions.Name
-  $Regions.RegionalDisplayName
+# There are differences between the output of the az cli command vs the PowerShell cmd
+#    - Ther az commonamnd includes Global Geography names, staging regions 
+#    - and euap preview regions
+
+<# ### Use the az cli command
+* Creates Object Array
+$Regions = az account list-locations -o table
+$Regions = az account list-locations
+* Just the reference name
+$Regions = az account list-locations --query '[].[name]' -o tsv
 #>
 
-#$Regions = Get-AzLocation | Select-Object Location
-#$Regions = Get-AzLocation | Select-Object Location
-#$Regions.Location
+<# ### Use the PS command
+* Just the reference name
+$Regions = Get-AzLocation | Select-Object Location
 
-# Do we have the right number?
-#$NumRegions= $Regions.Length
-#$NumRegions.GetType()
-#$Regions.GetType()
-#Write-Host "Found $NumRegions Regions"
+* Creates Object Array
+#$Regions = Get-AzLocation
 
+* Access the results using Object method calls
+$Regions.DisplayName
+$Regions.Name
+$Regions.RegionalDisplayName
+
+* Example
+$Regions.Name
+#>
+
+<#  Do we have the right number?
+$NumRegions= $Regions.Length
+$NumRegions.GetType()
+$Regions.GetType()
+Write-Host "Found $NumRegions Regions"
+#>
 
 $num_regions = 0
 
