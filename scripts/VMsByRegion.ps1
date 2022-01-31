@@ -137,4 +137,4 @@ ForEach ($Region in Get-AzLocation)
 
 
 # How many regions are there really? Does this match the complete list?
-Write-Host "Command succeed on $num_regions Regions out of $($Regions.Count)"
+Write-Host "Command succeed on $num_regions Regions out of $($Regions.Count) returned by Get-AzLocation"
