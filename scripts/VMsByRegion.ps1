@@ -105,6 +105,8 @@ ForEach ($Region in $Regions) {
 # Will just get the Location but we might want to use other properties
 #ForEach ($Region in Get-AzLocation | Select-Object Location)
 
+$CSV_file = ".\Test.csv"
+
 ### Using the Get-AzLocation command - probably a more correct way to do it and a bit cleaner
 # Grab the whole PSObject - 
 ForEach ($Region in Get-AzLocation)
@@ -118,20 +120,34 @@ ForEach ($Region in Get-AzLocation)
   #Get-AzVMSize -Location $Region.Location -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.[^a]*s.*v5'}
 
   # Output in csv format
-  #$foobar = Get-AzVMSize -Location $Region.Location -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.[^a]*s.*v5' } | ConvertTo-Csv -NoTypeInformation
+  
+  # NOTE - there appears to be an anomoly - in the loop some valid regions with the v5 instances retuirn an emply line but
+  # when run by hand - return the instances correctly.
+
+  #Start-Sleep -Seconds 5
   Get-AzVMSize -Location $Region.Location -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.[^a]*s.*v5' } | ConvertTo-Csv -NoTypeInformation
-    
+  
+  <# Try to output to CSV directly
+  Get-AzVMSize -Location $Region.Location `
+    -ErrorAction SilentlyContinue `
+    | Where-Object { $_.Name -Match 'Standard_D.[^a]*s.*v5' } `
+    | Export-Csv -Path $CSV_file -NoTypeInformation -Append
+  
+  #>
+  
   # Exclude non-legit regions
   if ($?) {
       $num_regions++
       # Will remove these later - need to figure out how to label region output in CSV file
       Write-Host ""
-      Write-Host "####======= $($Region.DisplayName) ========####"
+      Write-Host "####======= $($Region.Location) ========####"
+
   } else {
     # In here for info - pull out later
-    Write-Host ""
-    Write-Host "$($Region.DisplayName) Get-AzVMSize failed"
-    Write-Host ""
+
+    Write-Host "-"
+    Write-Host "$($Region.Location) Get-AzVMSize failed"
+    Write-Host "-"
   }
   
 } 
