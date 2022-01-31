@@ -118,7 +118,8 @@ ForEach ($Region in Get-AzLocation)
   #Get-AzVMSize -Location $Region.Location -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.[^a]*s.*v5'}
 
   # Output in csv format
-  $foobar = Get-AzVMSize -Location $Region.Location -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.[^a]*s.*v5' } | ConvertTo-Csv -NoTypeInformation
+  #$foobar = Get-AzVMSize -Location $Region.Location -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.[^a]*s.*v5' } | ConvertTo-Csv -NoTypeInformation
+  Get-AzVMSize -Location $Region.Location -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_D.[^a]*s.*v5' } | ConvertTo-Csv -NoTypeInformation
     
   # Exclude non-legit regions
   if ($?) {
