@@ -2,27 +2,36 @@
 <#   
   FileName: VMsByRegion.ps1
   Created By: Karl Vietmeier
-    
-  Description:
-  Parse list of VM sizes by region and generate a .csv file
 
 #>
 ###====================================================================================###
 
 <#
 .SYNOPSIS
-Will use the az cli to find VM sizes by region
+Will use the PowerShell commands to find VM sizes by region
 
 .DESCRIPTION
-Long description
+Parse list of regions and list Intel v5 instance sizes found.
 
-.EXAMPLE
-An example
 
 .NOTES
-General notes
+Needed outcome:
+A .csv/excel file with the output of the VMSizes command for each region that has the requested size
+
+NOTE - Good excerise for learning arrays and text manipluation.
+
+Usage:
+These commands require you to be authenticated to Azure session
+
+  Connect-AzAccount
+
+The above won't work if MFA is enabled
+
 #>
 
+###====================================================================================###
+###      Script
+###====================================================================================###
 ### Here for safety - comment/uncomment as desired
 #return
 
@@ -31,19 +40,6 @@ $ErrorActionPreference = "stop"
 
 # Run from the location of the script
 Set-Location $PSscriptroot
-
-###====================================================================================###
-###     These commands require you to be authenticated to Azure session
-###     
-###     Connect-AzAccount
-###
-###     The above won't work if MFA is enabled
-###====================================================================================###
-
-
-###====================================================================================###
-###      Script
-###====================================================================================###
 
 # There are differences between the output of the az cli command vs the PowerShell cmd
 #    - Ther az commonamnd includes Global Geography names, staging regions 
