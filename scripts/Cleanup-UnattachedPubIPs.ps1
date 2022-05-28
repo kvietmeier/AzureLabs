@@ -6,7 +6,7 @@
   Status:  Working
 
   Description:
-    Find and delete NICs - copied from:
+    Find and delete PublicIPs - copied from:
     https://docs.microsoft.com/en-us/azure/virtual-machines/windows/find-unattached-disks
 
     Notes -     
