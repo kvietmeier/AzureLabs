@@ -3,15 +3,13 @@
   Name: Cleanup-UnattachedNICs.ps1                                                                 
   Created By: Karl Vietmeier                                                     
 
-  Status:  Not Working
+  Status:  Working
 
   Description:
     Find and delete NICs - copied from:
     https://docs.microsoft.com/en-us/azure/virtual-machines/windows/find-unattached-disks
 
-
     Notes -     
-    Added error checking for restricted blob stores
 
     11/03/21: 
         Fixed incorrect $null references
