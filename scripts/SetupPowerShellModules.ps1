@@ -9,12 +9,13 @@
   Written By: Karl Vietmeier                                             
                                                                             
   These are common modules for Azure AD, Azure, AzureFiles, WVD, and GPO
-  *** Includes code to non-interatively install AZFiles Module       
 #>
 ###=================================================================================###
-#return
 
-# Need to be Admin to run.
+# Comment to run as a script
+return
+
+# Need to be Admin to run for some of these
 
 function PreReqs () {
   # Run these as an Admin:
@@ -55,24 +56,35 @@ function AZModules () {
       -Confirm:$false `
       -AllowClobber -Force -Verbose
 
-  # End Function
-}
+  
+} # End Function
 
 function OptionalModules () {
   # Azure Stack Module
   Install-Module -Name "Az.StackHCI" `
-      -Repository 'PSGallery' `
-      -Confirm:$false `
-      -AllowClobber -Force -Verbose
+    -Repository 'PSGallery' `
+    -Confirm:$false `
+    -AllowClobber -Force -Verbose
 
   # I needed this to do some GPO work - optional
   Install-Module -Name "GPRegistryPolicy" `
-      -Repository 'PSGallery' `
-      -Confirm:$false `
-      -AllowClobber -Force -Verbose
+    -Repository 'PSGallery' `
+    -Confirm:$false `
+    -AllowClobber -Force -Verbose
       
-  # End Function
-}
+  # To "colorize" dir listings"
+  Install-Module -Name "Get-ChildItemColor" `
+    -Repository 'PSGallery' `
+    -Confirm:$false `
+    -AllowClobber -Force -Verbose
+      
+  # To "colorize" prompt and dir listings"
+  Install-Module -Name "PSColor" `
+    -Repository 'PSGallery' `
+    -Confirm:$false `
+    -AllowClobber -Force -Verbose
+ 
+} # End Function
 
 function ADModules () {
   # Azure AD Module    
@@ -89,8 +101,8 @@ function ADModules () {
       -Confirm:$false `
       -AllowClobber -Force -Verbose
 
-  # End Function
-}
+ 
+} # End Function
 
 # Required
 PreReqs
