@@ -56,10 +56,10 @@ Set-Location $PSscriptroot
 
 ### Get my functions and credentials
 # Credentials  (stored outside the repo)
-. 'C:\.info\miscinfo.ps1'
+#. 'C:\.info\miscinfo.ps1'
 
 # Functions (In this repo)
-. '.\FunctionLibrary.ps1'
+#. '.\FunctionLibrary.ps1'
 
 # Imported from "FunctionLibrary.ps1"
 # Are we connected to Azure with the corredt SubID?
@@ -85,20 +85,21 @@ $VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUse
 
 
 # Name the VM and components
-$VMPrefix       = "ubuntu"
+$VMPrefix       = "labnode"
 $VMName         = "$VMPrefix-$RandomID"
 $DNSName        = "$VMPrefix$RandomID"
 $PubIP          = "$VMPrefix-PubIP-$RandomID"
 $NICId          = "$VMPrefix-NIC-$RandomID"
 
 # Use existing network resources: vNet, Subnet, NSG
-$StorageAccount = "kv82579bootdiags"
-$SAGroup        = "CoreInfra-rg"
-$ResourceGroup  = "rg-k8scluster01"
+$StorageAccount = "westus2diags"
+$SAGroup        = "CommonResources-WestUS2"
+$ResourceGroup  = "CoreVMs"
 $Region         = "westus2"
-$vNetName       = "k8s-vnet"
-$vNetRG         = "CoreInfra-rg"
-$NsgName        = "RestrictByIP"
+$vNetName       = "corevnet01-wus2"
+$vNetRG         = "CommonResources-WestUS2"
+$NsgName        = "WUS2-InboundNSG"
+$NsgRG          = "z_nsg-WUS2-Managed"
 
 
 ###=================  Image Definitions  ==================###
@@ -114,13 +115,13 @@ $Offer          = "0001-com-ubuntu-server-focal"
 $SKU            = "20_04-lts-gen2"
 $Version        = "latest"
 
-# VM Size to Use - need 4 vCPU for accelerated networking
-$VMSize         = "Standard_D2ds_v4"
+# VM Size to Use - 
+$VMSize         = "Standard_D2ds_v5"
 
 <# Common Sizes
-Standard_D2ds_v4
-Standard_D4ds_v4
-Standard_D8ds_v4
+Standard_D2ds_v5
+Standard_D4ds_v5
+Standard_D8ds_v5
 Standard_B2s
 #>
 
@@ -172,7 +173,7 @@ vNet, Subnet, and NSG.
 
 $vNet      = Get-AzVirtualNetwork -Name $vNetName -ResourceGroupName $vNetRG
 $SubNetCfg = Get-AzVirtualNetworkSubnetConfig -ResourceId $vNet.Subnets[0].Id
-$NSG       = Get-AzNetworkSecurityGroup -ResourceGroupName $vNetRG -Name $NsgName
+$NSG       = Get-AzNetworkSecurityGroup -ResourceGroupName $NsgRG -Name $NsgName
 
 # Create a new static Public IP and assign a DNS record
 $PIP = New-AzPublicIPAddress `
