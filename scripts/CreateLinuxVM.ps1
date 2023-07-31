@@ -7,7 +7,7 @@
   Description                                                      
     Create a Linux VM for testing                                 
     Sometimes you just need a VM for testing with some standard defaults and using 
-    existing vnets and NSG.   
+    existing vnets and NSG.
 
   Status:  Working, tested
 
@@ -15,11 +15,13 @@
     Setup storage - OS disk, rather than take the defaults.
     Make interactive - prompt for region, prefix, image, etc.
     Merge with Windows VM script?
+    Loop to create more than one
                                                                 
   Resources:
    https://docs.microsoft.com/en-us/powershell/module/az.compute/new-azvm?view=azps-4.6.1
    https://docs.microsoft.com/en-us/powershell/module/az.compute/new-azvmconfig?view=azps-4.7.0
    https://docs.microsoft.com/en-us/azure/virtual-machines/windows/cli-ps-findimage
+
 
 #>
 ###====================================================================================###
@@ -43,10 +45,8 @@ Generates a random 4 digit ID for resources.
 
 .NOTES
 General notes
+*** This script assumes you are already authenticated to Azure in your PowerShell console ***
 #>
-
-### Here for safety - comment/uncomment as desired
-#return
 
 # Stop on first error
 $ErrorActionPreference = "stop"
@@ -78,7 +78,7 @@ $VMLocalAdminSecurePassword = ConvertTo-SecureString "<passwordstring>" -AsPlain
 $VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
 #>
 
-### Resource names  uses RandomID so VMs are unique
+### Resource names uses RandomID so VMs are unique
 # - might want to use existing resources
 #$StorageAccount = "kv82579TempSA-$RandomID"
 #$ResourceGroup  = "TempRG-$RandomID"
@@ -91,12 +91,12 @@ $DNSName        = "$VMPrefix$RandomID"
 $PubIP          = "$VMPrefix-PubIP-$RandomID"
 $NICId          = "$VMPrefix-NIC-$RandomID"
 
-# Use existing network resources: vNet, Subnet, NSG
+# Use existing network resources: vNet, Subnet, NSG - set to your own
 $StorageAccount = "westus2diags"
 $SAGroup        = "CommonResources-WestUS2"
 $ResourceGroup  = "CoreVMs"
 $Region         = "westus2"
-$vNetName       = "corevnet01-wus2"
+$vNetName       = "linuxvnet01-wus2"
 $vNetRG         = "CommonResources-WestUS2"
 $NsgName        = "WUS2-InboundNSG"
 $NsgRG          = "z_nsg-WUS2-Managed"
@@ -115,8 +115,11 @@ $Offer          = "0001-com-ubuntu-server-focal"
 $SKU            = "20_04-lts-gen2"
 $Version        = "latest"
 
+###=================  VM Config Parameters  ==================###
 # VM Size to Use - 
 $VMSize         = "Standard_D2ds_v5"
+$DiskController = "NVMe"     # Choices - "SCSI" and "NVMe"
+
 
 <# Common Sizes
 Standard_D2ds_v5
@@ -156,8 +159,12 @@ if ($NotExist) {
 } else { Write-Host "Using Resourcegroup:" $ResourceGroup }
 
 
-# VM Name and Size
-$NewVMConfig = New-AzVMConfig -VMName $VMName -VMSize $VMSize
+# Set basic parameters VM Name and Size
+# https://learn.microsoft.com/en-us/powershell/module/az.compute/new-azvmconfig?view=azps-10.1.0
+$NewVMConfig = New-AzVMConfig -VMName $VMName `
+  -VMSize $VMSize `
+  -DiskControllerType $DiskController `
+  -EnableUltraSSD
 
 <# Add SSH Key to VM (need to integrate)
 $VirtualMachine = Get-AzVM -ResourceGroupName "ResourceGroup11" -Name "VirtualMachine07"
@@ -204,7 +211,7 @@ Add-AzVMNetworkInterface -VM $NewVMConfig -Id $VMNIC.Id
 ###===================    Disk/Storage SetUp   ===================###
 # Use this section to setup boot diagnostics and keep it with VM
 # Otherwise it will use an existing storage account in the Region
-# which may be what you want.
+# which may not be what you want.
 $NewVMConfig = Set-AzVMBootDiagnostic `
   -VM $NewVMConfig `
   -Enable `
