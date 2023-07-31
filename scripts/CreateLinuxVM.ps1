@@ -1,14 +1,7 @@
 ###====================================================================================###
 <# 
-  CreateLinuxVM.ps1                                                    
-    Created By: Karl Vietmeier
-                karl.vietmeier@intel.com                                       
+  Created By: Karl Vietmeier
                                                                     
-  Description                                                      
-    Create a Linux VM for testing                                 
-    Sometimes you just need a VM for testing with some standard defaults and using 
-    existing vnets and NSG.
-
   Status:  Working, tested
 
   To Do:  
@@ -17,18 +10,9 @@
     Merge with Windows VM script?
     Loop to create more than one
                                                                 
-  Resources:
-   https://docs.microsoft.com/en-us/powershell/module/az.compute/new-azvm?view=azps-4.6.1
-   https://docs.microsoft.com/en-us/powershell/module/az.compute/new-azvmconfig?view=azps-4.7.0
-   https://docs.microsoft.com/en-us/azure/virtual-machines/windows/cli-ps-findimage
-
 
 #>
 ###====================================================================================###
-
-### Here for safety - comment/uncomment as desired
-#return
-
 <#
 .SYNOPSIS
 Create a Linux VM
@@ -46,7 +30,17 @@ Generates a random 4 digit ID for resources.
 .NOTES
 General notes
 *** This script assumes you are already authenticated to Azure in your PowerShell console ***
+  
+Resources:
+  https://docs.microsoft.com/en-us/powershell/module/az.compute/new-azvm?view=azps-4.6.1
+  https://docs.microsoft.com/en-us/powershell/module/az.compute/new-azvmconfig?view=azps-4.7.0
+  https://docs.microsoft.com/en-us/azure/virtual-machines/windows/cli-ps-findimage
+
 #>
+
+
+### Here for safety - comment/uncomment as desired
+#return
 
 # Stop on first error
 $ErrorActionPreference = "stop"
@@ -54,42 +48,22 @@ $ErrorActionPreference = "stop"
 # Run from the location of the script
 Set-Location $PSscriptroot
 
-### Get my functions and credentials
-# Credentials  (stored outside the repo)
-#. 'C:\.info\miscinfo.ps1'
-
+###----   My functions and credentials   ----###
 # Functions (In this repo)
 #. '.\FunctionLibrary.ps1'
-
-# Imported from "FunctionLibrary.ps1"
-# Are we connected to Azure with the corredt SubID?
-#CheckLogin
-
 ###---- End my functions and credentials ----###
 
-# Create a 4 digit random ID for naming
-$RandomID = $(Get-Random -Minimum 1000 -Maximum 2000)
-
-<###----   Define parameters for the VM   ----### 
-  VM credential information is sourced from miscinfo.ps1
-  --- uncomment here to use locally in the script
+<# --- uncomment here to use locally in the script
+###----   Define Login parameters for the VM   ----### 
+# VM credential information is sourced from elsewherer in this script
 $VMLocalAdminUser = "<adminusername>"
 $VMLocalAdminSecurePassword = ConvertTo-SecureString "<passwordstring>" -AsPlainText -Force
 $VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
 #>
 
-### Resource names uses RandomID so VMs are unique
-# - might want to use existing resources
-#$StorageAccount = "kv82579TempSA-$RandomID"
-#$ResourceGroup  = "TempRG-$RandomID"
-
-
-# Name the VM and components
-$VMPrefix       = "labnode"
-$VMName         = "$VMPrefix-$RandomID"
-$DNSName        = "$VMPrefix$RandomID"
-$PubIP          = "$VMPrefix-PubIP-$RandomID"
-$NICId          = "$VMPrefix-NIC-$RandomID"
+###====================================================================================###
+###                              Variable Definitions                                  ###
+###====================================================================================###
 
 # Use existing network resources: vNet, Subnet, NSG - set to your own
 $StorageAccount = "westus2diags"
@@ -101,25 +75,17 @@ $vNetRG         = "CommonResources-WestUS2"
 $NsgName        = "WUS2-InboundNSG"
 $NsgRG          = "z_nsg-WUS2-Managed"
 
-
-###=================  Image Definitions  ==================###
-# Image: Centos
-#$PublisherName  = "OpenLogic"
-#$Offer          = "Centos"
-#$SKU            = "8_3"
-#$Version        = "latest"
-
+# Image Definitions
 # Ubuntu - add "-gen2" to create a Gen2 VM
 $PublisherName  = "Canonical"
 $Offer          = "0001-com-ubuntu-server-focal"
 $SKU            = "20_04-lts-gen2"
 $Version        = "latest"
 
-###=================  VM Config Parameters  ==================###
-# VM Size to Use - 
-$VMSize         = "Standard_D2ds_v5"
-$DiskController = "NVMe"     # Choices - "SCSI" and "NVMe"
-
+# VM Config Parameters 
+$VMSize         = "Standard_E2bds_v5"   # E#bds is required for NVMe
+$DiskController = "NVMe"                # Choices - "SCSI" and "NVMe"
+$Zone           = "1"                   # Need for UltraSSD
 
 <# Common Sizes
 Standard_D2ds_v5
@@ -127,6 +93,12 @@ Standard_D4ds_v5
 Standard_D8ds_v5
 Standard_B2s
 #>
+
+# Process a cloud-init file
+# Use the one I use for Terraform
+$CloudinitFile  = "C:\Users\ksvietme\repos\Terraform\azure\secrets\cloud-init.simple"
+$Bytes          = [System.Text.Encoding]::Unicode.GetBytes((Get-Content -raw $CloudinitFile))
+$CloudInit      = (Get-Content -raw $CloudinitFile)
 
 
 <# 
@@ -144,16 +116,50 @@ $ImageDefinition = Get-AzGalleryImageDefinition `
    -Name $ImageName
 #>
 
-###=================   END: Images   ==================###
+###=====================================-END-==========================================###
 
-<###=================  Start Setting up the VM  ==================###
-  Creating a Virtual Machine is a multi-step process where you build up configuration
-  PSObjects and apply them all with the "New-AzVM" command
-  --- You shouldn't need to modify the script below this line.
-#>
+
+###====================================================================================###
+###                           Unique Variable Definitions                              ###
+###====================================================================================###
+
+# TBD - put in a loop with a count
+
+### Resource names uses RandomID so VMs are unique
+# - might want to use existing resources
+#$StorageAccount = "kv82579TempSA-$RandomID"
+#$ResourceGroup  = "TempRG-$RandomID"
+
+# Create a 4 digit random ID for naming
+$RandomID = $(Get-Random -Minimum 1000 -Maximum 2000)
+
+# Name the VM and components
+$VMPrefix       = "labnode"
+$VMName         = "$VMPrefix-$RandomID"
+$DNSName        = "$VMPrefix$RandomID"
+$PubIP          = "$VMPrefix-PubIP-$RandomID"
+$NICId          = "$VMPrefix-NIC-$RandomID"
+
+###=====================================-END-==========================================###
+
+
+
+###====================================================================================###
+###                              Start Building the VM                                 ###
+#
+#  Creating a Virtual Machine is a multi-step process where you build up configuration
+#  PSObjects and apply them all with the "New-AzVM" command
+#  
+#                You shouldn't need to modify the script below this line.
+#
+###====================================================================================###
+
 
 # If it doesn't exist - Create the resource group for the VM and resources
-Get-AzResourceGroup -Name $ResourceGroup -ErrorVariable NotExist -ErrorAction SilentlyContinue
+Get-AzResourceGroup -Name $ResourceGroup `
+  -ErrorVariable NotExist `
+  -ErrorAction SilentlyContinue
+
 if ($NotExist) {
   New-AzResourceGroup -Name $ResourceGroup -Location $Region
 } else { Write-Host "Using Resourcegroup:" $ResourceGroup }
@@ -164,7 +170,8 @@ if ($NotExist) {
 $NewVMConfig = New-AzVMConfig -VMName $VMName `
   -VMSize $VMSize `
   -DiskControllerType $DiskController `
-  -EnableUltraSSD
+  -EnableUltraSSD `
+  -Zone $Zone
 
 <# Add SSH Key to VM (need to integrate)
 $VirtualMachine = Get-AzVM -ResourceGroupName "ResourceGroup11" -Name "VirtualMachine07"
@@ -186,10 +193,11 @@ $NSG       = Get-AzNetworkSecurityGroup -ResourceGroupName $NsgRG -Name $NsgName
 $PIP = New-AzPublicIPAddress `
   -Name $PubIP `
   -ResourceGroupName $ResourceGroup `
-  -Sku Basic `
-  -AllocationMethod Dynamic `
+  -Sku Standard `
+  -AllocationMethod Static `
   -DomainNameLabel $DNSName `
-  -Location $Region
+  -Location $Region `
+  -Zone $Zone
 
 # Start building the NIC configuration - Subnet and Public IP
 $NewIPConfig = New-AzNetworkInterfaceIpConfig -Name "IPConfig-1" -Subnet $SubNetCfg -PublicIpAddress $PIP -Primary 
@@ -202,13 +210,13 @@ $VMNIC = New-AzNetworkInterface `
   -NetworkSecurityGroupId $NSG.Id `
   -EnableAcceleratedNetworking `
   -IpConfiguration $NewIPConfig
+  #-Zone $Zone
 
 # Add the NIC to the VM Configuration
 Add-AzVMNetworkInterface -VM $NewVMConfig -Id $VMNIC.Id
 
 ###=================== End - NIC Configuration ===================###
 
-###===================    Disk/Storage SetUp   ===================###
 # Use this section to setup boot diagnostics and keep it with VM
 # Otherwise it will use an existing storage account in the Region
 # which may not be what you want.
@@ -218,18 +226,15 @@ $NewVMConfig = Set-AzVMBootDiagnostic `
   -ResourceGroupName $SAGroup `
   -StorageAccountName $StorageAccount
 
-# This section needs some work.
 
-
-###===================   End - Storage Setup   ===================###
-
-# OS definition and Credentials for user - Credentials are stored
-# in an external file.
+# OS definition and Credentials for user  -Credential are pulled from an $Env variable.
 $NewVMConfig = Set-AzVMOperatingSystem `
   -VM $NewVMConfig `
   -Linux `
   -ComputerName $VMName `
+  -CustomData $CloudInit `
   -Credential $VMCred
+
 
 # Source Image
 $NewVMConfig = Set-AzVMSourceImage `
@@ -242,3 +247,5 @@ $NewVMConfig = Set-AzVMSourceImage `
 
 ###----> Create the VM using info in the layered config above
 New-AzVM -ResourceGroupName $ResourceGroup -Location $Region -VM $NewVMConfig -Verbose
+
+###=====================================-END-==========================================###
