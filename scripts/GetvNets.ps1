@@ -39,11 +39,11 @@ Set-Location $PSscriptroot
 . 'C:\.info\miscinfo.ps1'
 
 # Functions (In this repo)
-. '.\FunctionLibrary.ps1'
+#. '.\FunctionLibrary.ps1'
 
 # Imported from "FunctionLibrary.ps1"
 # Are we connected to Azure with the corredt SubID?
-CheckLogin
+#CheckLogin
 
 
 $subs = Get-AzSubscription 

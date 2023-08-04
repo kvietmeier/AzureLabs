@@ -70,7 +70,7 @@ Invoke-RestMethod -Uri "https://rdweb.wvd.microsoft.com/api/health" | Select-Obj
   Common Question - 
   https://docs.microsoft.com/en-us/azure/virtual-network/what-is-ip-address-168-63-129-16
 
-  Powershell equivalents fotr common commands
+  Powershell equivalents for common commands
   https://www.msnoob.com/windows-powershell-equivalents-for-common-networking-commands.html
 
 #>
