@@ -51,13 +51,6 @@ $ErrorActionPreference = "stop"
 # Run from the location of the script
 Set-Location $PSscriptroot
 
-<#--- Uncomment this section to configure Azure authentication locally in the script
-###----   Define Login parameters for the VM   ----### 
-# VM credential information is sourced from elsewhere in this script
-$VMLocalAdminUser = "<adminusername>"
-$VMLocalAdminSecurePassword = ConvertTo-SecureString "<passwordstring>" -AsPlainText -Force
-$VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
-#>
 
 ###====================================================================================###
 ###                              Variable Definitions                                  ###
@@ -85,6 +78,7 @@ $VMPrefix       = "voltnode"
 $DiskPrefix     = "datadisk"
 $Zone           = "1"                   # Need for UltraSSD
 $PPGName        = "VoltPPG"
+# You have to define VMs sizes for the PG if you use a zone.
 $VMSizes2       = "Standard_E2bds_v5"
 $VMSizes4       = "Standard_E4bds_v5"
 $VMSizes8       = "Standard_E8bds_v5"
@@ -167,6 +161,7 @@ for ($i=1; $i -le $NumVMs; $i++) {
   $DNSName        = "$VMPrefix-kv0$i"
   $PubIP          = "$VMPrefix-PubIP-0$i"
   $NICId          = "$VMPrefix-NIC-$RandomID"
+  $IPConfig       = "$VMPrefix-IPcfg-0$i"
 
   # Set basic parameters VM Name and Size for newe VM object
   # https://learn.microsoft.com/en-us/powershell/module/az.compute/new-azvmconfig?view=azps-10.1.0
@@ -205,7 +200,7 @@ for ($i=1; $i -le $NumVMs; $i++) {
     -Zone $Zone
 
   # Start building the NIC configuration - Subnet and Public IP
-  $NewIPConfig = New-AzNetworkInterfaceIpConfig -Name "IPConfig-1" -Subnet $SubNetCfg -PublicIpAddress $PIP -Primary 
+  $NewIPConfig = New-AzNetworkInterfaceIpConfig -Name $IPConfig -Subnet $SubNetCfg -PublicIpAddress $PIP -Primary 
 
   # Create the NIC using the PS Objects - enable accelerated networking
   # Technically don't need NSG here - it is bound to the existing subnet in use
@@ -226,6 +221,7 @@ for ($i=1; $i -le $NumVMs; $i++) {
   ###======================== Create Disks For DB ==============================###
   #                          Define, Create, Attach                               # 
   
+  # To-Do - add a check for $disk = 0 to skip
   for ($Disk=1; $Disk -le $NumDataDisk; $Disk++) {
   
     $DiskName = "$DiskPrefix-$Disk-$VMName"
@@ -306,4 +302,12 @@ $ImageDefinition = Get-AzGalleryImageDefinition `
    -GalleryName $GalleryName `
    -ResourceGroupName $GalleryRG `
    -Name $ImageName
+#>
+
+<#--- Uncomment this section to configure Azure authentication locally in the script
+###----   Define Login parameters for the VM   ----### 
+# VM credential information is sourced from elsewhere in this script
+$VMLocalAdminUser = "<adminusername>"
+$VMLocalAdminSecurePassword = ConvertTo-SecureString "<passwordstring>" -AsPlainText -Force
+$VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
 #>
