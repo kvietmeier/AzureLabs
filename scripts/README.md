@@ -2,34 +2,37 @@
 
 Collection of scripts for working within Azure and with Azure Virtual Desktop. 
 
+I don't use this folder as much anymore as I've shifted to Terraform for most of my Azure automation.
 
 ## Project Directories
-```
+
+``` shell
 ├───scripts
 │   ├───AVD Scripts
 │   ├───examples
 │   └───users
 ```
+
 AVD Scripts: Scripts related to AVD<br>
-users: Has a script I grabbed off GitHub to add users to AD.<br>
+users: Has a script I grabbed off GitHub to add users to AD (I use Terraform for this now).<br>
 examples: Code snippets and scripts I have downloaded - most are not mine.<br> 
 
-
 ### Usage
-My scripts are "." sourcing 2 files, one is outside the repo and has variables with sensitive information
-like GUIDs, SubscriptionIDs/Names, and certificates. The other is in this repo and is a library of common 
-functions.
+
+Many of my scripts are "." sourcing 2 files, one is outside the repo and has variables with sensitive information
+like GUIDs, SubscriptionIDs/Names, and certificates. The other is in this repo and is a library of common functions.
 
 They are accessed like this:
-https://devblogs.microsoft.com/scripting/how-to-reuse-windows-powershell-functions-in-scripts/
-```
-. 'C:\.miscinfo.ps1'
+<https://devblogs.microsoft.com/scripting/how-to-reuse-windows-powershell-functions-in-scripts/>
+
+``` powershell
+. '<A drive somewhere>:\.somestuff.ps1'
 . '.\FunctionLibrary.ps1'
 ```
 
-
 An example of the variables stored in the "resources.ps1" file:
-```
+
+``` powershell
 # Subscription Information
 $SubID = "xxxxxxxx-xxxx-xxxx-xxxxxxxxxxxxxxxxx"
 $SubName = "ASubscriptionName"
@@ -38,9 +41,11 @@ $AIAPassword = "really should encrypt this"
 ```
 
 The script:
-```
+
+``` powershell
 scripts/SetupPowerShellModules.ps1
 ```
+
 Will setup your laptop/workstation to run PowerShell scripts/snippets and access Azure/AAD resources.
 
 <br>
@@ -49,9 +54,11 @@ commands and code snippets to be run interactively using the ISE or VSC.
 At some point I will merge them into larger scripts as functions but for now they exist as seperate utilities.
 
 Especially - 
-```
+
+``` powershell
 scripts/NetworkTroubleshooting.ps1
 ```
+
 This file is a collection of various Powershell and OS commands/utilities for troubleshooting networks.
 
 ## Author
@@ -67,7 +74,8 @@ My colleagues on the Windows Virtual Desktop GBB Team and PowerShell Guris at MS
   John Jenner<br>
   Tim Dunn<br>
 
-
 ## References
+
 Inspiration, code snippets, etc.
+
 * [PowerShell Documentation](https://docs.microsoft.com/en-us/powershell/)
