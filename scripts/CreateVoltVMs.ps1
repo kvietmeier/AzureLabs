@@ -56,6 +56,10 @@ Set-Location $PSscriptroot
 ###                              Variable Definitions                                  ###
 ###====================================================================================###
 
+# Looping Variables - number of VMs and Disks
+$NumVMs      = 2
+$NumDataDisk = 2
+
 # Use existing network resources: vNet, Subnet, NSG - set to your own
 $Region         = "westus2"
 $vNetName       = "testingvnet01-wsu2"
@@ -90,10 +94,6 @@ $VMSizes32      = "Standard_E32bds_v5"
 $CloudinitFile  = "C:\Users\ksvietme\repos\Terraform\azure\secrets\cloud-init.voltdb"
 $Bytes          = [System.Text.Encoding]::Unicode.GetBytes((Get-Content -raw $CloudinitFile))
 $CloudInit      = (Get-Content -raw $CloudinitFile)
-
-# Looping Variables - number of VMs and Disks
-$NumVMs      = 2
-$NumDataDisk = 2
 
 
 ###====================================================================================###
@@ -208,7 +208,6 @@ for ($i=1; $i -le $NumVMs; $i++) {
     -Name $NICId `
     -ResourceGroupName $ResourceGroup `
     -Location $Region `
-    -NetworkSecurityGroupId $NSG.Id `
     -EnableAcceleratedNetworking `
     -IpConfiguration $NewIPConfig
 

@@ -218,7 +218,6 @@ for ($i=1; $i -le $NumVMs; $i++) {
     -Name $NICId `
     -ResourceGroupName $ResourceGroup `
     -Location $Region `
-    -NetworkSecurityGroupId $NSG.Id `
     -EnableAcceleratedNetworking `
     -IpConfiguration $NewIPConfig
 
