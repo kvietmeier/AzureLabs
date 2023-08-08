@@ -22,7 +22,7 @@ Can create multiple identical Linux VMs with attached SCSI data disks
 General notes
 *** This script assumes you are already authenticated to Azure in your PowerShell console ***
     - I configure $VMCred as an environment variable
-    - You can uncomment the $VMCred section to confiugre it in this script 
+    - You can uncomment the $VMCred section to configure it in this script 
   
 Resources:
   https://docs.microsoft.com/en-us/powershell/module/az.compute/new-azvm?view=azps-4.6.1
@@ -50,7 +50,7 @@ Set-Location $PSscriptroot
 # Looping/switching Variables - number of VMs and Disks and PPG use
 $NumVMs      = 1
 $NumDataDisk = 0
-$UsePPG      = "true"
+$UsePPG      = "false"
 
 
 # Use your existing network resources: vNet, Subnet, NSG

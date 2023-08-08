@@ -103,7 +103,7 @@ $CloudInit      = (Get-Content -raw $CloudinitFile)
 
 
 ###====================================================================================###
-###                        Resource Group and Storage Account                          ###
+###           Proximity Placement Group, Resource Group and Storage Account            ###
 ###====================================================================================###
 
 # If it doesn't exist - Create the resource group for the VM and resources
@@ -149,6 +149,7 @@ Write-Host ""
 
 ###====================================================================================###
 ###                                VM Creation Loop                                    ###
+###====================================================================================###
 
 for ($i=1; $i -le $NumVMs; $i++) {
   
@@ -217,37 +218,41 @@ for ($i=1; $i -le $NumVMs; $i++) {
   ###--======================= End NIC Configuration ===========================###
   
 
-  ###======================== Create Disks For DB ==============================###
-  #                          Define, Create, Attach                               # 
+  ###===========================================================================###
+  ###                         Create Disks For DB                               ###
+  ###                        Define, Create, Attach                             ### 
+  ###===========================================================================###
   
-  # To-Do - add a check for $disk = 0 to skip
-  for ($Disk=1; $Disk -le $NumDataDisk; $Disk++) {
+  # Create disks if $NumDataDisk > 0
+  if ( $NumDataDisk -gt 0 ) {
+    # Create the disks
+    for ($Disk=1; $Disk -le $NumDataDisk; $Disk++) {
   
-    $DiskName = "$DiskPrefix-$Disk-$VMName"
-    $LUN      = $Disk + 10
+      $DiskName = "$DiskPrefix-$Disk-$VMName"
+      $LUN      = $Disk + 10
     
-    # Setup UltraSSD disk configuration "-AccountType UltraSSD_LRS"
-    $DataDiskConfig = New-AzDiskConfig `
-      -Location $Region `
-      -Zone $Zone `
-      -AccountType UltraSSD_LRS `
-      -CreateOption Empty `
-      -DiskSizeGB 256 
+      # Setup UltraSSD disk configuration "-AccountType UltraSSD_LRS"
+      $DataDiskConfig = New-AzDiskConfig `
+        -Location $Region `
+        -Zone $Zone `
+        -AccountType UltraSSD_LRS `
+        -CreateOption Empty `
+        -DiskSizeGB 256 
 
-    # Create new disk
-    $DataDisk = New-AzDisk `
-      -ResourceGroupName $ResourceGroup `
-      -DiskName $DiskName `
-      -Disk $DataDiskConfig
-
-    # Add disk to the VM config
-    $NewVMConfig = Add-AzVMDataDisk `
-      -VM $NewVMConfig `
-      -Name $DiskName `
-      -CreateOption Attach `
-      -Lun $LUN `
-      -ManagedDiskId $DataDisk.id
-
+      # Create new disk
+      $DataDisk = New-AzDisk `
+        -ResourceGroupName $ResourceGroup `
+        -DiskName $DiskName `
+        -Disk $DataDiskConfig
+    
+      # Add disk to the VM config
+      $NewVMConfig = Add-AzVMDataDisk `
+        -VM $NewVMConfig `
+        -Name $DiskName `
+        -CreateOption Attach `
+        -Lun $LUN `
+        -ManagedDiskId $DataDisk.id
+    }
   }
 
   ###==================== End Create Disks For DB ==============================###
