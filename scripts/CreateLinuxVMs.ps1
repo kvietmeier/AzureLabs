@@ -16,7 +16,11 @@ Create a Linux VM
 Can create multiple identical Linux VMs with attached SCSI data disks
 
 .EXAMPLE
-./CreateLinuxVM.ps1
+With Placement group
+./CreateLinuxVM.ps1 -NumVMS 1 -NumDataDisks 0 -UsePPG
+
+Without Placement group
+./CreateLinuxVM.ps1 -NumVMS 1 -NumDataDisks 0
 
 .NOTES
 General notes
