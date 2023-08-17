@@ -12,10 +12,10 @@
 .SYNOPSIS
 Create a group of indentical Linux VMs with the following characteristics
  * NVME Enabled
- * 2 UltraSSD attached
+ * UltraSSD attached
  * Public IP w/DNS name
  * In a Proximity Placement Group
- * Uses a detailed cloud-init file for OS configuration
+ * Uses a detailed cloud-init file for OS configuration - takes at least 4-5 minutes to complete
  * Using existing resouces:
    - Dedicated vNet peered to a hub vnet
    - NSG that filters on incoming IP address
@@ -24,13 +24,13 @@ Create a group of indentical Linux VMs with the following characteristics
 Will create multiple identical Linux VMs
 
 .EXAMPLE
-./CreateLinuxVM.ps1
+./CreateLinuxVM.ps1 -NumVMS 3 -NumDataDisks 2
 
 .NOTES
 General notes
 *** This script assumes you are already authenticated to Azure in your PowerShell console ***
     - I configure $VMCred as an environment variable
-    - You can uncomment the $VMCred section to confiugre it in this script 
+    - You can uncomment the $VMCred section to configure it in this script 
   
 Resources:
   https://docs.microsoft.com/en-us/powershell/module/az.compute/new-azvm?view=azps-4.6.1
@@ -38,12 +38,28 @@ Resources:
   https://docs.microsoft.com/en-us/azure/virtual-machines/windows/cli-ps-findimage
 
 The logic of this may seem odd - but with PowerShell you create the components of the VM then update 
-a VMConfiguration as a PSObect then at the end you roll it all up in one simple "Create VM" commamd.
+a VMConfiguration as a PSObect with each component then at the end you roll it all up in one 
+simple "Create VM" commamd.
 
 This is a common PS method for Azure resources - you create a configuration object then use that 
 configuration to create one or more instances of the object/s.
 
 #>
+
+# Set default to 3 VMs, with 2 disks each
+param(
+  [Parameter(Mandatory=$True,
+    HelpMessage="Enter number of VMs to create",  
+    Position=0)]
+  [int]$NumVMs = "3",
+  [Parameter(Mandatory=$True,
+    HelpMessage="Enter number of Data Disks to create", 
+    Position=1)]
+  [int]$NumDataDisks = "2"
+)
+
+# Usage:
+# ./CreateVoltVMs.ps1 -NumVMs "<num>" -NumDataDisk "<num>"
 
 # Stop on first error
 $ErrorActionPreference = "stop"
@@ -57,8 +73,8 @@ Set-Location $PSscriptroot
 ###====================================================================================###
 
 # Looping Variables - number of VMs and Disks
-$NumVMs      = 2
-$NumDataDisk = 2
+#$NumVMs      = 3
+#$NumDataDisk = 2
 
 # Use existing network resources: vNet, Subnet, NSG - set to your own
 $Region         = "westus2"
@@ -143,6 +159,8 @@ Write-Host "###============================================================###" 
 Write-Host "                Creating Resource Group:" $ResourceGroup
 Write-Host "               Creating Storage Account:" $VoltStorAcct.StorageAccountName
 Write-Host "    Creating Proxinmity Placement Group:" $PPGName
+Write-Host "                          Number of VMs:" $NumVMs
+Write-Host "            Number of Data Disks per VM:" $NumDataDisks
 Write-Host "###============================================================###" -ForegroundColor DarkBlue
 Write-Host ""
 
@@ -224,7 +242,7 @@ for ($i=1; $i -le $NumVMs; $i++) {
   ###===========================================================================###
   
   # Create disks if $NumDataDisk > 0
-  if ( $NumDataDisk -gt 0 ) {
+  if ( $NumDataDisks -gt 0 ) {
     # Create the disks
     for ($Disk=1; $Disk -le $NumDataDisk; $Disk++) {
   
@@ -289,8 +307,17 @@ for ($i=1; $i -le $NumVMs; $i++) {
   ###
 
 }
-
 ###=============================  END Create VM Loop   ==============================###
+
+
+Write-Host ""
+Write-Host "###====================###" -ForegroundColor Red
+Write-Host ""
+Write-Host "To delete these resources use: Remove-AzResourceGroup -Name $ResourceGroup -Force"
+Write-Host ""
+Write-Host "###====================###" -ForegroundColor Red
+Write-Host ""
+
 
 ###============================= Misc Notes
 <# 
@@ -306,12 +333,4 @@ $ImageDefinition = Get-AzGalleryImageDefinition `
    -GalleryName $GalleryName `
    -ResourceGroupName $GalleryRG `
    -Name $ImageName
-#>
-
-<#--- Uncomment this section to configure Azure authentication locally in the script
-###----   Define Login parameters for the VM   ----### 
-# VM credential information is sourced from elsewhere in this script
-$VMLocalAdminUser = "<adminusername>"
-$VMLocalAdminSecurePassword = ConvertTo-SecureString "<passwordstring>" -AsPlainText -Force
-$VMCred = New-Object System.Management.Automation.PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
 #>

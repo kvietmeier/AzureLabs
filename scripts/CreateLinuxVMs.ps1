@@ -37,6 +37,20 @@ configuration to create one or more instances of the object/s.
 
 #>
 
+# Set default to 1 VM, with 0 disks
+param(
+  [Parameter(Mandatory=$True,
+    HelpMessage="Enter number of VMs to create",  
+    Position=0)]
+  [int]$NumVMs = "1",
+  [Parameter(Mandatory=$True,
+    HelpMessage="Enter number of Data Disks to create", 
+    Position=1)]
+  [int]$NumDataDisks = "0",
+  [Parameter(Position=2)]
+  [switch]$UsePPG = $False
+)
+
 # Stop on first error
 $ErrorActionPreference = "stop"
 
@@ -48,13 +62,13 @@ Set-Location $PSscriptroot
 ###====================================================================================###
 
 # Looping/switching Variables - number of VMs and Disks and PPG use
-$NumVMs      = 1
-$NumDataDisk = 0
-$UsePPG      = "false"
+#$NumVMs      = 1
+#$NumDataDisk = 0
+#$UsePPG      = "false"
 
 
 # Use your existing network resources: vNet, Subnet, NSG
-$ResourceGroup  = "TMP-Labtesting"
+$ResourceGroup  = "TMP-LinuxTesting"
 $Region         = "westus2"
 $vNetName       = "linuxvnet01-wus2"
 $vNetRG         = "CommonResources-WestUS2"
@@ -140,8 +154,9 @@ $PPG = New-AzProximityPlacementGroup `
 Write-Host ""
 Write-Host "###============================================================###" -ForegroundColor DarkBlue
 Write-Host "                Creating Resource Group:" $ResourceGroup
-Write-Host "               Creating Storage Account:" $VMStorageAcctount.StorageAccountName
-Write-Host "     Creating Proximity Placement Group:" $PPGName
+Write-Host "               Creating Storage Account:" $VMStorageAccount.StorageAccountName
+Write-Host "                          Number of VMs:" $NumVMs
+Write-Host "            Number of Data Disks per VM:" $NumDataDisks
 Write-Host "###============================================================###" -ForegroundColor DarkBlue
 Write-Host ""
 
@@ -175,8 +190,9 @@ for ($i=1; $i -le $NumVMs; $i++) {
   # Set -vCPUCountPerCore to 1 to disable hyperthreading
   
   # Are we using a PPG?
-  if ($UsePPG -eq "false") {
-    Write-Host "Not using a Proximity Placement Group"
+  if ($UsePPG -eq $False) {
+  #if ($UsePPG) {
+    Write-Host "    Not using a Proximity Placement Group"
 
     $NewVMConfig = New-AzVMConfig -VMName $VMName `
     -VMSize $VMSize `
@@ -185,7 +201,7 @@ for ($i=1; $i -le $NumVMs; $i++) {
     -Zone $Zone
   } 
   else {
-    Write-Host "     Using Proximity Placement Group:" $PPGName
+    Write-Host "    Using Proximity Placement Group:" $PPGName
 
     $NewVMConfig = New-AzVMConfig -VMName $VMName `
     -VMSize $VMSize `
@@ -292,6 +308,14 @@ for ($i=1; $i -le $NumVMs; $i++) {
   New-AzVM -ResourceGroupName $ResourceGroup -Location $Region -VM $NewVMConfig | Out-Null
 
 }
+
+Write-Host ""
+Write-Host "###====================###" -ForegroundColor Red
+Write-Host ""
+Write-Host "To delete these resources use: Remove-AzResourceGroup -Name $ResourceGroup -Force"
+Write-Host ""
+Write-Host "###====================###" -ForegroundColor Red
+Write-Host ""
 
 ###=============================  END Create VM Loop   ==============================###
 
