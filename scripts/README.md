@@ -30,14 +30,37 @@ They are accessed like this:
 . '.\FunctionLibrary.ps1'
 ```
 
-An example of the variables stored in the "resources.ps1" file:
+An example of variables stored in the "somestuff.ps1" file and sourced in your profile:
 
 ``` powershell
 # Subscription Information
 $SubID = "xxxxxxxx-xxxx-xxxx-xxxxxxxxxxxxxxxxx"
 $SubName = "ASubscriptionName"
+
+# User Login
 $AIAuser = "user@contoso.com"
 $AIAPassword = "really should encrypt this"
+```
+
+Or use a Service Principle -
+
+```powershell
+###--- Tenant Info
+$AzureTenantID  = "xxxxxxxx-xxxx-xxxx-xxxxxxxxxxxxxxxxx"
+$AzureSubID     = "xxxxxxxx-xxxx-xxxx-xxxxxxxxxxxxxxxxx"
+$AzureSubName   = "FOO-BAR-Subscription"
+$AzureADDomain  = "foobar.onmicrosoft.com"
+
+#--- Service Principle
+$AppID      = "xxxxxxxx-xxxx-xxxx-xxxxxxxxxxxxxxxxx"
+$AppSecret  = "xxxxxxxx-xxxx-xxxx-xxxxxxxxxxxxxxxxx"
+
+# Usage:
+az login --service-principal `
+  -u $AppID `
+  -p $AppSecret`
+  --tenant $AzureTenantID
+
 ```
 
 The script:
@@ -67,7 +90,7 @@ Karl Vietmeier
 [@KarlVietmeier](https://twitter.com/karlvietmeier)
 
 ## Acknowledgments
-My colleagues on the Windows Virtual Desktop GBB Team and PowerShell Guris at MSFT-<br>
+My colleagues on the Azure Virtual Desktop GBB Team and PowerShell Gurus at MSFT-<br>
   Adam Whitlach<br>
   John Kelbly<br>
   Marc Wolfson<br>
