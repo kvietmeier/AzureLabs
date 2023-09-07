@@ -41,7 +41,7 @@ configuration to create one or more instances of the object/s.
 
 #>
 
-# Set default to 1 VM, with 0 disks
+# Set default to 1 VM, with 0 disks for looping control
 param(
   [Parameter(Mandatory=$True,
     HelpMessage="Enter number of VMs to create",  
@@ -65,19 +65,13 @@ Set-Location $PSscriptroot
 ###                              Variable Definitions                                  ###
 ###====================================================================================###
 
-# Looping/switching Variables - number of VMs and Disks and PPG use
-#$NumVMs      = 1
-#$NumDataDisk = 0
-#$UsePPG      = "false"
-
-
-# Use your existing network resources: vNet, Subnet, NSG
+# "Temp" ResourceGroup and Region
 $ResourceGroup  = "TMP-LinuxTesting"
 $Region         = "westus2"
+
+# Use your existing network resources: vNet, Subnet
 $vNetName       = "linuxvnet01-wus2"
 $vNetRG         = "CommonResources-WestUS2"
-$NsgName        = "WUS2-InboundNSG"
-$NsgRG          = "z_nsg-WUS2-Managed"
 
 # Image Definitions
 # Ubuntu - add "-gen2" to create a Gen2 VM
@@ -112,10 +106,9 @@ $CloudInit      = (Get-Content -raw $CloudinitFile)
 ###                                                                                    ###
 ###                                                                                    ###
 
-# Use existing vNet already peered to hub
+# Use existing vNet already peered to hub (use first subnet)
 $vNet      = Get-AzVirtualNetwork -Name $vNetName -ResourceGroupName $vNetRG
 $SubNetCfg = Get-AzVirtualNetworkSubnetConfig -ResourceId $vNet.Subnets[0].Id
-$NSG       = Get-AzNetworkSecurityGroup -ResourceGroupName $NsgRG -Name $NsgName
 
 
 ###====================================================================================###
@@ -125,12 +118,11 @@ $NSG       = Get-AzNetworkSecurityGroup -ResourceGroupName $NsgRG -Name $NsgName
 # If it doesn't exist - Create the resource group for the VM and resources
 Get-AzResourceGroup -Name $ResourceGroup `
   -ErrorVariable NotExist `
-  -ErrorAction SilentlyContinue
+  -ErrorAction SilentlyContinue | Out-Null
 
 if ($NotExist) {
   New-AzResourceGroup -Name $ResourceGroup -Location $Region | Out-Null
-} else { Write-Host "Using Resourcegroup:" $ResourceGroup }
-
+} 
 
 # SAs have to be unique
 $RandomStorageACCT = $(Get-Random -Minimum 10000 -Maximum 90000)
@@ -157,10 +149,13 @@ $PPG = New-AzProximityPlacementGroup `
 
 Write-Host ""
 Write-Host "###============================================================###" -ForegroundColor DarkBlue
-Write-Host "                Creating Resource Group:" $ResourceGroup
+Write-Host "                   Using Resource Group:" $ResourceGroup
 Write-Host "               Creating Storage Account:" $VMStorageAccount.StorageAccountName
 Write-Host "                          Number of VMs:" $NumVMs
 Write-Host "            Number of Data Disks per VM:" $NumDataDisks
+# Are we using a PPG?
+if ($UsePPG -eq $False) { Write-Host "  Not Using a Proximity Placement Group:" } 
+  else { Write-Host "        Using Proximity Placement Group:" $PPGName }
 Write-Host "###============================================================###" -ForegroundColor DarkBlue
 Write-Host ""
 
@@ -196,23 +191,16 @@ for ($i=1; $i -le $NumVMs; $i++) {
   # Are we using a PPG?
   if ($UsePPG -eq $False) {
   #if ($UsePPG) {
-    Write-Host "    Not using a Proximity Placement Group"
-
-    $NewVMConfig = New-AzVMConfig -VMName $VMName `
-    -VMSize $VMSize `
-    -DiskControllerType $DiskController `
-    -EnableUltraSSD `
-    -Zone $Zone
+    $NewVMConfig = New-AzVMConfig -VMName $VMName -VMSize $VMSize -DiskControllerType $DiskController -EnableUltraSSD -Zone $Zone
   } 
   else {
-    Write-Host "    Using Proximity Placement Group:" $PPGName
-
-    $NewVMConfig = New-AzVMConfig -VMName $VMName `
-    -VMSize $VMSize `
-    -DiskControllerType $DiskController `
-    -EnableUltraSSD `
-    -ProximityPlacementGroupId $PPG.Id `
-    -Zone $Zone 
+    $NewVMConfig = New-AzVMConfig`
+      -VMName $VMName `
+      -VMSize $VMSize `
+      -DiskControllerType $DiskController `
+      -EnableUltraSSD `
+      -ProximityPlacementGroupId $PPG.Id `
+      -Zone $Zone
   }
 
   # ToDo: Add SSH Key to VM  - Doing this in cloud-init

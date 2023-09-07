@@ -13,9 +13,9 @@ I don't use this folder as much anymore as I've shifted to Terraform for most of
 │   └───users
 ```
 
-AVD Scripts: Scripts related to AVD<br>
-users: Has a script I grabbed off GitHub to add users to AD (I use Terraform for this now).<br>
-examples: Code snippets and scripts I have downloaded - most are not mine.<br> 
+* AVD Scripts: Scripts related to AVD  
+* users: Has a script I grabbed off GitHub to add users to AD (I use Terraform for this now).  
+* examples: Code snippets and scripts I have downloaded - most are not mine.  
 
 ### Usage
 
@@ -76,7 +76,7 @@ Some of these "scripts" aren't meant to be run as a single script but are collec
 commands and code snippets to be run interactively using the ISE or VSC.
 At some point I will merge them into larger scripts as functions but for now they exist as seperate utilities.
 
-Especially - 
+Especially -
 
 ``` powershell
 scripts/NetworkTroubleshooting.ps1
@@ -90,12 +90,12 @@ Karl Vietmeier
 [@KarlVietmeier](https://twitter.com/karlvietmeier)
 
 ## Acknowledgments
-My colleagues on the Azure Virtual Desktop GBB Team and PowerShell Gurus at MSFT-<br>
-  Adam Whitlach<br>
-  John Kelbly<br>
-  Marc Wolfson<br>
-  John Jenner<br>
-  Tim Dunn<br>
+My colleagues on the Azure Virtual Desktop GBB Team and PowerShell Gurus at MSFT-
+  Adam Whitlach
+  John Kelbly
+  Marc Wolfson
+  John Jenner
+  Tim Dunn
 
 ## References
 
