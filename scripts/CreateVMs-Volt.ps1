@@ -92,7 +92,7 @@ $Version        = "latest"
 $ResourceGroup  = "TMP-VoltTesting"
 $VMSize         = "Standard_E2bds_v5"   # E#bds is required for NVMe
 $DiskController = "NVMe"                # Choices - "SCSI" and "NVMe"
-$VMPrefix       = "voltnode"
+$VMPrefix       = "vdb"
 $MgmtVMName     = "voltmgmt"
 $MgmtVMSize     = "Standard_D2ds_v5"
 $DiskPrefix     = "datadisk"
@@ -154,6 +154,8 @@ $PPG = New-AzProximityPlacementGroup `
   -IntentVMSizeList $VMSizes2, $VMSizes4, $VMSizes8, $VMSizes16, $VMSizes32, $VMSizesGP `
   -Zone $Zone
 
+# Shift forward so the Management VM is -01 (important in later loop)
+$NumVMs++
 
 Write-Host ""
 Write-Host "###============================================================###" -ForegroundColor DarkBlue
@@ -165,22 +167,121 @@ Write-Host "            Number of Data Disks per VM:" $NumDataDisks
 Write-Host "###============================================================###" -ForegroundColor DarkBlue
 Write-Host ""
 
+###===============================  Create Mgmt VM   ================================###
+###    Volt needs an "extra" VM                                                      ###
+###    This is a hack, the right way would be to create a hash of VM definitions.    ###
+
+### Resource names uses RandomID so VMs are unique
+#   Create a 3 digit random ID for naming
+$RandomID1 = $(Get-Random -Minimum 100 -Maximum 200)
+
+# Name the VM and components - a little hard coded - we want the mgmt VM to be the first one
+$VMName         = "$VMPrefix-01"
+$DNSName        = "$VMPrefix-kv01"
+$PubIP          = "$VMPrefix-PubIP-$VMName"
+$NICId          = "$VMName-NIC-$RandomID1"
+$IPConfig       = "$VMName-IPcfg"
+
+Write-Host ""
+Write-Host "###============================================================###" -ForegroundColor DarkBlue
+Write-Host "    Creating Management VM:" $VMname
+Write-Host "###============================================================###" -ForegroundColor DarkBlue
+Write-Host ""
+
+# Set basic parameters VM Name and Size for newe VM object
+# https://learn.microsoft.com/en-us/powershell/module/az.compute/new-azvmconfig?view=azps-10.1.0
+# Set -vCPUCountPerCore to 1 to disable hyperthreading
+  
+$NewVMConfig = New-AzVMConfig -VMName $VMName `
+  -VMSize $MgmtVMSize `
+  -ProximityPlacementGroupId $PPG.Id `
+  -Zone $Zone 
+
+
+###===================== Create the NIC Configuration ========================###
+#               Use existing testing vNet already peered to hub                 #
+#                 subnet has an NSG managed through Terraform                   #
+  
+$vNet      = Get-AzVirtualNetwork -Name $vNetName -ResourceGroupName $vNetRG
+$SubNetCfg = Get-AzVirtualNetworkSubnetConfig -ResourceId $vNet.Subnets[0].Id
+
+# The subnet already has an NSFG associated
+#$NSG       = Get-AzNetworkSecurityGroup -ResourceGroupName $NsgRG -Name $NsgName
+
+# Create a new static Public IP and assign a DNS record
+$PIP = New-AzPublicIPAddress `
+  -Name $PubIP `
+  -ResourceGroupName $ResourceGroup `
+  -Sku Standard `
+  -AllocationMethod Static `
+  -DomainNameLabel $DNSName `
+  -Location $Region `
+  -Zone $Zone
+
+# Start building the NIC configuration - Subnet and Public IP
+$NewIPConfig = New-AzNetworkInterfaceIpConfig -Name $IPConfig -Subnet $SubNetCfg -PublicIpAddress $PIP -Primary 
+
+# Create the NIC using the PS Objects - enable accelerated networking
+# Technically don't need NSG here - it is bound to the existing subnet in use
+$VMNIC = New-AzNetworkInterface `
+  -Name $NICId `
+  -ResourceGroupName $ResourceGroup `
+  -Location $Region `
+  -EnableAcceleratedNetworking `
+  -IpConfiguration $NewIPConfig
+
+# Add the NIC to the VM Configuration
+Add-AzVMNetworkInterface -VM $NewVMConfig -Id $VMNIC.Id
+
+###--======================= End NIC Configuration ===========================###
+  
+# Setup Bootdiags for serial console access
+$NewVMConfig = Set-AzVMBootDiagnostic `
+ -VM $NewVMConfig `
+ -Enable `
+ -ResourceGroupName $ResourceGroup `
+ -StorageAccountName $VoltStorAcct.StorageAccountName
+
+# OS definition and credentials for user  -Credential are pulled from an $Env variable.
+$NewVMConfig = Set-AzVMOperatingSystem `
+ -VM $NewVMConfig `
+ -Linux `
+ -ComputerName $VMName `
+ -CustomData $CloudInit `
+ -Credential $VMCred
+
+# Source Image
+$NewVMConfig = Set-AzVMSourceImage `
+ -VM $NewVMConfig `
+ -PublisherName $PublisherName `
+ -Offer $Offer `
+ -Skus $SKU `
+ -Version $Version
+
+
+###----> Create the Management VM using info in the layered config above
+ 
+New-AzVM -ResourceGroupName $ResourceGroup -Location $Region -VM $NewVMConfig | Out-Null
+ 
+###---  END 
+
 
 ###====================================================================================###
 ###                                VM Creation Loop                                    ###
+###                              Create the Cluster VMs                                ###
 ###====================================================================================###
 
-for ($i=1; $i -le $NumVMs; $i++) {
+for ($i=2; $i -le $NumVMs; $i++) {
   
   ### Resource names uses RandomID so VMs are unique
   #   Create a 3 digit random ID for naming
-  $RandomID = $(Get-Random -Minimum 100 -Maximum 200)
+  $RandomID2 = $(Get-Random -Minimum 100 -Maximum 200)
 
   # Name the VM and components
   $VMName         = "$VMPrefix-0$i"
   $DNSName        = "$VMPrefix-kv0$i"
   $PubIP          = "$VMPrefix-PubIP-0$i"
-  $NICId          = "$VMPrefix-NIC-$RandomID"
+  $NICId          = "$VMPrefix-NIC-$RandomID2"
   $IPConfig       = "$VMPrefix-IPcfg-0$i"
 
   Write-Host ""
@@ -308,103 +409,6 @@ for ($i=1; $i -le $NumVMs; $i++) {
 
 }
 ###=============================  END Create VM Loop   ==============================###
-
-  
-###===============================  Create Mgmt VM   ================================###
-###    Volt needs an "extra" VM                                                      ###
-###    This is a hack, the right way would be to create a hash of VM definitions.    ###
-
-
-### Resource names uses RandomID so VMs are unique
-#   Create a 3 digit random ID for naming
-$RandomID = $(Get-Random -Minimum 100 -Maximum 200)
-
-# Name the VM and components
-$VMName         = "$MgmtVMName"
-$DNSName        = "$VMPrefix-mgmt"
-$PubIP          = "$VMPrefix-PubIP-$VMName"
-$NICId          = "$VMName-NIC-$RandomID"
-$IPConfig       = "$VMName-IPcfg"
-
-Write-Host ""
-Write-Host "###============================================================###" -ForegroundColor DarkBlue
-Write-Host "    Creating VM:" $VMname
-Write-Host "###============================================================###" -ForegroundColor DarkBlue
-Write-Host ""
-
-# Set basic parameters VM Name and Size for newe VM object
-# https://learn.microsoft.com/en-us/powershell/module/az.compute/new-azvmconfig?view=azps-10.1.0
-# Set -vCPUCountPerCore to 1 to disable hyperthreading
-  
-$NewVMConfig = New-AzVMConfig -VMName $VMName `
-  -VMSize $MgmtVMSize `
-  -ProximityPlacementGroupId $PPG.Id `
-  -Zone $Zone 
-
-
-###===================== Create the NIC Configuration ========================###
-#               Use existing testing vNet already peered to hub                 #
-  
-$vNet      = Get-AzVirtualNetwork -Name $vNetName -ResourceGroupName $vNetRG
-$SubNetCfg = Get-AzVirtualNetworkSubnetConfig -ResourceId $vNet.Subnets[0].Id
-$NSG       = Get-AzNetworkSecurityGroup -ResourceGroupName $NsgRG -Name $NsgName
-
-# Create a new static Public IP and assign a DNS record
-$PIP = New-AzPublicIPAddress `
-  -Name $PubIP `
-  -ResourceGroupName $ResourceGroup `
-  -Sku Standard `
-  -AllocationMethod Static `
-  -DomainNameLabel $DNSName `
-  -Location $Region `
-  -Zone $Zone
-
-# Start building the NIC configuration - Subnet and Public IP
-$NewIPConfig = New-AzNetworkInterfaceIpConfig -Name $IPConfig -Subnet $SubNetCfg -PublicIpAddress $PIP -Primary 
-
-# Create the NIC using the PS Objects - enable accelerated networking
-# Technically don't need NSG here - it is bound to the existing subnet in use
-$VMNIC = New-AzNetworkInterface `
-  -Name $NICId `
-  -ResourceGroupName $ResourceGroup `
-  -Location $Region `
-  -EnableAcceleratedNetworking `
-  -IpConfiguration $NewIPConfig
-
-# Add the NIC to the VM Configuration
-Add-AzVMNetworkInterface -VM $NewVMConfig -Id $VMNIC.Id
-
-###--======================= End NIC Configuration ===========================###
-  
-# Setup Bootdiags for serial console access
-$NewVMConfig = Set-AzVMBootDiagnostic `
- -VM $NewVMConfig `
- -Enable `
- -ResourceGroupName $ResourceGroup `
- -StorageAccountName $VoltStorAcct.StorageAccountName
-
-# OS definition and credentials for user  -Credential are pulled from an $Env variable.
-$NewVMConfig = Set-AzVMOperatingSystem `
- -VM $NewVMConfig `
- -Linux `
- -ComputerName $VMName `
- -CustomData $CloudInit `
- -Credential $VMCred
-
-# Source Image
-$NewVMConfig = Set-AzVMSourceImage `
- -VM $NewVMConfig `
- -PublisherName $PublisherName `
- -Offer $Offer `
- -Skus $SKU `
- -Version $Version
-
-
-###----> Create the VM using info in the layered config above
- 
-New-AzVM -ResourceGroupName $ResourceGroup -Location $Region -VM $NewVMConfig | Out-Null
- 
-###---
 
 
 Write-Host ""
