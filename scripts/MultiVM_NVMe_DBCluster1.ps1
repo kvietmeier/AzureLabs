@@ -48,12 +48,12 @@ configuration to create one or more instances of the object/s.
 #>
 
 # Looping Variables - number of VMs and Disks
-# Set default to 3 VMs, with 2 disks each
+# Set default to 4 VMs, with 2 disks each
 param(
   [Parameter(Mandatory=$True,
     HelpMessage="Enter number of VMs to create",  
     Position=0)]
-  [int]$NumVMs = "3",
+  [int]$NumVMs = "4",
   [Parameter(Mandatory=$True,
     HelpMessage="Enter number of Data Disks to create", 
     Position=1)]
@@ -90,14 +90,19 @@ $Version        = "latest"
 
 # VM Config Parameters 
 $ResourceGroup  = "TMP-VoltTesting"
-$VMSize         = "Standard_E2bds_v5"   # E#bds is required for NVMe
+#$VMSize         = "Standard_E2bds_v5"   # E#bds is required for NVMe
+#$VMSize         = "Standard_E4bds_v5"
+$VMSize         = "Standard_E8bds_v5"
+#$VMSize         = "Standard_E16bds_v5"
+#$VMSize         = "Standard_E32bds_v5"
 $DiskController = "NVMe"                # Choices - "SCSI" and "NVMe"
 $VMPrefix       = "vdb"
-$MgmtVMName     = "voltmgmt"
+#$MgmtVMName     = "voltmgmt"
 $MgmtVMSize     = "Standard_D2ds_v5"
 $DiskPrefix     = "datadisk"
 $Zone           = "1"                   # Need for UltraSSD
 $PPGName        = "VoltPPG"
+
 # You have to define VMs sizes for the PG if you use a zone.
 $VMSizesGP      = "Standard_D2ds_v5"
 $VMSizes2       = "Standard_E2bds_v5"
@@ -188,7 +193,7 @@ Write-Host "    Creating Management VM:" $VMname
 Write-Host "###============================================================###" -ForegroundColor DarkBlue
 Write-Host ""
 
-# Set basic parameters VM Name and Size for newe VM object
+# Set basic parameters VM Name and Size for new VM object
 # https://learn.microsoft.com/en-us/powershell/module/az.compute/new-azvmconfig?view=azps-10.1.0
 # Set -vCPUCountPerCore to 1 to disable hyperthreading
   
@@ -274,14 +279,14 @@ New-AzVM -ResourceGroupName $ResourceGroup -Location $Region -VM $NewVMConfig | 
 for ($i=2; $i -le $NumVMs; $i++) {
   
   ### Resource names uses RandomID so VMs are unique
-  #   Create a 3 digit random ID for naming
-  $RandomID2 = $(Get-Random -Minimum 100 -Maximum 200)
+  #   Create a 4 digit random ID for naming
+  $RandomID2 = $(Get-Random -Minimum 1000 -Maximum 10000)
 
   # Name the VM and components
   $VMName         = "$VMPrefix-0$i"
   $DNSName        = "$VMPrefix-kv0$i"
   $PubIP          = "$VMPrefix-PubIP-0$i"
-  $NICId          = "$VMPrefix-NIC-$RandomID2"
+  $NICId          = "$VMName-NIC-$RandomID2"
   $IPConfig       = "$VMPrefix-IPcfg-0$i"
 
   Write-Host ""
@@ -307,7 +312,9 @@ for ($i=2; $i -le $NumVMs; $i++) {
   
   $vNet      = Get-AzVirtualNetwork -Name $vNetName -ResourceGroupName $vNetRG
   $SubNetCfg = Get-AzVirtualNetworkSubnetConfig -ResourceId $vNet.Subnets[0].Id
-  $NSG       = Get-AzNetworkSecurityGroup -ResourceGroupName $NsgRG -Name $NsgName
+
+  # Don't need this there is already an NSG attached to the subnet
+  #$NSG       = Get-AzNetworkSecurityGroup -ResourceGroupName $NsgRG -Name $NsgName
 
   # Create a new static Public IP and assign a DNS record
   $PIP = New-AzPublicIPAddress `
