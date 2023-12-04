@@ -48,17 +48,11 @@ configuration to create one or more instances of the object/s.
 
 #>
 
-# Push old output up the screen a llittle
-foreach($i in 1..10){
-  Write-Host ""
-}
-
 # Stop on first error
 $ErrorActionPreference = "stop"
 
 # Run from the location of the script
 Set-Location $PSscriptroot
-
 
 ###====================================================================================###
 ###            Create Menus to choose instance type and Num DB Nodes                   ###
@@ -69,7 +63,7 @@ Set-Location $PSscriptroot
 #$NumDisks=@("1", "2", "3")
 
 # Instances Menu - 
-$Instances=@("Standard_E2bds_v5", "Standard_E4bds_v5", "Standard_E8bds_v5", "Standard_E16bds_v5", "Standard_E32bds_v5")
+$Instances=@("Standard_D2ds_v5", "Standard_D4ds_v5", "Standard_D8ds_v5", "Standard_D16ds_v5", "Standard_D32ds_v5")
 $global:selection = $null
 do {
   Write-Host "What Instance Type are we using?"
@@ -138,7 +132,6 @@ Write-Host "$NumDataDisks" -ForegroundColor Cyan
 ###                                    End Menus                                       ###
 ###====================================================================================###
 
-<#
 ###====================================================================================###
 ###                              Variable Definitions                                  ###
 ###====================================================================================###
@@ -147,8 +140,6 @@ Write-Host "$NumDataDisks" -ForegroundColor Cyan
 $Region         = "westus2"
 $vNetName       = "testingvnet01-wsu2"
 $vNetRG         = "CommonResources-WestUS2"
-$NsgName        = "WUS2-InboundNSG"
-$NsgRG          = "z_nsg-WUS2-Managed"
 
 # Image Definitions
 # Ubuntu - add "-gen2" to create a Gen2 VM
@@ -157,33 +148,25 @@ $Offer          = "0001-com-ubuntu-server-focal"
 $SKU            = "20_04-lts-gen2"
 $Version        = "latest"
 
-# VM Config Parameters 
+# VM Config Parameters
+#  VMSize - set at run time
+#  NumVM  - set at run time
 $ResourceGroup  = "TMP-VoltTesting"
-#$VMSize         = "Standard_E2bds_v5"   # E#bds is required for NVMe
-#$VMSize         = "Standard_E4bds_v5"
-$VMSize         = "Standard_E8bds_v5"
-#$VMSize         = "Standard_E16bds_v5"
-#$VMSize         = "Standard_E32bds_v5"
-$DiskController = "NVMe"                # Choices - "SCSI" and "NVMe"
+$DiskController = "SCSI"                # Choices - "SCSI" and "NVMe"
 $VMPrefix       = "vdb"
-#$MgmtVMName     = "voltmgmt"
 $MgmtVMSize     = "Standard_D2ds_v5"
 $DiskPrefix     = "datadisk"
 $Zone           = "1"                   # Need for UltraSSD
 $PPGName        = "VoltPPG"
 
 # You have to define VMs sizes for the PG if you use a zone.
-$VMSizesGP      = "Standard_D2ds_v5"
-$VMSizes2       = "Standard_E2bds_v5"
-$VMSizes4       = "Standard_E4bds_v5"
-$VMSizes8       = "Standard_E8bds_v5"
-$VMSizes16      = "Standard_E16bds_v5"
-$VMSizes32      = "Standard_E32bds_v5"
+#- You have to define VMs sizes for the PG if you use a zone."
+#  Convert @Instances array to a "String[]"
+$PPGAllowedVMSizes = [string[]]$Instances
 
 # Process a cloud-init file
 # Use the one I use for Terraform
 $CloudinitFile  = "C:\Users\ksvietme\repos\Terraform\azure\secrets\cloud-init.voltdb"
-$Bytes          = [System.Text.Encoding]::Unicode.GetBytes((Get-Content -raw $CloudinitFile))
 $CloudInit      = (Get-Content -raw $CloudinitFile)
 
 
@@ -216,7 +199,7 @@ New-AzStorageAccount -ResourceGroupName $ResourceGroup `
   -SkuName Standard_LRS `
   -Kind StorageV2 | Out-Null
 
-# Store the PS Object
+# Store the PS Object for later use
 $VoltStorAcct = Get-AzStorageAccount -ResourceGroupName $ResourceGroup -Name deleteme${RandomStorageACCT} 
 
 # For DB testing we need a Proximity Group - Zone requires defining VM sizes
@@ -225,7 +208,7 @@ $PPG = New-AzProximityPlacementGroup `
   -Name $PPGName `
   -ResourceGroupName $ResourceGroup `
   -ProximityPlacementGroupType Standard `
-  -IntentVMSizeList $VMSizes2, $VMSizes4, $VMSizes8, $VMSizes16, $VMSizes32, $VMSizesGP `
+  -IntentVMSizeList $PPGAllowedVMSizes `
   -Zone $Zone
 
 # Shift forward so the Management VM is -01 (important in later loop)
@@ -510,7 +493,4 @@ $ImageDefinition = Get-AzGalleryImageDefinition `
    -GalleryName $GalleryName `
    -ResourceGroupName $GalleryRG `
    -Name $ImageName
-#>
-
-
 #>

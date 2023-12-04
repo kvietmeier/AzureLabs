@@ -80,7 +80,7 @@ $Offer          = "0001-com-ubuntu-server-focal"
 $SKU            = "20_04-lts-gen2"
 $Version        = "latest"
 
-# VM Config Parameters 
+# VM Config Parameters
 $VMPrefix       = "labnode"
 $DiskPrefix     = "datadisk"
 $VMSize         = "Standard_D2ds_v5"    # E#bds is required for NVMe
@@ -88,17 +88,15 @@ $DiskController = "SCSI"                # Choices - "SCSI" and "NVMe"
 $Zone           = "1"                   # Need for UltraSSD
 $PPGName        = "LabTestingPPG"
 
-<# Common VM Sizes
-Standard_D2ds_v5
-Standard_D4ds_v5
-Standard_D8ds_v5
-Standard_B2s
-#>
+#- You have to define VMs sizes for the PG if you use a zone."
+#  Convert @Instances array to a "String[]"
+$Instances=@("Standard_D2ds_v5", "Standard_D4ds_v5", "Standard_D8ds_v5", "Standard_D16ds_v5", "Standard_D32ds_v5")
+$PPGAllowedVMSizes = [string[]]$Instances
+
 
 # Process a cloud-init file
 # Use the one I use for Terraform
 $CloudinitFile  = "C:\Users\ksvietme\repos\Terraform\azure\secrets\cloud-init.simple"
-$Bytes          = [System.Text.Encoding]::Unicode.GetBytes((Get-Content -raw $CloudinitFile))
 $CloudInit      = (Get-Content -raw $CloudinitFile)
 
 ###====================================================================================###
@@ -143,7 +141,7 @@ $PPG = New-AzProximityPlacementGroup `
   -Name $PPGName `
   -ResourceGroupName $ResourceGroup `
   -ProximityPlacementGroupType Standard `
-  -IntentVMSizeList $VMSize `
+  -IntentVMSizeList $PPGAllowedVMSizes `
   -Zone $Zone
 
 
@@ -190,8 +188,12 @@ for ($i=1; $i -le $NumVMs; $i++) {
   
   # Are we using a PPG?
   if ($UsePPG -eq $False) {
-  #if ($UsePPG) {
-    $NewVMConfig = New-AzVMConfig -VMName $VMName -VMSize $VMSize -DiskControllerType $DiskController -EnableUltraSSD -Zone $Zone
+    $NewVMConfig = New-AzVMConfig`
+     -VMName $VMName `
+     -VMSize $VMSize `
+     -DiskControllerType $DiskController `
+     -EnableUltraSSD `
+     -Zone $Zone
   } 
   else {
     $NewVMConfig = New-AzVMConfig`

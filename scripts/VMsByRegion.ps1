@@ -125,8 +125,8 @@ ForEach ($Region in Get-AzLocation)
   # when run by hand - return the instances correctly.
 
   #Start-Sleep -Seconds 5
-  #Get-AzVMSize -Location $Region.Location -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_DCe*s.*v5' } | ConvertTo-Csv -NoTypeInformation
-  Get-AzVMSize -Location $Region.Location -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_DC.[^a]*s.*v5' } | ConvertTo-Csv -NoTypeInformation
+  Get-AzVMSize -Location $Region.Location -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_DCe*s.*v5' } | ConvertTo-Csv -NoTypeInformation
+  #Get-AzVMSize -Location $Region.Location -ErrorAction SilentlyContinue | Where-Object { $_.Name -Match 'Standard_DC.[^a]*s.*v5' } | ConvertTo-Csv -NoTypeInformation
   
   <# Try to output to CSV directly
   Get-AzVMSize -Location $Region.Location `

@@ -22,10 +22,11 @@ Create a group of indentical Linux VMs with the following characteristics
  * This version creates an additional "mgmt" VM.
 
 .DESCRIPTION
-Will create multiple identical Linux VMs + a "mgmt" VM
+Will prompt the user to choose an Instance type and a number of VMs with a fixed number of data disks
+The script then builds a set of VMs to be used for a DB cluster.
 
 .EXAMPLE
-./CreateLinuxVM.ps1 -NumVMS 3 -NumDataDisks 2
+Run the script to be prompted
 
 .NOTES
 General notes
@@ -47,27 +48,95 @@ configuration to create one or more instances of the object/s.
 
 #>
 
-# Looping Variables - number of VMs and Disks
-# Set default to 4 VMs, with 2 disks each
-param(
-  [Parameter(Mandatory=$True,
-    HelpMessage="Enter number of VMs to create",  
-    Position=0)]
-  [int]$NumVMs = "4",
-  [Parameter(Mandatory=$True,
-    HelpMessage="Enter number of Data Disks to create", 
-    Position=1)]
-  [int]$NumDataDisks = "2"
-)
-
-# Usage:
-# ./CreateVoltVMs.ps1 -NumVMs "<num>" -NumDataDisk "<num>"
+# Push old output up the screen a llittle
+foreach($i in 1..10){
+  Write-Host ""
+}
 
 # Stop on first error
 $ErrorActionPreference = "stop"
 
 # Run from the location of the script
 Set-Location $PSscriptroot
+
+
+###====================================================================================###
+###            Create Menus to choose instance type and Num DB Nodes                   ###
+###====================================================================================###
+# Looping Variables - number of VMs and Disks Pick an instance type amd number of VMs
+# Setup Menu
+#$NumberOfVMs=@("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
+#$NumDisks=@("1", "2", "3")
+
+# Instances Menu - 
+$Instances=@("Standard_E2bds_v5", "Standard_E4bds_v5", "Standard_E8bds_v5", "Standard_E16bds_v5", "Standard_E32bds_v5")
+$global:selection = $null
+do {
+  Write-Host "What Instance Type are we using?"
+  
+  for ($i=0; $i -lt $Instances.count; $i++) {
+    Write-Host -ForegroundColor Cyan " $($i+1)." $Instances[$i]
+  }
+  
+  Write-Host
+  $global:ans = (Read-Host 'Choose an Instance') -as [int]
+
+
+} while ((-not $ans) -or (0 -gt $ans) -or ($Instances.count -lt $ans))
+
+$global:selection = $Instances[$ans - 1]
+$VMSize = $global:selection
+
+# How many VMs?
+Write-Host ""
+$VMPrompt = "How Many Database Nodes? (choose between 3 and 11)"
+#Write-Host "$NumVMs" -ForegroundColor Cyan
+
+$InputBlock = {
+  try {
+
+    $InputNumVMs = [int](Read-Host -Prompt $VMPrompt)
+
+    if ($InputNumVMs -le 2) {
+      Write-Host "Must be greater than 2 VMs"
+      & $Inputblock
+    }
+    elseif ($InputNumVMs -ge 12) {
+      Write-Host "Cluster size is less than 12"
+      & $Inputblock
+    }
+    else {
+      $InputNumVMs
+    }
+
+  }
+  catch {
+    Write-Host "Number of VMs has to be a number"
+    & $Inputblock
+  }
+}
+
+# Get the correct number
+$NumVMs = & $InputBlock
+
+
+# Going to hard code number of disks for now
+Write-Host ""
+[int]$NumDataDisks = "2"
+
+# Output Summary - using -NoNewLine lets you use more than one color on a line
+Write-Host "Creating a DB cluster with:" -ForegroundColor Green
+Write-Host "   Instance Type   = " -NoNewline 
+Write-Host "$VMSize" -ForegroundColor Cyan
+Write-Host "   Number of nodes = " -NoNewline
+Write-Host "$NumVMs" -ForegroundColor Cyan
+Write-Host "Number of NVME SSD = " -NoNewline
+Write-Host "$NumDataDisks" -ForegroundColor Cyan
+
+
+###====================================================================================###
+###                                    End Menus                                       ###
+###====================================================================================###
 
 
 ###====================================================================================###
@@ -78,8 +147,6 @@ Set-Location $PSscriptroot
 $Region         = "westus2"
 $vNetName       = "testingvnet01-wsu2"
 $vNetRG         = "CommonResources-WestUS2"
-$NsgName        = "WUS2-InboundNSG"
-$NsgRG          = "z_nsg-WUS2-Managed"
 
 # Image Definitions
 # Ubuntu - add "-gen2" to create a Gen2 VM
@@ -89,32 +156,24 @@ $SKU            = "20_04-lts-gen2"
 $Version        = "latest"
 
 # VM Config Parameters 
+# VMSize - set at run time
+# NumVM  - set at run time
 $ResourceGroup  = "TMP-VoltTesting"
-#$VMSize         = "Standard_E2bds_v5"   # E#bds is required for NVMe
-#$VMSize         = "Standard_E4bds_v5"
-$VMSize         = "Standard_E8bds_v5"
-#$VMSize         = "Standard_E16bds_v5"
-#$VMSize         = "Standard_E32bds_v5"
 $DiskController = "NVMe"                # Choices - "SCSI" and "NVMe"
 $VMPrefix       = "vdb"
-#$MgmtVMName     = "voltmgmt"
 $MgmtVMSize     = "Standard_D2ds_v5"
 $DiskPrefix     = "datadisk"
 $Zone           = "1"                   # Need for UltraSSD
 $PPGName        = "VoltPPG"
 
-# You have to define VMs sizes for the PG if you use a zone.
-$VMSizesGP      = "Standard_D2ds_v5"
-$VMSizes2       = "Standard_E2bds_v5"
-$VMSizes4       = "Standard_E4bds_v5"
-$VMSizes8       = "Standard_E8bds_v5"
-$VMSizes16      = "Standard_E16bds_v5"
-$VMSizes32      = "Standard_E32bds_v5"
+#- You have to define VMs sizes for the PG if you use a zone."
+#  Convert @Instances array to a "String[]"
+$PPGAllowedVMSizes = [string[]]$Instances
+
 
 # Process a cloud-init file
 # Use the one I use for Terraform
 $CloudinitFile  = "C:\Users\ksvietme\repos\Terraform\azure\secrets\cloud-init.voltdb"
-$Bytes          = [System.Text.Encoding]::Unicode.GetBytes((Get-Content -raw $CloudinitFile))
 $CloudInit      = (Get-Content -raw $CloudinitFile)
 
 
@@ -150,13 +209,13 @@ New-AzStorageAccount -ResourceGroupName $ResourceGroup `
 # Store the PS Object
 $VoltStorAcct = Get-AzStorageAccount -ResourceGroupName $ResourceGroup -Name deleteme${RandomStorageACCT} 
 
-# For DB testing we need a Proximity Group - Zone requires defining VM sizes
+# For DB testing we need a Proximity Group - Zone requires defining VM sizes - use Instance list as string[]
 $PPG = New-AzProximityPlacementGroup `
   -Location $Region `
   -Name $PPGName `
   -ResourceGroupName $ResourceGroup `
   -ProximityPlacementGroupType Standard `
-  -IntentVMSizeList $VMSizes2, $VMSizes4, $VMSizes8, $VMSizes16, $VMSizes32, $VMSizesGP `
+  -IntentVMSizeList $PPGAllowedVMSizes `
   -Zone $Zone
 
 # Shift forward so the Management VM is -01 (important in later loop)
@@ -441,4 +500,7 @@ $ImageDefinition = Get-AzGalleryImageDefinition `
    -GalleryName $GalleryName `
    -ResourceGroupName $GalleryRG `
    -Name $ImageName
+#>
+
+
 #>

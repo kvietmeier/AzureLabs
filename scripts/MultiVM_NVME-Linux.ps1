@@ -95,17 +95,17 @@ $VMPrefix       = "voltnode"
 $DiskPrefix     = "datadisk"
 $Zone           = "1"                   # Need for UltraSSD
 $PPGName        = "VoltPPG"
-# You have to define VMs sizes for the PG if you use a zone.
-$VMSizes2       = "Standard_E2bds_v5"
-$VMSizes4       = "Standard_E4bds_v5"
-$VMSizes8       = "Standard_E8bds_v5"
-$VMSizes16      = "Standard_E16bds_v5"
-$VMSizes32      = "Standard_E32bds_v5"
+
+
+#- You have to define VMs sizes for the PG if you use a zone."
+#  Convert @Instances array to a "String[]"
+$Instances=@("Standard_E2bds_v5", "Standard_E4bds_v5", "Standard_E8bds_v5", "Standard_E16bds_v5", "Standard_E32bds_v5")
+$PPGAllowedVMSizes = [string[]]$Instances
+
 
 # Process a cloud-init file
 # Use the one I use for Terraform
 $CloudinitFile  = "C:\Users\ksvietme\repos\Terraform\azure\secrets\cloud-init.voltdb"
-$Bytes          = [System.Text.Encoding]::Unicode.GetBytes((Get-Content -raw $CloudinitFile))
 $CloudInit      = (Get-Content -raw $CloudinitFile)
 
 
@@ -147,7 +147,7 @@ $PPG = New-AzProximityPlacementGroup `
   -Name $PPGName `
   -ResourceGroupName $ResourceGroup `
   -ProximityPlacementGroupType Standard `
-  -IntentVMSizeList $VMSizes2, $VMSizes4, $VMSizes8, $VMSizes16, $VMSizes32 `
+  -IntentVMSizeList $PPGAllowedVMSizes `
   -Zone $Zone
 
 
