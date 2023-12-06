@@ -1,0 +1,15 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachines_tdxtest02_name": {
+            "value": null
+        },
+        "disks_tdxtest02_OsDisk_1_544da5d25bef4e3bad5c7149a406c0d7_externalid": {
+            "value": null
+        },
+        "networkInterfaces_tdxtest02715_externalid": {
+            "value": null
+        }
+    }
+}

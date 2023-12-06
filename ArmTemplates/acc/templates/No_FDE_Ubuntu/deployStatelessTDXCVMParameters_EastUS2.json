@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "East US 2"
+    },
+    "vmSize": {
+      "value": "Standard_DC4es_v5"
+    },
+    "osImageName": {
+      "value": "Ubuntu 22.04 LTS Gen 2 TDX"
+    },
+    "osType": {
+      "value": "Linux"
+    },
+    "osDiskType": {
+      "value": "Standard_LRS"
+    },
+    "securityType": {
+      "value": "NonPersistedTPM"
+    },
+    "diskSecurityType": {
+      "value": "ConfidentialVM_NonPersistedTPM"
+    },
+    "secureBootEnabled": {
+      "value": "false"
+    },
+    "vTpmEnabled": {
+      "value": "true"
+    },
+    "adminUsername": {
+      "value": "accuser"
+    },
+    "authenticationType": {
+      "value": "password"
+    },
+    "adminPasswordOrKey": {
+      "value": "Chalc0pyrite"
+    }
+  }
+}

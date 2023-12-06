@@ -1,0 +1,43 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "North Europe"
+    },
+    "vmSize": {
+      "value": "Standard_DC4es_v5"
+    },
+    "osImageName": {
+      "value": "SUSE Enterprise Linux 15 SP5"
+    },
+    "osType": {
+      "value": "Linux"
+    },
+    "osDiskType": {
+      "value": "Standard_LRS"
+    },
+    "securityType": {
+      "value": "NonPersistedTPM"
+    },	
+    "diskSecurityType": {
+	  "Value": "ConfidentialVM_NonPersistedTPM"
+    },
+    "secureBootEnabled": {
+      "value": "false"
+    },
+    "vTpmEnabled": {
+      "value": "true"
+    },	
+    "adminUsername": {
+      "value": "accuser"
+    },
+	"authenticationType": {
+	  "value": "password"
+	},
+    "adminPasswordOrKey": {
+      "value": "<EnterYourPassword>"
+    }      
+  }
+}
+

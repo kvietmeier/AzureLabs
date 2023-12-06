@@ -1,0 +1,189 @@
+#cloud-config
+# vim: syntax=yaml
+#
+###=============================================================================###
+# Bootstrap setup for a Linux server
+# 
+# Make sure you have all of the tools you need!
+# 
+# cloud-init docs:
+#   https://cloudinit.readthedocs.io/en/latest/index.html 
+# 
+# Examples:
+#   https://cloudinit.readthedocs.io/en/latest/topics/examples.html
+#
+###=============================================================================###
+
+# Upgrade the instance on first boot
+# (ie run apt-get upgrade)
+package_upgrade: true
+
+# Add some additional repos
+apt_sources:
+  # Python
+  - source: "ppa:deadsnakes/ppa"
+
+# Fix locking issues
+apt:
+  conf: |
+    Acquire::Retries "60";
+    DPkg::Lock::Timeout "60";
+
+# Install additional packages on first boot
+packages:
+  # DPDK Dependencies
+  - librdmacm-dev
+  - librdmacm1
+  - libnuma-dev
+  - libmnl-dev
+  - libpcap-dev
+  - autoconf 
+  - lib32z1
+  - meson
+  - pkg-config
+  - cmake
+    # Python3
+  - python3-pyelftools
+  #- python-pyelftools
+  - python3-pip
+  # For iperf3
+  - libsctp1
+  # Useful stuff you need
+  - build-essential
+  - libtool
+  - screen
+  - git
+  - tree
+  - slurm
+  - psmisc
+  - net-tools
+  - nfs-common
+  - sysstat
+  - dnsutils
+  - apt-file
+  - vim
+  - curl
+  - bmon
+  - ccze
+  - saidar
+  - cloud-utils
+  - wget
+  - jq
+  - software-properties-common
+  # Install perf utilities
+  - linux-tools-generic
+  - linux-tools-azure
+  #zure perf/system related tools
+  - dstat
+  - numactl
+  - cpuinfo
+  - hwinfo
+  - stress-ng
+  - ifstat
+  - dstat
+  - nmon
+  - psmisc
+  - blktrace
+  # Need these to support apt over http
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg-agent
+  - software-properties-common
+  # Misc packages just good to have current versions
+  - openjdk-17-jre-headless
+
+# Run commands once on first boot - clone and compile useful tools
+runcmd:
+  # Needed for DPDK
+  - [pip3, install, ninja]
+  - [pip3, install, meson]
+  # Compile/install iperf3
+  - [git, clone, https://github.com/esnet/iperf.git]
+  - [cd, iperf]
+  - ['./configure']
+  - [make]
+  - [make, install]
+  - [/usr/sbin/ldconfig]
+  - [cd, ~]
+  # Compile/install sockperf
+  - [git, clone, https://github.com/mellanox/sockperf]
+  - [cd, sockperf]
+  - ['./autogen.sh']
+  - ['./configure']
+  - [make]
+  - [make, install]
+  - [cd, ~]
+  # Compile/install FIO
+  - [git, clone, https://github.com/axboe/fio.git]
+  - [cd, fio]
+  - ['./configure']
+  - [make]
+  - [make, install]
+  - [cd, ~]
+  # System cleanup
+  - [apt-get, clean, -yy]
+  - [apt-get, autoremove, -yy]
+  - [mandb, -c]
+  - [apt-file, update]
+  # Create some directories
+  - [mkdir, /tmp/output]
+  - [mkdir, /mnt/huge]
+
+
+###--- Users
+users:
+  # Keep the original default user (azureuser)
+  - name: default
+    ssh-authorized-keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC191SVNBDjAymcZcXf/ANjed+kNZt6r8Y53+NXkfLgTNWx+k9ofDW1DrlD+GBWakop7xNfUdXRSBMtXxSAdhY1sWCbHPafXlPVtZxFz8mvleqQW+I1oHWlG+Pv5fptsRpKG1CkRBno13JhB4BWEoA7GMxISktymKMgeuu7YMemlPh3DdoYiZrjVYwF775mAmHXlSJrozswWZzUJCT+nhabIeiks4/Y2ofQE5jtcJZeqOvG4WSZ/QUGhWpUm3f8giOFFIvnaqvP+tu3chHpMeVdoIt/Q0LApt2OcDM/GClrgKRpGT++q5TJjCn077Qlrvow5+FdLTJREffBpEuJbk9yr5GYh4htPRYnjRJ1ufPinxBzDPhl1vuydWbCGbbII4B620Qtp+mKLdivwZWn1eK/1PA08fQzhNojir/pjBGopiyycLWAnwvykIQjQooIVg4F79CHmNycQjKJHLHNVcaKuhY/kqAwtNsQK8wrPbj0P3fO9cZhyngF2xI2oOZKxAs= amr\ksvietme@ksvietme-mobl1
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC0Lm1VRw+QoaSlfvQCcyOee5tb7RJaMKRP+w2dKYnUFOmT0cfWlP2CCT4b8K8Q5Vz6VvQJ4k1H73L4dFoR2xcxITKKsOFUehF+zQDFEBCuYVTcFX5qEewAdAPWVS92Txlwm7dNWszkmeRxYqHyNnhh71xKLNh5Fq1aJlY8x9TnSMMLHjAjJvbRCfhzz10tjooB8l7UsX9SAdkceJO4ovi0VanJeG9RqOlIUQofpJsk7GCucka/lD8CAfIVlspt8scICvkGPjMqCfq9PbNyabM2e8Oo1tlxZdrk6a+gvybJrKMpfmlY+/qTQmBTKAzvlytajxeNnjdB+ZRAnTM6yXvzT/a/Ov0AJ6Tq8tBjrulbRXLqPw1Aa+gSvqeVgmztqtk/F0RK7mTfChYqsw2/t3Ib1zhHGiteYsGCWXGnyot/nm3Nd2J/gyR+wHvJO/jdeB/qgM2OfXQ+Tpeptk1sUSsmKyZDPpFmlZ/BQnpd6+b0/G7KR/BSGx7MKoTzjFsPBMs= ksvietme@ksvietme-mobl1
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/KvmOn2tqd2kV4CoHhoN/l2WQt8LvL9AF3eZ940TYBE+4bGdvevbyChm3FNIg6359EGD+Owt3pKDb2h0X6n7vYMLqpFoXyawWAf9eOVBdXYYDGULym24B4t4Ij14v5f0fibRQ5+7qoD6TkpZ9gUnl/vEgsoARyrOSUxrteaFT6HtZe+1+IhhEzbON0tCvQsbZEWrtaspUaLJeScNve5JfL2dVo3zW/SPgb8PJ7ZD8Npym2y2UFh41er2DW8PKFsw3l4yQHjK0jJ1PQhJRneC8m5QymtpxYTQ464tXQjtQWq5f2UcqbXqznVbvRqiPzK+mukwzDvreTJ71dvfKP8gcQl4dpE24tVmdgvBYcQpXtdQhGDvG5E14V3rZIOCGtL6ZezcT66oHDhZvUZBzs1vxY/1NQziPMFxknhJ+0M5yPRGMcEsEviCPweQI/wOHurzQPBqcr+b34Yyx6JdwzBmMpKY20mESyMZdRWMjv5amK6+sqkFzsUHGXYwhoFI6bI0= amr\ksvietme@ksvietme-desk
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCg+Zwgb6lHJfAn7+29LJlnG28FjY5ShypmoiZlNZ1/YtlbsSDUfWs3Zhy+LGsfx8Fl6j/dU5e5j06A5monnM0sTr8rshqFbCMNfMtA1xQg37Uq5fELoJBaJI0h5vIZgoX5XREBWlcgoH1kha1q1Q8087fR+GLMIzZhigmOnzmLPsVU6SKwufibAJAW8G5hgSAlQd9X3BHcqhYX27cJfhQJ3pxD0wHqTI5lv3cyIyELDefIOtV+Y0HoaaqVzhrfy9JTNfEqtvghJZffGn7TPb2Nfo2D+SIxrtwpBO0IoZKum2j63qzfM7lRsv/kGFy0s2Q5g4DErytMJdqwukCUYoG+HyqwBVFp+JyEK1cO6W0rqSxNnBQtaKZhi2rwzOPfGtQZ7PohNaz2PV5NiaU4iJDczF478xZQwKd/SrTAgxCsqRyRrEImafECT9+qx7rlJ1GpFH4rDxz9f7Q+iRx3ys5mDo912GpysJke66gPlKxbWAhk34c/o+8QvgIFc45zVGs= azureuser@linuxtools
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCc6L8p7/08yn7F1sAVD7RFqY6lWdTBcO++nmFW3fGB6p3L7R8+zTsq3o7Lzl3vUFGhYliWfmmcTDGmk6TFykMtOCVskIFW14VY8EHT0NjqFXNW8jCjt7KoBKKKICJTBsABtEFPYeThJvJ+O3exolBZMuzyrfkQNq4V6sMmckNgOM6YsCRkLopwNrMcVwFf5Rc+qdinD86PnPQLDf+lU7TmiMqkzvtc+SJ3zbNzb0D0VMsjplltMpnoIxCAUBU0SQ9zpG6MdAKw1Ajg/iIuGrQfVWlOczsE6dQQAkBsVFeWIpr+3jCD1SXMwfCWGDb2dK5t7V2Jqe0FNSF68PFeWfDvuZbeCw1U5RWqLozqjyOIKt27ml5gbVUIaUSUi0brKBH/KXBV39ihagqZJs2AhFZhYk7eomTcjKFPHMnmZiW3fWx6oCve/804djGQ5nx0iqOZRhoVjKCsNVsv6L+54+B7PkpvBpfYEjljP17OdG7d6aednqWQi3juvxSh7T0YxM8= root@linuxtools
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    groups: sudo
+    shell: /bin/bash
+    # Configure Azure added user - With additional SSH keys
+  - name: ubuntu
+    ssh-authorized-keys:
+    - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC191SVNBDjAymcZcXf/ANjed+kNZt6r8Y53+NXkfLgTNWx+k9ofDW1DrlD+GBWakop7xNfUdXRSBMtXxSAdhY1sWCbHPafXlPVtZxFz8mvleqQW+I1oHWlG+Pv5fptsRpKG1CkRBno13JhB4BWEoA7GMxISktymKMgeuu7YMemlPh3DdoYiZrjVYwF775mAmHXlSJrozswWZzUJCT+nhabIeiks4/Y2ofQE5jtcJZeqOvG4WSZ/QUGhWpUm3f8giOFFIvnaqvP+tu3chHpMeVdoIt/Q0LApt2OcDM/GClrgKRpGT++q5TJjCn077Qlrvow5+FdLTJREffBpEuJbk9yr5GYh4htPRYnjRJ1ufPinxBzDPhl1vuydWbCGbbII4B620Qtp+mKLdivwZWn1eK/1PA08fQzhNojir/pjBGopiyycLWAnwvykIQjQooIVg4F79CHmNycQjKJHLHNVcaKuhY/kqAwtNsQK8wrPbj0P3fO9cZhyngF2xI2oOZKxAs= amr\ksvietme@ksvietme-mobl1
+    - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC0Lm1VRw+QoaSlfvQCcyOee5tb7RJaMKRP+w2dKYnUFOmT0cfWlP2CCT4b8K8Q5Vz6VvQJ4k1H73L4dFoR2xcxITKKsOFUehF+zQDFEBCuYVTcFX5qEewAdAPWVS92Txlwm7dNWszkmeRxYqHyNnhh71xKLNh5Fq1aJlY8x9TnSMMLHjAjJvbRCfhzz10tjooB8l7UsX9SAdkceJO4ovi0VanJeG9RqOlIUQofpJsk7GCucka/lD8CAfIVlspt8scICvkGPjMqCfq9PbNyabM2e8Oo1tlxZdrk6a+gvybJrKMpfmlY+/qTQmBTKAzvlytajxeNnjdB+ZRAnTM6yXvzT/a/Ov0AJ6Tq8tBjrulbRXLqPw1Aa+gSvqeVgmztqtk/F0RK7mTfChYqsw2/t3Ib1zhHGiteYsGCWXGnyot/nm3Nd2J/gyR+wHvJO/jdeB/qgM2OfXQ+Tpeptk1sUSsmKyZDPpFmlZ/BQnpd6+b0/G7KR/BSGx7MKoTzjFsPBMs= ksvietme@ksvietme-mobl1
+    - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/KvmOn2tqd2kV4CoHhoN/l2WQt8LvL9AF3eZ940TYBE+4bGdvevbyChm3FNIg6359EGD+Owt3pKDb2h0X6n7vYMLqpFoXyawWAf9eOVBdXYYDGULym24B4t4Ij14v5f0fibRQ5+7qoD6TkpZ9gUnl/vEgsoARyrOSUxrteaFT6HtZe+1+IhhEzbON0tCvQsbZEWrtaspUaLJeScNve5JfL2dVo3zW/SPgb8PJ7ZD8Npym2y2UFh41er2DW8PKFsw3l4yQHjK0jJ1PQhJRneC8m5QymtpxYTQ464tXQjtQWq5f2UcqbXqznVbvRqiPzK+mukwzDvreTJ71dvfKP8gcQl4dpE24tVmdgvBYcQpXtdQhGDvG5E14V3rZIOCGtL6ZezcT66oHDhZvUZBzs1vxY/1NQziPMFxknhJ+0M5yPRGMcEsEviCPweQI/wOHurzQPBqcr+b34Yyx6JdwzBmMpKY20mESyMZdRWMjv5amK6+sqkFzsUHGXYwhoFI6bI0= amr\ksvietme@ksvietme-desk
+    - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCg+Zwgb6lHJfAn7+29LJlnG28FjY5ShypmoiZlNZ1/YtlbsSDUfWs3Zhy+LGsfx8Fl6j/dU5e5j06A5monnM0sTr8rshqFbCMNfMtA1xQg37Uq5fELoJBaJI0h5vIZgoX5XREBWlcgoH1kha1q1Q8087fR+GLMIzZhigmOnzmLPsVU6SKwufibAJAW8G5hgSAlQd9X3BHcqhYX27cJfhQJ3pxD0wHqTI5lv3cyIyELDefIOtV+Y0HoaaqVzhrfy9JTNfEqtvghJZffGn7TPb2Nfo2D+SIxrtwpBO0IoZKum2j63qzfM7lRsv/kGFy0s2Q5g4DErytMJdqwukCUYoG+HyqwBVFp+JyEK1cO6W0rqSxNnBQtaKZhi2rwzOPfGtQZ7PohNaz2PV5NiaU4iJDczF478xZQwKd/SrTAgxCsqRyRrEImafECT9+qx7rlJ1GpFH4rDxz9f7Q+iRx3ys5mDo912GpysJke66gPlKxbWAhk34c/o+8QvgIFc45zVGs= azureuser@linuxtools
+    - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCc6L8p7/08yn7F1sAVD7RFqY6lWdTBcO++nmFW3fGB6p3L7R8+zTsq3o7Lzl3vUFGhYliWfmmcTDGmk6TFykMtOCVskIFW14VY8EHT0NjqFXNW8jCjt7KoBKKKICJTBsABtEFPYeThJvJ+O3exolBZMuzyrfkQNq4V6sMmckNgOM6YsCRkLopwNrMcVwFf5Rc+qdinD86PnPQLDf+lU7TmiMqkzvtc+SJ3zbNzb0D0VMsjplltMpnoIxCAUBU0SQ9zpG6MdAKw1Ajg/iIuGrQfVWlOczsE6dQQAkBsVFeWIpr+3jCD1SXMwfCWGDb2dK5t7V2Jqe0FNSF68PFeWfDvuZbeCw1U5RWqLozqjyOIKt27ml5gbVUIaUSUi0brKBH/KXBV39ihagqZJs2AhFZhYk7eomTcjKFPHMnmZiW3fWx6oCve/804djGQ5nx0iqOZRhoVjKCsNVsv6L+54+B7PkpvBpfYEjljP17OdG7d6aednqWQi3juvxSh7T0YxM8= root@linuxtools
+    shell: /bin/bash
+    groups: sudo
+    sudo: ALL=(ALL) NOPASSWD:ALL  
+
+
+###--- Misc system configuration
+timezone: "America/Los_Angeles"
+
+# Use Azure host for timesync
+ntp:
+  enabled: true
+  ntp_client: chrony
+  config:
+    confpath: /etc/chrony/chrony.conf
+    packages:
+     - chrony
+    service_name: chrony
+    template: |
+       ## template:jinja
+       driftfile /var/lib/chrony/chrony.drift
+       logdir /var/log/chrony
+       maxupdateskew 100.0
+       local stratum 2
+       refclock PHC /dev/ptp_hyperv poll 3 dpoll -2
+       makestep 1.0 -1
+
+
+# Create empty files on the system
+write_files:
+- path: /root/CONFIGURED_BY_CLOUD_INIT
+
+
+final_message: Post creation OS config done
+
+###--- End File

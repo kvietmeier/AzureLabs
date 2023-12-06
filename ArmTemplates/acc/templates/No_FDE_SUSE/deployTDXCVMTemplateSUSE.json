@@ -1,0 +1,441 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "defaultValue": "East US 2",
+            "allowedValues": [
+	        "East US 2",
+        	"East US 2 EUAP",
+        	"North Europe",
+        	"West Europe"
+            ],
+            "metadata": {
+                "description": "Location for the resources."
+            }
+        },
+        "vmName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name for the Virtual Machine."
+            }
+        },
+        "osImageName": {
+            "type": "string",
+            "defaultValue": "SUSE Enterprise Linux 15 SP5",
+            "allowedValues": [
+                "SUSE Enterprise Linux 15 SP5",
+		"SUSE SAP Enterprise Linux 15 SP5"
+            ],
+            "metadata": {
+                "description": "OS Image for the Virtual Machine"
+            }
+        },
+	"osType": {
+	  "type": "string",
+	  "allowedValues": [
+		"Linux"
+	  ],
+	  "metadata": {
+		"description": "OS type for the Virtual Machine"
+	  }
+	},
+	"osDiskType": {
+	  "type": "string",
+	  "defaultValue": "Standard_LRS",
+	  "allowedValues": [
+		"Premium_LRS",
+		"Standard_LRS",
+		"StandardSSD_LRS"
+	  ],
+	  "metadata": {
+		"description": "OS disk type of the VM."
+	  }
+	}, 		
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "User name for the Virtual Machine."
+            }
+        },
+        "authenticationType": {
+            "type": "string",
+            "defaultValue": "password",
+            "allowedValues": [
+                "password",
+                "sshPublicKey"
+            ],
+            "metadata": {
+                "description": "Type of authentication to use on the Virtual Machine."
+            }
+        },
+        "adminPasswordOrKey": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Password or ssh key for the Virtual Machine."
+            }
+        },
+        "vmSize": {
+            "type": "string",
+            "defaultValue": "Standard_DC2es_v5",
+            "allowedValues": [
+                "Standard_DC2es_v5",
+                "Standard_DC4es_v5",
+                "Standard_DC8es_v5",
+                "Standard_DC16es_v5",
+                "Standard_DC32es_v5",
+                "Standard_DC48es_v5",			
+                "Standard_DC64es_v5",
+                "Standard_DC96es_v5",
+                "Standard_DC2eds_v5",
+                "Standard_DC4eds_v5",
+                "Standard_DC8eds_v5",
+                "Standard_DC16eds_v5",
+                "Standard_DC32eds_v5",
+                "Standard_DC48eds_v5",			
+                "Standard_DC64eds_v5",
+                "Standard_DC96eds_v5",
+                "Standard_EC2es_v5",
+                "Standard_EC4es_v5",
+                "Standard_EC8es_v5",
+                "Standard_EC16es_v5",
+                "Standard_EC32es_v5",
+                "Standard_EC48es_v5",			
+                "Standard_EC64es_v5",
+                "Standard_EC128es_v5",
+                "Standard_EC2eds_v5",
+                "Standard_EC4eds_v5",
+                "Standard_EC8eds_v5",
+                "Standard_EC16eds_v5",
+                "Standard_EC32eds_v5",
+                "Standard_EC48eds_v5",			
+                "Standard_EC64eds_v5",
+                "Standard_EC128eds_v5"
+            ],
+            "metadata": {
+                "description": "Size of the VM."
+            }
+        },
+        "vnetPrefixes": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/24",
+            "metadata": {
+                "description": "VNET Adress Space"
+            }
+        },
+        "subnetPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/24",
+            "metadata": {
+                "description": "Subnet prefix of the virtual network"
+            }
+        },
+        "inboundPorts": {
+            "type": "string",
+            "defaultValue": "Enable",
+            "allowedValues": [
+                "Enable",
+                "Disable"
+            ],
+            "metadata": {
+                "description": "Select whether or not to enable virtual machine network to be accessible from the public internet"
+            }
+        },
+        "acceleratedNetworking": {
+            "type": "string",
+            "defaultValue": "Disable",
+            "allowedValues": [
+                "Enable",
+                "Disable"
+            ],
+            "metadata": {
+                "description": "Select whether or not to enable acclerated networking"
+            }
+        },
+        "bootDiagnostics": {
+            "type": "string",
+            "defaultValue": "Disable",
+            "allowedValues": [
+                "Enable",
+                "Disable"
+            ],
+            "metadata": {
+                "description": "Determine whether or not to capture serial console output and screenshots of the virtual machine running on a host to help diagnose startup issues"
+            }
+        },
+        "securityType": {
+          "type": "string",
+          "defaultValue": "NonPersistedTPM",
+          "allowedValues": [
+            "NonPersistedTPM"
+          ],
+          "metadata": {
+              "description": "VM security type."
+          }
+        },
+	"diskSecurityType": {
+	  "type": "string",
+	  "defaultValue": "ConfidentialVM_NonPersistedTPM",
+	  "allowedValues": [
+		"ConfidentialVM_VMGuestStateOnlyEncryptedWithPlatformKey",
+		"ConfidentialVM_DiskEncryptedWithPlatformKey",
+		"ConfidentialVM_DiskEncryptedWithCustomerKey",
+		"ConfidentialVM_NonPersistedTPM"
+	  ],
+	  "metadata": {
+		"description": "VM security type."
+	  }
+	},	
+	"secureBootEnabled": {
+	  "type": "string",
+	  "defaultValue": "true",
+	  "allowedValues": [
+		"true",
+		"false"
+	  ],
+	  "metadata": {
+		"description": "Secure Boot setting of the VM."
+	  }
+	},
+	"vTpmEnabled": {
+	  "type": "string",
+	  "defaultValue": "true",
+	  "allowedValues": [
+		"true",
+		"false"
+	  ],
+	  "metadata": {
+		"description": "VTpm setting of the VM."
+	  }
+	}
+    },
+    "variables": {
+        "imageReference": {				
+     	    "SUSE Enterprise Linux 15 SP5": {
+		"publisher": "suse",
+                "offer": "sles-15-sp5-tdxpreview-preview",
+                "sku": "gen2",
+                "version": "latest"
+		    },
+	     "SUSE SAP Enterprise Linux 15 SP5": {
+		"publisher": "suse",
+                "offer": "sles-sap-15-sp5-tdxpreview-preview",
+                "sku": "gen2",
+                "version": "latest"
+		    },	
+        },
+        "publicIPAddressName": "[concat(parameters('vmName'), '-ip')]",
+        "nsgID": "[resourceId('Microsoft.Network/networkSecurityGroups',variables('nsgName'))]",
+        "nsgName": "[concat(parameters('vmName'), '-nsg')]",
+        "nicName": "[concat(parameters('vmName'), '-nic')]",
+        "virtualNetworkName": "[concat(parameters('vmName'), '-vnet')]",
+        "virtualNetworkResourceGroupName": "[resourceGroup().name]",
+        "subnetName": "[concat(parameters('vmName'), 'Subnet')]",     
+        "diagnosticsStorageName": "[concat(parameters('vmName'), 'diag')]",
+        "diagnosticsStorageResourceGroupName": "[resourceGroup().name]",
+        "diagnosticsStorageType": "Standard_LRS",
+        "diagnosticsStorageKind": "Storage",
+        "linuxConfiguration": {
+            "disablePasswordAuthentication": "true",
+            "ssh": {
+                "publicKeys": [
+                    {
+                        "keyData": "[parameters('adminPasswordOrKey')]",
+                        "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]"
+                    }
+                ]
+            }
+        },
+        "windowsConfiguration": {
+            "provisionVmAgent": "true"
+        },
+        "linuxSecurityRules": [
+            {
+                "name": "ssh",
+                "properties": {
+                    "access": "Allow",
+                    "description": "Allow SSH",
+                    "destinationAddressPrefix": "*",
+                    "destinationPortRange": "22",
+                    "direction": "Inbound",
+                    "priority": 200,
+                    "protocol": "Tcp",
+                    "sourceAddressPrefix": "*",
+                    "sourcePortRange": "*"
+                }
+            }
+        ],
+        "windowsSecurityRules": [
+            {
+                "name": "rdp",
+                "properties": {
+                    "access": "Allow",
+                    "description": "Allow RDP",
+                    "destinationAddressPrefix": "*",
+                    "destinationPortRange": "3389",
+                    "direction": "Inbound",
+                    "priority": 200,
+                    "protocol": "Tcp",
+                    "sourceAddressPrefix": "*",
+                    "sourcePortRange": "*"
+                }
+            }
+        ],
+        "securityRules": "[if(contains(parameters('osImageName'), 'Windows'), variables('windowsSecurityRules'), variables('linuxSecurityRules'))]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2019-07-01",
+            "name": "[concat('ResourceGroupDeployment-', uniqueString(deployment().name))]",
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": []
+                }
+            },
+            "type": "Microsoft.Resources/deployments"
+        },
+        {
+            "apiVersion": "2018-07-01",
+            "condition": "[equals(parameters('bootDiagnostics'), 'Enable')]",
+            "kind": "[variables('diagnosticsStorageKind')]",
+            "location": "[parameters('location')]",
+            "name": "[variables('diagnosticsStorageName')]",
+            "sku": {
+                "name": "[variables('diagnosticsStorageType')]"
+            },
+            "type": "Microsoft.Storage/storageAccounts"
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2018-11-01",
+            "name": "[variables('publicIPAddressName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic"
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2018-11-01",
+            "name": "[variables('nicName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[variables('publicIPAddressName')]",
+                "[variables('virtualNetworkName')]",
+                "[variables('nsgID')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipConfigNode",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId(variables('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets/', variables('virtualNetworkName'), variables('subnetName'))]"
+                            }
+                        }
+                    }
+                ],
+                "networkSecurityGroup": {
+                    "id": "[variables('nsgID')]"
+                },
+                "enableAcceleratedNetworking": "[if(equals(parameters('acceleratedNetworking'), 'Enable'), 'true', 'false')]"
+            }
+        },
+        {
+            "apiVersion": "2018-06-01",
+            "location": "[parameters('location')]",
+            "name": "[variables('virtualNetworkName')]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('vnetPrefixes')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('subnetName')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('subnetPrefix')]"
+                        }
+                    }
+                ]
+            },
+            "type": "Microsoft.Network/virtualNetworks"
+        },
+        {
+            "apiVersion": "2018-06-01",
+            "location": "[parameters('location')]",
+            "name": "[variables('nsgName')]",
+            "properties": {
+                "securityRules": "[if(equals(parameters('inboundPorts'), 'Enable'), variables('securityRules'), json('null'))]"
+            },
+            "type": "Microsoft.Network/networkSecurityGroups"
+        },
+        {
+            "apiVersion": "2022-11-01",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[parameters('vmName')]",
+			"tags": {
+					"platformsettings.host_environment.microsoft_uefi_cert_authority_template": "True"
+			},			
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('vmName')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPasswordOrKey')]",
+                    "linuxConfiguration": "[if(equals(parameters('authenticationType'), 'password'), json('null'), variables('linuxConfiguration'))]",
+                    "windowsConfiguration": "[if(contains(parameters('osImageName'), 'Windows'), variables('windowsConfiguration'), json('null'))]"
+                },
+                "storageProfile": {
+                    "osDisk": {
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "[parameters('osDiskType')]",
+                            "securityProfile": {
+								"securityEncryptionType" : "[parameters('securityType')]"
+							}
+                        }
+                    },
+                    "imageReference": "[variables('imageReference')[parameters('osImageName')]]"
+            
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+                        }
+                    ]
+                },
+                "securityProfile": {
+                    "uefiSettings" : {
+                      "secureBootEnabled": "true",
+                      "vTpmEnabled": "true"
+                    },
+                    "securityType" : "ConfidentialVM"
+                },  
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": "[equals(parameters('bootDiagnostics'), 'Enable')]",
+                        "storageUri": "[if(equals(parameters('bootDiagnostics'), 'Enable'), reference(resourceId(variables('diagnosticsStorageResourceGroupName'), 'Microsoft.Storage/storageAccounts/', variables('diagnosticsStorageName')), '2018-02-01').primaryEndpoints['blob'], json('null'))]"
+                    }
+                }       
+            }
+        }
+    ]
+}

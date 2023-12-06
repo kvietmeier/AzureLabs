@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "North Europe"
+    },
+    "vmSize": {
+      "value": "Standard_DC2es_v5"
+    },
+    "osImageName": {
+      "value": "Windows Server 2022 Gen 2"
+    },
+    "osDiskType": {
+      "value": "Standard_LRS"
+    },
+    "securityType": {
+      "value": "DiskWithVMGuestState"
+    },
+    "secureBootEnabled": {
+      "value": "true"
+    },
+    "adminUsername": {
+      "value": "accuser"
+    },
+    "authenticationType": {
+      "value": "password"
+    },
+    "adminPasswordOrKey": {
+      "value": "<EnterYourPassword>"
+    },
+    "vmName": {
+      "value": "<EnterYourVmName>"
+    }
+  }
+}

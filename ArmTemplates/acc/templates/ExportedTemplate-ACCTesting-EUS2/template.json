@@ -1,0 +1,111 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachines_tdxtest02_name": {
+            "defaultValue": "tdxtest02",
+            "type": "String"
+        },
+        "disks_tdxtest02_OsDisk_1_544da5d25bef4e3bad5c7149a406c0d7_externalid": {
+            "defaultValue": "/subscriptions/10e791eb-244c-4bab-bdb3-9eb0cc878bfe/resourceGroups/ACCTesting-EUS2/providers/Microsoft.Compute/disks/tdxtest02_OsDisk_1_544da5d25bef4e3bad5c7149a406c0d7",
+            "type": "String"
+        },
+        "networkInterfaces_tdxtest02715_externalid": {
+            "defaultValue": "/subscriptions/10e791eb-244c-4bab-bdb3-9eb0cc878bfe/resourceGroups/ACCTesting-EUS2/providers/Microsoft.Network/networkInterfaces/tdxtest02715",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2023-03-01",
+            "name": "[parameters('virtualMachines_tdxtest02_name')]",
+            "location": "eastus2",
+            "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                    "/subscriptions/10e791eb-244c-4bab-bdb3-9eb0cc878bfe/resourceGroups/Built-In-Identity-RG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/Built-In-Identity-eastus2": {}
+                }
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_DC8eds_v5"
+                },
+                "additionalCapabilities": {
+                    "hibernationEnabled": false
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "canonical",
+                        "offer": "0001-com-ubuntu-confidential-vm-jammy",
+                        "sku": "22_04-lts-cvm",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Linux",
+                        "name": "[concat(parameters('virtualMachines_tdxtest02_name'), '_OsDisk_1_544da5d25bef4e3bad5c7149a406c0d7')]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "managedDisk": {
+                            "securityProfile": {
+                                "securityEncryptionType": "VMGuestStateOnly"
+                            },
+                            "id": "[parameters('disks_tdxtest02_OsDisk_1_544da5d25bef4e3bad5c7149a406c0d7_externalid')]"
+                        },
+                        "deleteOption": "Delete"
+                    },
+                    "dataDisks": [],
+                    "diskControllerType": "SCSI"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('virtualMachines_tdxtest02_name')]",
+                    "adminUsername": "azureuser",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": true,
+                        "ssh": {
+                            "publicKeys": [
+                                {
+                                    "path": "/home/azureuser/.ssh/authorized_keys",
+                                    "keyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC191SVNBDjAymcZcXf/ANjed+kNZt6r8Y53+NXkfLgTNWx+k9ofDW1DrlD+GBWakop7xNfUdXRSBMtXxSAdhY1sWCbHPafXlPVtZxFz8mvleqQW+I1oHWlG+Pv5fptsRpKG1CkRBno13JhB4BWEoA7GMxISktymKMgeuu7YMemlPh3DdoYiZrjVYwF775mAmHXlSJrozswWZzUJCT+nhabIeiks4/Y2ofQE5jtcJZeqOvG4WSZ/QUGhWpUm3f8giOFFIvnaqvP+tu3chHpMeVdoIt/Q0LApt2OcDM/GClrgKRpGT++q5TJjCn077Qlrvow5+FdLTJREffBpEuJbk9yr5GYh4htPRYnjRJ1ufPinxBzDPhl1vuydWbCGbbII4B620Qtp+mKLdivwZWn1eK/1PA08fQzhNojir/pjBGopiyycLWAnwvykIQjQooIVg4F79CHmNycQjKJHLHNVcaKuhY/kqAwtNsQK8wrPbj0P3fO9cZhyngF2xI2oOZKxAs= amr\\ksvietme@ksvietme-mobl1"
+                                }
+                            ]
+                        },
+                        "provisionVMAgent": true,
+                        "patchSettings": {
+                            "patchMode": "ImageDefault",
+                            "assessmentMode": "ImageDefault"
+                        },
+                        "enableVMAgentPlatformUpdates": false
+                    },
+                    "secrets": [],
+                    "allowExtensionOperations": true,
+                    "requireGuestProvisionSignal": true
+                },
+                "securityProfile": {
+                    "uefiSettings": {
+                        "secureBootEnabled": true,
+                        "vTpmEnabled": true
+                    },
+                    "securityType": "ConfidentialVM"
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[parameters('networkInterfaces_tdxtest02715_externalid')]",
+                            "properties": {
+                                "deleteOption": "Delete"
+                            }
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true,
+                        "storageUri": "https://eastus2diags.blob.core.windows.net/"
+                    }
+                }
+            }
+        }
+    ]
+}
