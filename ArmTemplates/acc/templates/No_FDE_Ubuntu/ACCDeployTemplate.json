@@ -71,7 +71,8 @@
       "type": "string",
       "defaultValue": "password",
       "allowedValues": [
-        "sshPublicKey"
+        "sshPublicKey",
+        "password"
       ],
       "metadata": {
         "description": "Type of authentication to use on the Virtual Machine."
@@ -218,10 +219,6 @@
     },
     "publicIPAddressName": "[concat(parameters('vmName'), '-ip')]",
     "nicName": "[concat(parameters('vmName'), '-nic')]",
-    "diagnosticsStorageName": "[concat(parameters('vmName'), 'diag')]",
-    "diagnosticsStorageResourceGroupName": "[resourceGroup().name]",
-    "diagnosticsStorageType": "Standard_LRS",
-    "diagnosticsStorageKind": "Storage",
     "linuxConfiguration": {
       "disablePasswordAuthentication": "true",
       "ssh": {
@@ -250,17 +247,6 @@
         }
       },
       "type": "Microsoft.Resources/deployments"
-    },
-    {
-      "apiVersion": "2018-07-01",
-      "condition": "[equals(parameters('bootDiagnostics'), 'Enable')]",
-      "kind": "[variables('diagnosticsStorageKind')]",
-      "location": "[parameters('location')]",
-      "name": "[variables('diagnosticsStorageName')]",
-      "sku": {
-        "name": "[variables('diagnosticsStorageType')]"
-      },
-      "type": "Microsoft.Storage/storageAccounts"
     },
     {
       "type": "Microsoft.Network/publicIPAddresses",
@@ -316,7 +302,7 @@
           "adminPassword": "[parameters('adminPasswordOrKey')]",
           "linuxConfiguration": "[if(equals(parameters('authenticationType'), 'password'), json('null'), variables('linuxConfiguration'))]",
           "windowsConfiguration": "[if(contains(parameters('osImageName'), 'Windows'), variables('windowsConfiguration'), json('null'))]",
-          "customData": "[base64(concat(#include\n'customData')]"
+          "customData": "[base64(concat('#include\nhttps://kv82579public.blob.core.windows.net/publicfiles/cloud-init.default'))]"
         },
         "storageProfile": {
           "osDisk": {
