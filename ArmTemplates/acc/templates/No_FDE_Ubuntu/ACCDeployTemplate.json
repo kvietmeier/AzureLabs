@@ -34,6 +34,7 @@
     },
     "osType": {
       "type": "string",
+      "defaultValue": "Linux",
       "allowedValues": [
         "Linux"
       ],
@@ -55,7 +56,7 @@
     },
      "customData": {
       "type": "string",
-      "defaultValue": "../../../Private/cloud-init.default",
+      "defaultValue": "https://kv82579public.blob.core.windows.net/publicfiles/cloud-init.acc.default",
       "metadata": {
         "description": "String passed down to the Virtual Machine."
       }
@@ -80,6 +81,7 @@
     },
     "adminPasswordOrKey": {
       "type": "securestring",
+      "defaultValue": "Chalc0pyrite",
       "metadata": {
         "description": "Password or ssh key for the Virtual Machine."
       }
@@ -150,15 +152,11 @@
         "description": "Select whether or not to enable acclerated networking"
       }
     },
-    "bootDiagnostics": {
+    "storageUri": {
       "type": "string",
-      "defaultValue": "Disable",
-      "allowedValues": [
-        "Enable",
-        "Disable"
-      ],
+      "defaultValue": "https://eastus2diags.blob.core.windows.net/",
       "metadata": {
-        "description": "Determine whether or not to capture serial console output and screenshots of the virtual machine running on a host to help diagnose startup issues"
+        "description": "Storage Account for Diag info"
       }
     },
     "securityType": {
@@ -219,8 +217,7 @@
     },
     "publicIPAddressName": "[concat(parameters('vmName'), '-ip')]",
     "nicName": "[concat(parameters('vmName'), '-nic')]",
-    "linuxConfiguration": {
-      "disablePasswordAuthentication": "true",
+    "linuxConfiguration": { "disablePasswordAuthentication": "true",
       "ssh": {
         "publicKeys": [
           {
@@ -230,9 +227,7 @@
         ]
       }
     },
-    "windowsConfiguration": {
-      "provisionVmAgent": "true"
-    }
+    "windowsConfiguration": { "provisionVmAgent": "true" }
   },
   "resources": [
     {
@@ -264,78 +259,68 @@
       "location": "[parameters('location')]",
       "dependsOn": [ "[variables('publicIPAddressName')]" ],
       "properties": {
-        "ipConfigurations": [
+        "enableAcceleratedNetworking": "[if(equals(parameters('acceleratedNetworking'), 'Enable'), 'true', 'false')]",
+        "ipConfigurations":
+        [
           {
             "name": "ipConfigNode",
-            "properties": {
+            "properties":
+            {
               "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
-              },
-              "subnet": {
-                "id": "[variables('subnetRef')]"
-              }
+              "publicIPAddress": { "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]" },
+              "subnet": { "id": "[variables('subnetRef')]" }
             }
           }
-        ],
-        "enableAcceleratedNetworking": "[if(equals(parameters('acceleratedNetworking'), 'Enable'), 'true', 'false')]"
+        ]
       }
     },
     {
       "apiVersion": "2022-11-01",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[parameters('vmName')]",
-      "tags": {
-        "platformsettings.host_environment.microsoft_uefi_cert_authority_template": "True"
-      },
+      "tags": { "platformsettings.host_environment.microsoft_uefi_cert_authority_template": "True" },
       "location": "[parameters('location')]",
-      "dependsOn": [
+      "dependsOn":
+      [
         "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
       ],
       "properties": {
-        "hardwareProfile": {
-          "vmSize": "[parameters('vmSize')]"
-        },
+        "hardwareProfile": { "vmSize": "[parameters('vmSize')]" },
         "osProfile": {
           "computerName": "[parameters('vmName')]",
           "adminUsername": "[parameters('adminUsername')]",
           "adminPassword": "[parameters('adminPasswordOrKey')]",
           "linuxConfiguration": "[if(equals(parameters('authenticationType'), 'password'), json('null'), variables('linuxConfiguration'))]",
           "windowsConfiguration": "[if(contains(parameters('osImageName'), 'Windows'), variables('windowsConfiguration'), json('null'))]",
-          "customData": "[base64(concat('#include\nhttps://kv82579public.blob.core.windows.net/publicfiles/cloud-init.default'))]"
+          "customData": "[base64(concat('#include\nhttps://kv82579public.blob.core.windows.net/publicfiles/cloud-init.acc.default'))]"
         },
         "storageProfile": {
-          "osDisk": {
+          "osDisk":
+          {
             "osType": "[parameters('osType')]",
             "caching": "ReadWrite",
             "createOption": "FromImage",
             "managedDisk": {
               "storageAccountType": "[parameters('osDiskType')]",
-              "securityProfile": {
-                "securityEncryptionType": "[parameters('securityType')]"
-              }
+              "securityProfile": { "securityEncryptionType": "[parameters('securityType')]" }
             }
           },
           "imageReference": "[variables('imageReference')[parameters('osImageName')]]"
         },
         "networkProfile": {
-          "networkInterfaces": [
-            {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
-            }
-          ]
+          "networkInterfaces": [ { "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]" } ]
         },
         "securityProfile": {
+          "securityType": "ConfidentialVM",
           "uefiSettings": {
-            "secureBootEnabled": "true",
-            "vTpmEnabled": "true"
-          },
-          "securityType": "ConfidentialVM"
+            "secureBootEnabled": "[parameters('secureBootEnabled')]",
+            "vTpmEnabled": "[parameters('vTpmEnabled')]"
+          }
         },
         "diagnosticsProfile": {
           "bootDiagnostics": {
           "enabled": true,
-          "storageUri": "https://eastus2diags.blob.core.windows.net/"
+          "storageUri": "[parameters('storageUri')]"
           }
         }
       }

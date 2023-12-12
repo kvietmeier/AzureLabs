@@ -33,7 +33,7 @@
       "value": "corevnet01-eus2"
     },
     "adminUsername": {
-      "value": "accuser"
+      "value": "azureuser"
     },
     "authenticationType": {
       "value": "password"
