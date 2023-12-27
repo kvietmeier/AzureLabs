@@ -1,5 +1,7 @@
 ### .gitignore for AzureLabs repo
 ###
+# exclude the ignore file
+.gitignore
 
 # Default entries
 .htaccess
@@ -7,11 +9,9 @@ css.php
 HISTORY.txt
 README.txt
 
-# Ignore "Private" files
-/Private/
-
-# exclude the ignore file
-.gitignore
+# Ignore everything in "Private" anmd "secrets" folders
+Private/
+secrets/
 
 # Ignore temporary or scratch files
 **/foo*
@@ -28,7 +28,8 @@ README.txt
 *.vhdx
 *.vhd
 *.zip
-
+*.msi
+*.msix
 
 # Exclude vim swap files and backups
 *.swap
