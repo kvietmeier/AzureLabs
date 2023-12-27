@@ -1,8 +1,10 @@
-### Azure AKS-Edge Labs
+## Azure AKS-Edge Labs
 
 Configuration files and apps for AKS-Edge projects
 
-## Project Directories
+---
+
+### Project Directories
 
 ```text
 
@@ -21,16 +23,18 @@ Nothing yet
 code blocks for commands
 ```
 
-## Authors
+### Authors
 
 Karl Vietmeier
 [@KarlVietmeier](https://twitter.com/karlvietmeier)
 
-## Acknowledgments
+### Acknowledgments
 
 No one yet
 
-## References
+---
+
+### References
 
 Docs, Quickstarts, etc.
 
