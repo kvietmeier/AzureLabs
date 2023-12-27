@@ -1,0 +1,28 @@
+{
+    "SchemaVersion": "1.1",
+    "Version": "1.0",
+    "AksEdgeProduct": "AKS Edge Essentials - K3s",
+    "AksEdgeProductUrl": "",
+    "InstallOptions": {
+        "InstallPath": "",
+        "VhdxPath": ""
+    },
+    "VSwitch": {
+        "Name": "",
+        "AdapterName": ""
+    },
+    "Azure": {
+        "SubscriptionName":"Visual Studio Enterprise Subscription",
+        "SubscriptionId": "",
+        "TenantId": "",
+        "ResourceGroupName": "aksedge-rg",
+        "ServicePrincipalName": "aksedge-sp",
+        "Location": "EastUS",
+        "CustomLocationOID":"",
+        "Auth": {
+            "ServicePrincipalId": "",
+            "Password": ""
+        }
+    },
+    "AksEdgeConfigFile": "aksedge-config.json"
+}

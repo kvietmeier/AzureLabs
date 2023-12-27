@@ -7,9 +7,11 @@ Configuration files and apps for AKS-Edge projects
 ### Project Directories
 
 ```text
-
-Nothing yet
-
+AzureLabs/AKS-Edge
+  ├───configs
+  ├───ScreenShots
+  ├───scripts
+  └───troubleshooting
 ```
 
 ### Placeholder
