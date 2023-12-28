@@ -1,0 +1,70 @@
+{
+    "SchemaVersion": "1.6",
+    "Version": "1.0",
+    "DeploymentType": "ScalableCluster",
+    "Init": {
+      "ServiceIPRangeStart": "192.168.1.50",
+      "ServiceIPRangeSize": 10
+    },
+    "Arc": {
+      "ClusterName": "T15-AKS",
+      "Location": "westus2",
+      "ResourceGroupName": "aksedge-rg",
+      "SubscriptionId": "10e791eb-244c-4bab-bdb3-9eb0cc878bfe",
+      "TenantId": "c873522c-21be-456d-acc2-9c4f952c6578",
+      "ClientId": "f3d5f0b2-c3fc-47d5-af5d-c9e823401dc9",
+      "ClientSecret": "W2.8Q~Dp6rlrP7e5MFyaXPFtfdvimFBRew3bcaz4"
+    },
+    "Network": {
+      "VSwitch": {
+        "Name": "ExternalvSwitch",
+        "Type": "External"
+      },
+      "ControlPlaneEndpointIp": "192.168.1.49",
+      "ServiceIPRangeSize": 10,
+      "ServiceIPRangeStart": "192.168.1.50",
+      "ServiceIPRangeEnd": "192.168.1.59",
+      "NetworkPlugin": "calico",
+      "Ip4GatewayAddress": "192.168.1.1",
+      "Ip4PrefixLength": 24,
+      "DnsServers": [
+        "192.168.1.1",
+        "8.8.8.8"
+      ],
+      "InternetDisabled": false,
+      "SkipAddressFreeCheck": false,
+      "Proxy": {
+        "Http": null,
+        "Https": null,
+        "No": ""
+      }
+    },
+    "User": {
+      "AcceptEula": true,
+      "AcceptOptionalTelemetry": true,
+      "VolumeLicense": {
+        "EnrollmentID": null,
+        "PartNumber": null
+      }
+    },
+    "Machines": [
+      {
+        "NetworkConnection": {
+          "AdapterName": "Wi-Fi",
+          "Mtu": 0
+        },
+        "LinuxNode": {
+          "CpuCount": 6,
+          "MemoryInMB": 8192,
+          "DataSizeInGB": 500,
+          "MacAddress": null,
+          "TimeoutSeconds": 300,
+          "TpmPassthrough": false,
+          "Ip4Address": "192.168.1.48",
+          "SecondaryNetworks": [
+          "@{VMSwitchName=; Ip4Address=; Ip4GatewayAddress=; Ip4PrefixLength=}"
+          ]
+        }
+      }
+    ]
+  }
