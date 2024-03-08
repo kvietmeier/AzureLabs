@@ -47,12 +47,12 @@ configuration to create one or more instances of the object/s.
 #>
 
 # Looping Variables - number of VMs and Disks
-# Set default to 3 VMs, with 2 disks each
+# Set default to 1 VM, with 2 disks
 param(
   [Parameter(Mandatory=$True,
     HelpMessage="Enter number of VMs to create",  
     Position=0)]
-  [int]$NumVMs = "3",
+  [int]$NumVMs = "1",
   [Parameter(Mandatory=$True,
     HelpMessage="Enter number of Data Disks to create", 
     Position=1)]
@@ -77,8 +77,7 @@ Set-Location $PSscriptroot
 $Region         = "westus2"
 $vNetName       = "testingvnet01-wsu2"
 $vNetRG         = "CommonResources-WestUS2"
-$NsgName        = "WUS2-InboundNSG"
-$NsgRG          = "z_nsg-WUS2-Managed"
+$index          = "1"
 
 # Image Definitions
 # Ubuntu - add "-gen2" to create a Gen2 VM
@@ -88,13 +87,13 @@ $SKU            = "20_04-lts-gen2"
 $Version        = "latest"
 
 # VM Config Parameters 
-$ResourceGroup  = "TMP-VoltTesting"
+$ResourceGroup  = "TMP-NVMeTesting"
 $VMSize         = "Standard_E2bds_v5"   # E#bds is required for NVMe
 $DiskController = "NVMe"                # Choices - "SCSI" and "NVMe"
-$VMPrefix       = "voltnode"
+$VMPrefix       = "nvme"
 $DiskPrefix     = "datadisk"
 $Zone           = "1"                   # Need for UltraSSD
-$PPGName        = "VoltPPG"
+$PPGName        = "TempPPG1"
 
 
 #- You have to define VMs sizes for the PG if you use a zone."
@@ -105,7 +104,7 @@ $PPGAllowedVMSizes = [string[]]$Instances
 
 # Process a cloud-init file
 # Use the one I use for Terraform
-$CloudinitFile  = "C:\Users\ksvietme\repos\Terraform\azure\secrets\cloud-init.voltdb"
+$CloudinitFile  = "C:\Users\ksvietme\repos\Terraform\azure\secrets\cloud-init.default"
 $CloudInit      = (Get-Content -raw $CloudinitFile)
 
 
@@ -201,8 +200,7 @@ for ($i=1; $i -le $NumVMs; $i++) {
   #               Use existing testing vNet already peered to hub                 #
   
   $vNet      = Get-AzVirtualNetwork -Name $vNetName -ResourceGroupName $vNetRG
-  $SubNetCfg = Get-AzVirtualNetworkSubnetConfig -ResourceId $vNet.Subnets[0].Id
-  $NSG       = Get-AzNetworkSecurityGroup -ResourceGroupName $NsgRG -Name $NsgName
+  $SubNetCfg = Get-AzVirtualNetworkSubnetConfig -ResourceId $vNet.Subnets[$index].Id
 
   # Create a new static Public IP and assign a DNS record
   $PIP = New-AzPublicIPAddress `

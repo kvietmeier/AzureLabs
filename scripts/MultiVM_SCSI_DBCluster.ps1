@@ -119,12 +119,12 @@ Write-Host ""
 [int]$NumDataDisks = "2"
 
 # Output Summary - using -NoNewLine lets you use more than one color on a line
-Write-Host "Creating a DB cluster with:" -ForegroundColor Green
+Write-Host "Creating a SCSI disk based DB cluster with:" -ForegroundColor Green
 Write-Host "   Instance Type   = " -NoNewline 
 Write-Host "$VMSize" -ForegroundColor Cyan
 Write-Host "   Number of nodes = " -NoNewline
 Write-Host "$NumVMs" -ForegroundColor Cyan
-Write-Host "Number of NVME SSD = " -NoNewline
+Write-Host "Number of Data Disks = " -NoNewline
 Write-Host "$NumDataDisks" -ForegroundColor Cyan
 
 
@@ -136,10 +136,12 @@ Write-Host "$NumDataDisks" -ForegroundColor Cyan
 ###                              Variable Definitions                                  ###
 ###====================================================================================###
 
-# Use existing network resources: vNet, Subnet, NSG - set to your own
+# Use existing network resources: vNet, use - Subnet[$index], NSG is set already at the subnet level
+# vNet has 3 subnets
 $Region         = "westus2"
 $vNetName       = "testingvnet01-wsu2"
 $vNetRG         = "CommonResources-WestUS2"
+$index          = "0"
 
 # Image Definitions
 # Ubuntu - add "-gen2" to create a Gen2 VM
@@ -148,16 +150,28 @@ $Offer          = "0001-com-ubuntu-server-focal"
 $SKU            = "20_04-lts-gen2"
 $Version        = "latest"
 
+# Mariner
+#$PublisherName  = "ntegralinc1586961136942"
+#$Offer          = "ntg_cbl_mariner_2"
+#$SKU            = "ntg_cbl_mariner_2_gen2"
+#$Version        = "latest"
+
 # VM Config Parameters
 #  VMSize - set at run time
 #  NumVM  - set at run time
-$ResourceGroup  = "TMP-VoltTesting"
-$DiskController = "SCSI"                # Choices - "SCSI" and "NVMe"
+$ResourceGroup  = "SCSI-VoltTesting"
 $VMPrefix       = "vdb"
 $MgmtVMSize     = "Standard_D2ds_v5"
-$DiskPrefix     = "datadisk"
 $Zone           = "1"                   # Need for UltraSSD
 $PPGName        = "VoltPPG"
+
+# OS and Disk Congfiguration
+$DiskController = "SCSI"                # Choices - "SCSI" and "NVMe"
+$DiskPrefix     = "datadisk"
+$OSDiskSize     = "256"
+$StorAcctType   = "Premium_LRS"
+$Create         = "FromImage"
+$OnDelete       = "Delete" 
 
 # You have to define VMs sizes for the PG if you use a zone.
 #- You have to define VMs sizes for the PG if you use a zone."
@@ -238,6 +252,7 @@ $DNSName        = "$VMPrefix-kv01"
 $PubIP          = "$VMPrefix-PubIP-$VMName"
 $NICId          = "$VMName-NIC-$RandomID1"
 $IPConfig       = "$VMName-IPcfg"
+$OSDiskName     = "$VMName-OSDisk"
 
 Write-Host ""
 Write-Host "###============================================================###" -ForegroundColor DarkBlue
@@ -260,7 +275,7 @@ $NewVMConfig = New-AzVMConfig -VMName $VMName `
 #                 subnet has an NSG managed through Terraform                   #
   
 $vNet      = Get-AzVirtualNetwork -Name $vNetName -ResourceGroupName $vNetRG
-$SubNetCfg = Get-AzVirtualNetworkSubnetConfig -ResourceId $vNet.Subnets[0].Id
+$SubNetCfg = Get-AzVirtualNetworkSubnetConfig -ResourceId $vNet.Subnets[$index].Id
 
 # The subnet already has an NSFG associated
 #$NSG       = Get-AzNetworkSecurityGroup -ResourceGroupName $NsgRG -Name $NsgName
@@ -299,6 +314,17 @@ $NewVMConfig = Set-AzVMBootDiagnostic `
  -ResourceGroupName $ResourceGroup `
  -StorageAccountName $VoltStorAcct.StorageAccountName
 
+
+# Set OSDiskSize
+$NewVMConfig = Set-AzVMOSDisk `
+ -VM $NewVMConfig `
+ -Name $OSDiskName `
+ -DiskSizeInGB $OSDiskSize `
+ -StorageAccountType  $StorAcctType `
+ -CreateOption $Create `
+ -DeleteOption $OnDelete
+
+
 # OS definition and credentials for user  -Credential are pulled from an $Env variable.
 $NewVMConfig = Set-AzVMOperatingSystem `
  -VM $NewVMConfig `
@@ -324,6 +350,7 @@ New-AzVM -ResourceGroupName $ResourceGroup -Location $Region -VM $NewVMConfig | 
 
 
 ###====================================================================================###
+###====================================================================================###
 ###                                VM Creation Loop                                    ###
 ###                              Create the Cluster VMs                                ###
 ###====================================================================================###
@@ -340,6 +367,7 @@ for ($i=2; $i -le $NumVMs; $i++) {
   $PubIP          = "$VMPrefix-PubIP-0$i"
   $NICId          = "$VMName-NIC-$RandomID2"
   $IPConfig       = "$VMPrefix-IPcfg-0$i"
+  $OSDiskName     = "$VMName-OSDisk"
 
   Write-Host ""
   Write-Host "###============================================================###" -ForegroundColor DarkBlue
@@ -357,7 +385,6 @@ for ($i=2; $i -le $NumVMs; $i++) {
     -EnableUltraSSD `
     -ProximityPlacementGroupId $PPG.Id `
     -Zone $Zone 
-
 
   ###===================== Create the NIC Configuration ========================###
   #               Use existing testing vNet already peered to hub                 #
@@ -443,6 +470,16 @@ for ($i=2; $i -le $NumVMs; $i++) {
     -ResourceGroupName $ResourceGroup `
     -StorageAccountName $VoltStorAcct.StorageAccountName
 
+  # Set OSDiskSize
+  $NewVMConfig = Set-AzVMOSDisk `
+    -VM $NewVMConfig `
+    -Name $OSDiskName `
+    -DiskSizeInGB $OSDiskSize `
+    -StorageAccountType  $StorAcctType `
+    -CreateOption $Create `
+    -DeleteOption $OnDelete
+   
+    
   # OS definition and credentials for user  -Credential are pulled from an $Env variable.
   $NewVMConfig = Set-AzVMOperatingSystem `
     -VM $NewVMConfig `

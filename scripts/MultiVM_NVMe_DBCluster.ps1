@@ -143,7 +143,7 @@ Write-Host "$NumDataDisks" -ForegroundColor Cyan
 ###                              Variable Definitions                                  ###
 ###====================================================================================###
 
-# Use existing network resources: vNet, Subnet, NSG - set to your own
+# Use existing network resources: vNet, use - Subnet[0], NSG is set already at the subnet level
 $Region         = "westus2"
 $vNetName       = "testingvnet01-wsu2"
 $vNetRG         = "CommonResources-WestUS2"
@@ -159,12 +159,20 @@ $Version        = "latest"
 # VMSize - set at run time
 # NumVM  - set at run time
 $ResourceGroup  = "TMP-VoltTesting"
-$DiskController = "NVMe"                # Choices - "SCSI" and "NVMe"
 $VMPrefix       = "vdb"
 $MgmtVMSize     = "Standard_D2ds_v5"
-$DiskPrefix     = "datadisk"
 $Zone           = "1"                   # Need for UltraSSD
 $PPGName        = "VoltPPG"
+
+# OS and Disk Congfiguration
+$DiskController = "SCSI"                # Choices - "SCSI" and "NVMe"
+$DiskPrefix     = "datadisk"
+$OSDiskSize     = "256"
+$StorAcctType   = "Premium_LRS"
+$Create         = "FromImage"
+$OnDelete       = "Delete" 
+
+
 
 #- You have to define VMs sizes for the PG if you use a zone."
 #  Convert @Instances array to a "String[]"
@@ -305,6 +313,15 @@ $NewVMConfig = Set-AzVMBootDiagnostic `
  -Enable `
  -ResourceGroupName $ResourceGroup `
  -StorageAccountName $VoltStorAcct.StorageAccountName
+
+# Set OSDiskSize
+$NewVMConfig = Set-AzVMOSDisk `
+ -VM $NewVMConfig `
+ -Name $OSDiskName `
+ -DiskSizeInGB $OSDiskSize `
+ -StorageAccountType  $StorAcctType `
+ -CreateOption $Create `
+ -DeleteOption $OnDelete
 
 # OS definition and credentials for user  -Credential are pulled from an $Env variable.
 $NewVMConfig = Set-AzVMOperatingSystem `
@@ -449,6 +466,15 @@ for ($i=2; $i -le $NumVMs; $i++) {
     -Enable `
     -ResourceGroupName $ResourceGroup `
     -StorageAccountName $VoltStorAcct.StorageAccountName
+
+  # Set OSDiskSize
+  $NewVMConfig = Set-AzVMOSDisk `
+    -VM $NewVMConfig `
+    -Name $OSDiskName `
+    -DiskSizeInGB $OSDiskSize `
+    -StorageAccountType  $StorAcctType `
+    -CreateOption $Create `
+    -DeleteOption $OnDelete
 
   # OS definition and credentials for user  -Credential are pulled from an $Env variable.
   $NewVMConfig = Set-AzVMOperatingSystem `
