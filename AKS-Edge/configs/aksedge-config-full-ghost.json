@@ -6,15 +6,6 @@
     "ServiceIPRangeStart": "192.168.1.210",
     "ServiceIPRangeSize": 10
   },
-  "Arc": {
-    "ClusterName": "GhostCanyon-AKS",
-    "Location": "westus2",
-    "ResourceGroupName": "aksedge-rg",
-    "SubscriptionId": "10e791eb-244c-4bab-bdb3-9eb0cc878bfe",
-    "TenantId": "c873522c-21be-456d-acc2-9c4f952c6578",
-    "ClientId": "f3d5f0b2-c3fc-47d5-af5d-c9e823401dc9",
-    "ClientSecret": "W2.8Q~Dp6rlrP7e5MFyaXPFtfdvimFBRew3bcaz4"
-  },
   "Network": {
     "VSwitch": {
       "Name": "ExtSwitch",
