@@ -59,19 +59,7 @@ function AZModules () {
   
 } # End Function
 
-function OptionalModules () {
-  # Azure Stack Module
-  Install-Module -Name "Az.StackHCI" `
-    -Repository 'PSGallery' `
-    -Confirm:$false `
-    -AllowClobber -Force -Verbose
-
-  # I needed this to do some GPO work - optional
-  Install-Module -Name "GPRegistryPolicy" `
-    -Repository 'PSGallery' `
-    -Confirm:$false `
-    -AllowClobber -Force -Verbose
-      
+function OptionalModules () {      
   # To "colorize" dir listings"
   Install-Module -Name "Get-ChildItemColor" `
     -Repository 'PSGallery' `
@@ -100,14 +88,30 @@ function ADModules () {
       -Scope 'CurrentUser' `
       -Confirm:$false `
       -AllowClobber -Force -Verbose
-
+  
+  # Needed to manage GPOs - optional
+  Install-Module -Name "GPRegistryPolicy" `
+    -Repository 'PSGallery' `
+    -Confirm:$false `
+    -AllowClobber -Force -Verbose
  
 } # End Function
 
+function AzureEdgeModules () {
+  # Azure Stack Module
+  Install-Module -Name "Az.StackHCI" `
+    -Repository 'PSGallery' `
+    -Confirm:$false `
+    -AllowClobber -Force -Verbose
+
+}  # End Function
+
+###-----------------  Call Modules
 # Required
 PreReqs
 
 # Pick the ones you need
 AZModules
 OptionalModules
-ADModules
+#ADModules
+#AzureEdgeModules
