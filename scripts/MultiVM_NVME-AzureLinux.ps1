@@ -47,7 +47,7 @@ configuration to create one or more instances of the object/s.
 #>
 
 # Looping Variables - number of VMs and Disks
-# Set default to 1 VM, with 2 disks
+<# # Set default to 1 VM, with 2 disks
 param(
   [Parameter(Mandatory=$True,
     HelpMessage="Enter number of VMs to create",  
@@ -67,6 +67,48 @@ $ErrorActionPreference = "stop"
 
 # Run from the location of the script
 Set-Location $PSscriptroot
+#>
+
+# Looping Variables - number of VMs and Disks
+# Set default to 1 VM, with 2 disks
+param(
+  [Parameter(Mandatory=$True, HelpMessage="Enter number of VMs to create", Position=0)]
+  [int]$NumVMs = 1,
+
+  [Parameter(Mandatory=$True, HelpMessage="Enter number of Data Disks to create", Position=1)]
+  [int]$NumDataDisks = 2,
+
+  # --- ADDED: Target Subscription to prevent 403 Errors ---
+  [Parameter(Mandatory=$False, HelpMessage="The Name or ID of the subscription to use")]
+  [string]$TargetSubscription = "ea2ae48a-1f66-401b-9406-338e0e0d7c4c" 
+)
+
+# Stop on first error
+$ErrorActionPreference = "stop"
+
+# --- ADDED: Context Check & Switch ---
+# 1. Check if we are logged in at all
+if ($null -eq (Get-AzContext)) {
+    Write-Host "No Azure Context found. Logging in..." -ForegroundColor Yellow
+    Connect-AzAccount
+}
+
+# 2. Switch to the correct subscription if provided
+if ($TargetSubscription) {
+    try {
+        $Context = Set-AzContext -Subscription $TargetSubscription -ErrorAction Stop
+        Write-Host "Script is running in subscription: $($Context.Subscription.Name)" -ForegroundColor Green
+    }
+    catch {
+        Write-Error "Could not switch to subscription '$TargetSubscription'. Please check the name or your permissions."
+        exit
+    }
+}
+# -------------------------------------
+
+# Run from the location of the script
+Set-Location $PSscriptroot
+
 
 
 ###====================================================================================###
@@ -75,27 +117,29 @@ Set-Location $PSscriptroot
 
 # Use existing network resources: vNet, Subnet, NSG - set to your own
 $Region         = "westus3"
-$vNetName       = "vnet-coreinfrahub-karlv"
-$vNetRG         = "karlv-voctesting"
+$vNetName       = "vnet-uswest3-hub-karlv"
+$vNetRG         = "rg-westus3-karlv-coreresources"
 $index          = "1"
 
-# Image Definitions
+### Image Definitions
 # Ubuntu - add "-gen2" to create a Gen2 VM
 #$PublisherName  = "Canonical"
 #$Offer          = "0001-com-ubuntu-server-focal"
 #$SKU            = "20_04-lts-gen2"
 #$Version        = "latest"
 
+# Azure Linux - HPC Version
+# Need to subscribe to the image
 $PublisherName  = "azure-hpc"
 $Offer          = "azurelinux-hpc"
 $SKU            = "3"
 $Version        = "latest"
 
 # VM Config Parameters 
-$ResourceGroup  = "karlv-voctesting"
+$ResourceGroup  = "rg-deleteme02"
 $VMSize         = "Standard_E2bds_v5"   # E#bds is required for NVMe
 $DiskController = "NVMe"                # Choices - "SCSI" and "NVMe"
-$VMPrefix       = "nvme"
+$VMPrefix       = "vastnfs"
 $DiskPrefix     = "datadisk"
 $Zone           = "1"                   # Need for UltraSSD
 $PPGName        = "TempPPG1"
@@ -112,6 +156,27 @@ $PPGAllowedVMSizes = [string[]]$Instances
 #$CloudinitFile  = "C:\Users\ksvietme\repos\Terraform\azure\secrets\cloud-init.default"
 $CloudinitFile  = "C:\Users\karl.vietmeier\repos\Terraform\scripts\cloud-init\aws-cloud-init-multiOS.yaml"
 $CloudInit      = (Get-Content -raw $CloudinitFile)
+
+
+# Point this to your LOCAL public key file (e.g., id_rsa.pub)
+$SSHKeyFile = "C:\Users\karl.vietmeier\.ssh\id_rsa.pub" 
+$SSHKeyData = Get-Content -Raw $SSHKeyFile
+
+### --- Create the Credential Object Silently --- ###
+# 1. Define the Admin Username (This will be the user you SSH as)
+$AdminUsername = "azureuser"  # <--- Change this to 'karl' or 'labuser' if you prefer
+
+# 2. Define a Dummy Password 
+# (Required to create the object, but IGNORED by Azure because we use SSH keys + DisablePasswordAuthentication)
+$DummyPassword = "SuperComplexPassword123!@#" 
+$SecurePassword = ConvertTo-SecureString $DummyPassword -AsPlainText -Force
+
+# 3. Create the $VMCred object so the script stops asking
+$VMCred = New-Object System.Management.Automation.PSCredential ($AdminUsername, $SecurePassword)
+
+### -------------------------------------------------- ###
+
+SuperComplexPassword123!@#
 
 
 ###====================================================================================###
@@ -289,7 +354,15 @@ for ($i=1; $i -le $NumVMs; $i++) {
     -Linux `
     -ComputerName $VMName `
     -CustomData $CloudInit `
-    -Credential $VMCred
+    -Credential $VMCred `
+    -DisablePasswordAuthentication
+
+  # --- NEW: Add SSH Key ---
+  $NewVMConfig = Add-AzVMSshPublicKey `
+    -VM $NewVMConfig `
+    -KeyData $SSHKeyData `
+    -Path "/home/$($VMCred.UserName)/.ssh/authorized_keys"
+
 
   # Source Image
   $NewVMConfig = Set-AzVMSourceImage `
@@ -299,12 +372,40 @@ for ($i=1; $i -le $NumVMs; $i++) {
     -Skus $SKU `
     -Version $Version
 
+  $NewVMConfig = Set-AzVMPlan `
+    -VM $NewVMConfig `
+    -Publisher $PublisherName `
+    -Product $Offer `
+    -Name $SKU
+
+
+
+
 
   ###----> Create the VM using info in the layered config above
   
   New-AzVM -ResourceGroupName $ResourceGroup -Location $Region -VM $NewVMConfig | Out-Null
   
   ###
+  ### --- START: print IPs --- ###
+    
+  # Refresh the objects to ensure we get the assigned IP addresses
+  $FinalPip = Get-AzPublicIPAddress -ResourceGroupName $ResourceGroup -Name $PubIP
+  $FinalNic = Get-AzNetworkInterface -ResourceGroupName $ResourceGroup -Name $NICId
+  
+  # We assume the private key is the same path without ".pub"
+  $PrivateKeyPath = $SSHKeyFile.Replace(".pub", "")
+    
+  Write-Host ""
+  Write-Host "  [VM CREATED]: $VMName" -ForegroundColor Green
+  Write-Host "  ---------------------------------------------"
+  Write-Host "  Public IP:    $($FinalPip.IpAddress)" -ForegroundColor Yellow
+  Write-Host "  Private IP:   $($FinalNic.IpConfigurations.PrivateIpAddress)" -ForegroundColor Cyan
+  Write-Host "  DNS Name:     $($FinalPip.DnsSettings.Fqdn)" 
+  Write-Host "  SSH Command:  ssh -i $PrivateKeyPath $($VMCred.UserName)@$($FinalPip.IpAddress)" -ForegroundColor White
+  Write-Host "  ---------------------------------------------"
+  Write-Host ""
+  
 
 }
 ###=============================  END Create VM Loop   ==============================###
